@@ -1,0 +1,56 @@
+import {contextBridge, ipcRenderer} from "electron";
+import {ElectronAPI, electronAPI} from "@electron-toolkit/preload";
+import IpcRendererEvent = Electron.IpcRendererEvent;
+import {PlayerState} from "../shared/PlayerState.js";
+
+export interface CustomWindowControls {
+    minimize: () => void;
+    maximize: () => void;
+    close: () => void;
+    onMaximizeChange: (callback: (isMaximized: boolean) => void) => void;
+    isMaximized: () => Promise<boolean>;
+}
+
+const windowControls: CustomWindowControls = {
+    minimize: () => ipcRenderer.send("window-minimize"),
+    maximize: () => ipcRenderer.send("window-maximize"),
+    close: () => ipcRenderer.send("window-close"),
+    onMaximizeChange: (callback: (isMaximized: boolean) => void) =>
+        ipcRenderer.on("window-is-maximized", (_, isMaximized) => callback(isMaximized)),
+    isMaximized: () => ipcRenderer.invoke("window-is-maximized")
+};
+
+const api = {
+    listLocalSongs: (folderPath: string) => ipcRenderer.invoke("songs:list", folderPath),
+    loadTrack: (songPath: string) => ipcRenderer.invoke("player:load", songPath),
+    pauseOrResume: () => ipcRenderer.invoke("player:pause-or-resume"),
+    zoomIn: () => ipcRenderer.invoke("zoom:in"),
+    zoomOut: () => ipcRenderer.invoke("zoom:out"),
+    resetZoom: () => ipcRenderer.invoke("zoom:reset"),
+    getZoom: () => ipcRenderer.invoke("zoom:get"),
+    onZoomFactorChanged: (cb: (factor: number) => void) => {
+        const handler = (_ev: IpcRendererEvent, factor: number) => cb(factor);
+        ipcRenderer.on("zoom-factor-changed", handler);
+        return () => ipcRenderer.removeListener("zoom-factor-changed", handler);
+    }
+} as const;
+
+let playerUpdateCallback: ((data: PlayerState) => void) | null = null;
+
+ipcRenderer.on("player:update", (_event, data) => {
+    if(playerUpdateCallback) playerUpdateCallback(data);
+});
+
+export type ApiType = typeof api;
+
+contextBridge.exposeInMainWorld("electron", {
+    ...(electronAPI as ElectronAPI),
+    ...windowControls
+});
+
+contextBridge.exposeInMainWorld("api", {
+    ...api,
+    onPlayerUpdate: (cb: (data: PlayerState) => void) => {
+        playerUpdateCallback = cb;
+    }
+});

@@ -1,0 +1,167 @@
+:root {
+    --primary: #ffffff;
+    --secondary: #b9b9b9;
+}
+
+.wrapper {
+    padding: 25px;
+}
+
+.songList {
+    margin-top: 20px;
+}
+
+.songRow {
+    padding: 8px;
+    align-items: center;
+    border-radius: 8px;
+    transition: background-color 0.05s;
+}
+
+.durationHeader {
+    text-align: right;
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.numberHeaderWrapper {
+    width: 50px;
+    display: flex;
+    justify-content: center;
+}
+
+.headRow {
+    padding: 8px;
+    color: var(--secondary);
+    font-size: 1.05rem;
+    align-items: center;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 3.5fr 2.5fr 1.5fr 1fr 40px;
+    gap: 20px;
+}
+
+.songRow:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#activeRow {
+    transition: 0s;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.textRight {
+    text-align: right;
+}
+
+.divider {
+    background-color: rgba(255, 255, 255, 0.15);
+    height: 1px;
+    margin: 0 0 20px;
+}
+
+.trackElement {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 15px;
+}
+
+.trackInfo {
+    line-height: 1.3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.cover {
+    height: 50px;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.cover img {
+    -webkit-user-drag: none;
+}
+
+.trackTitle {
+    color: var(--primary);
+    font-size: 1.2rem;
+}
+
+.trackArtist {
+    font-size: 1.1rem;
+    color: var(--secondary);
+}
+
+.trackNumberWrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+    aspect-ratio: 1;
+}
+
+.trackNumber {
+    color: var(--secondary);
+    min-width: 1ch;
+    margin-right: -8px;
+    transform: translateX(-50%);
+}
+
+.playButton {
+    margin-right: 2px;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    left: 0;
+    right: 0;
+    background: none;
+    border: none;
+    color: white;
+    text-align: center;
+    font-size: 1.2rem;
+    opacity: 0;
+    padding: 5px;
+}
+
+.trackAlbum {
+    color: var(--secondary);
+    font-size: 1.1rem;
+}
+
+.songList a, .link {
+    cursor: pointer;
+    width: fit-content;
+}
+
+.songList a:hover, .link:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.trackDuration {
+    text-align: right;
+    color: var(--secondary);
+    font-size: 1.1rem;
+}
+
+.trackColumn {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.songRow:hover .trackNumber {
+    opacity: 0;
+}
+
+.songRow:hover .playButton {
+    opacity: 1;
+}

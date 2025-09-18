@@ -1,0 +1,65 @@
+.main {
+    max-width: 370px;
+    width: 30vw;
+    padding: 10px;
+    background-color: #121212;
+    border-right: 8px solid black;
+}
+
+.main button {
+    font-size: 1.3rem;
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    text-align: left;
+    padding: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.1s;
+}
+
+.main button:hover,
+.main button.active {
+    background-color: rgb(255, 255, 255, 0.12);
+}
+
+.main button:hover svg,
+.main button.active svg {
+    color: #ffffff;
+}
+
+.category {
+    margin-top: 25px;
+    font-weight: 700;
+    padding: 0 13px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #b2b2b2;
+}
+
+.collection button {
+    font-size: 1.1rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+}
+
+.collection {
+    padding: 5px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.collection button svg {
+    font-size: 1.6rem;
+    color: #848484;
+    transition: 0.1s;
+}
+
+#album {
+    transform: scale(1.1)
+}
