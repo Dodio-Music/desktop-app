@@ -1,23 +1,23 @@
 import {AudioIO, IoStreamWrite} from "naudiodon";
-import {parseFile} from "music-metadata";
-import {spawn} from "child_process";
 import ffmpeg from "ffmpeg-static";
 import {Readable} from "node:stream";
 import {ChildProcessByStdio} from "node:child_process";
-import {PCMStore} from "./PCMStore.js";
 import {PlayerState} from "../../shared/PlayerState.js";
+import {PCMSource} from "./FLACStreamSource.js";
 const ffmpegPath = typeof ffmpeg === "string" ? ffmpeg : (ffmpeg as unknown as { default: string }).default;
 
 type PlayerSession = {
     index: number;
     ai: IoStreamWrite;
-    pcmStore: PCMStore;
     bitDepth: 16 | 24 | 32;
     numberOfChannels: number;
     sampleRate: number;
     readOffset: number;
     cancelled: boolean;
     waitingForData: boolean;
+    pcmSource: PCMSource;
+    silentBuffer: Buffer;
+    bufferSize: number;
 };
 
 export class Player {
@@ -31,14 +31,19 @@ export class Player {
     private currentPath: string | null = null;
     private chunkerLoopPromise: Promise<void> | null = null;
 
-    private async chunkerLoop(session: PlayerSession, silentBuffer: Buffer, bufferSize: number) {
+    private async chunkerLoop(session: PlayerSession) {
         while (!session.cancelled) {
-            const buffer = session.pcmStore.read(session.readOffset, bufferSize);
-            const validPCM = buffer.length === bufferSize;
+            const buffer = session.pcmSource.read(session.readOffset, session.bufferSize);
+            const validPCM = buffer.length === session.bufferSize;
             session.waitingForData = !validPCM;
 
-            const outputBuffer = this.userPaused || session.waitingForData ? silentBuffer : buffer;
+            let outputBuffer = this.userPaused || session.waitingForData ? session.silentBuffer : buffer;
             if (!this.userPaused && validPCM) session.readOffset += buffer.length;
+
+            if(validPCM) {
+                // quick fix: small headroom to avoid clipping
+                outputBuffer = this.applyVolume(outputBuffer, 0.98, session.bitDepth);
+            }
 
             if (!session.ai.write(outputBuffer)) {
                 await new Promise<void>((resolve) => {
@@ -58,39 +63,21 @@ export class Player {
         })
     }
 
-    async load(filePath: string) {
+    async load(source: PCMSource, duration: number) {
         await this.stop();
 
-        const metadata = await parseFile(filePath);
+        this.userPaused = false;
+
+        void source.start();
 
         if (!ffmpegPath) {
             throw new Error("ffmpeg binary not found. Please check your system for compatibility!");
         }
 
-        const numberOfChannels = metadata.format.numberOfChannels || 2;
-        const sampleRate = metadata.format.sampleRate || 44100;
-        const bitDepth = this.formatMatch(metadata.format.bitsPerSample || 16);
-        this.trackDuration = metadata.format.duration ?? 0;
-        this.currentPath = filePath;
-
-        const pcmStore = new PCMStore();
-
-        this.ffmpeg = spawn(ffmpegPath, [
-            "-i", filePath,
-            "-f", `s${bitDepth}le`,
-            "-acodec", `pcm_s${bitDepth}le`,
-            "-ac", `${numberOfChannels}`,
-            "-ar", `${sampleRate}`,
-            "pipe:1"
-        ], {stdio: ["ignore", "pipe", "ignore"]});
-
-        if (!this.ffmpeg) {
-            throw new Error("Error while trying to create ffmpeg instance!");
-        }
-
-        this.ffmpeg.stdout.on("data", (chunk: Buffer) => {
-            pcmStore.append(chunk);
-        });
+        const numberOfChannels = source.channels || 2;
+        const sampleRate = source.sampleRate || 44100;
+        const bitDepth = source.bitDepth;
+        this.trackDuration = duration;
 
         const ai = AudioIO({
             outOptions: {
@@ -105,19 +92,6 @@ export class Player {
 
         ai.start();
 
-        const session: PlayerSession = {
-            index: this.count++,
-            ai,
-            pcmStore,
-            bitDepth,
-            numberOfChannels,
-            sampleRate,
-            readOffset: 0,
-            cancelled: false,
-            waitingForData: false
-        }
-        this.session = session;
-
         if (!ai) {
             throw new Error("Error while trying to create naudiodon instance!");
         }
@@ -127,21 +101,22 @@ export class Player {
         const chunkSize = framesPerBuffer * numberOfChannels * bytesPerSample;
         const silentChunk = Buffer.alloc(chunkSize);
 
-        this.chunkerLoopPromise = this.chunkerLoop(session, silentChunk, chunkSize);
-    }
-
-    formatMatch(bitDepth: number) {
-        const allowed = [16, 24, 32];
-
-        let match = allowed[0];
-        for (const val of allowed) {
-            if (bitDepth >= val) {
-                match = val;
-            } else {
-                break;
-            }
+        const session: PlayerSession = {
+            index: this.count++,
+            ai,
+            bitDepth,
+            numberOfChannels,
+            sampleRate,
+            readOffset: 0,
+            cancelled: false,
+            waitingForData: false,
+            bufferSize: chunkSize,
+            silentBuffer: silentChunk,
+            pcmSource: source
         }
-        return match as 16 | 24 | 32;
+        this.session = session;
+
+        this.chunkerLoopPromise = this.chunkerLoop(session);
     }
 
     pauseOrResume() {
@@ -183,5 +158,38 @@ export class Player {
             userPaused: this.userPaused,
             duration: this.trackDuration
         });
+    }
+
+    applyVolume(buf: Buffer, volume: number, bitDepth: 16 | 24 | 32): Buffer {
+        switch (bitDepth) {
+            case 16: {
+                for (let i = 0; i < buf.length; i += 2) {
+                    let sample = buf.readInt16LE(i);
+                    sample = Math.max(-32768, Math.min(32767, Math.round(sample * volume)));
+                    buf.writeInt16LE(sample, i);
+                }
+                break;
+            }
+            case 24: {
+                for (let i = 0; i < buf.length; i += 3) {
+                    let sample = buf[i] | (buf[i + 1] << 8) | (buf[i + 2] << 16);
+                    if (sample & 0x800000) sample |= 0xff000000;
+                    sample = Math.max(-8388608, Math.min(8388607, Math.round(sample * volume)));
+                    buf[i] = sample & 0xff;
+                    buf[i + 1] = (sample >> 8) & 0xff;
+                    buf[i + 2] = (sample >> 16) & 0xff;
+                }
+                break;
+            }
+            case 32: {
+                for (let i = 0; i < buf.length; i += 4) {
+                    let sample = buf.readFloatLE(i);
+                    sample = Math.max(-1, Math.min(1, sample * volume));
+                    buf.writeFloatLE(sample, i);
+                }
+                break;
+            }
+        }
+        return buf;
     }
 }

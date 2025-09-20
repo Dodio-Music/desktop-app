@@ -19,7 +19,6 @@ app.whenReady().then(() => {
     app.on("browser-window-created", (_, window) => {
         optimizer.watchWindowShortcuts(window);
     });
-
     createWindow();
     registerWindowControlsIPC();
     registerSongIndexer(mainWindow);

@@ -3,6 +3,7 @@ import {ElectronAPI, electronAPI} from "@electron-toolkit/preload";
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerState} from "../shared/PlayerState.js";
 import {IPreferences} from "../main/preferences.js";
+import {TrackInfo} from "../shared/TrackInfo.js";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -23,7 +24,8 @@ const windowControls: CustomWindowControls = {
 
 const api = {
     listLocalSongs: (folderPath: string) => ipcRenderer.invoke("songs:list", folderPath),
-    loadTrack: (songPath: string) => ipcRenderer.invoke("player:load", songPath),
+    loadTrack: (songPath: string) => ipcRenderer.invoke("player:load-local", songPath),
+    loadTrackRemote: (trackInfo: TrackInfo) => ipcRenderer.invoke("player:load-remote", trackInfo),
     pauseOrResume: () => ipcRenderer.invoke("player:pause-or-resume"),
     zoomIn: () => ipcRenderer.invoke("zoom:in"),
     zoomOut: () => ipcRenderer.invoke("zoom:out"),

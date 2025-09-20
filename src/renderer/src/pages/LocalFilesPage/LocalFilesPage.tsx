@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 
 import s from "./LocalFilesPage.module.css";
-import {secondsToTime} from "../util/timeUtils";
+import {secondsToTime} from "../../util/timeUtils";
 import {WiTime3} from "react-icons/wi";
 import {FaPlay} from "react-icons/fa6";
 import {MouseEvent} from "react";
@@ -66,7 +66,7 @@ const LocalFilesPage = () => {
         };
 
         return (
-            <div className={s.wrapper} onClick={handleWrapperClick}>
+            <div className={"pageWrapper"} onClick={handleWrapperClick}>
                 <h1>Local Files</h1>
                 {error ?
                     <>

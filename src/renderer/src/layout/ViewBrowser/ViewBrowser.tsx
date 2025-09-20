@@ -3,9 +3,9 @@ import LikedArtistsPage from "../../pages/LikedArtistsPage";
 import NotFoundPage from "../../pages/NotFoundPage";
 import s from "./view_browser.module.css";
 import LikedAlbumsPage from "../../pages/LikedAlbumsPage";
-import HomePage from "../../pages/HomePage";
+import HomePage from "../../pages/HomePage/HomePage";
 import LikedTracksPage from "../../pages/LikedTracksPage";
-import LocalFilesPage from "../../pages/LocalFilesPage";
+import LocalFilesPage from "../../pages/LocalFilesPage/LocalFilesPage";
 
 const ViewBrowser = () => {
     return (

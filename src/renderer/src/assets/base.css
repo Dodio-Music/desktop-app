@@ -93,3 +93,7 @@ img {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.36);
 }
+
+.pageWrapper {
+    padding: 25px;
+}
