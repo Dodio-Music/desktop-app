@@ -1,11 +1,12 @@
 import {AudioIO, IoStreamWrite} from "naudiodon";
 import {parseFile} from "music-metadata";
 import {spawn} from "child_process";
-import ffmpegPath from "ffmpeg-static";
+import ffmpeg from "ffmpeg-static";
 import {Readable} from "node:stream";
 import {ChildProcessByStdio} from "node:child_process";
 import {PCMStore} from "./PCMStore.js";
 import {PlayerState} from "../../shared/PlayerState.js";
+const ffmpegPath = typeof ffmpeg === "string" ? ffmpeg : (ffmpeg as unknown as { default: string }).default;
 
 type PlayerSession = {
     index: number;
@@ -83,13 +84,13 @@ export class Player {
             "pipe:1"
         ], {stdio: ["ignore", "pipe", "ignore"]});
 
-        this.ffmpeg.stdout.on("data", (chunk: Buffer) => {
-            pcmStore.append(chunk);
-        });
-
         if (!this.ffmpeg) {
             throw new Error("Error while trying to create ffmpeg instance!");
         }
+
+        this.ffmpeg.stdout.on("data", (chunk: Buffer) => {
+            pcmStore.append(chunk);
+        });
 
         const ai = AudioIO({
             outOptions: {

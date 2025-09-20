@@ -27,13 +27,13 @@ const api = {
     zoomIn: () => ipcRenderer.invoke("zoom:in"),
     zoomOut: () => ipcRenderer.invoke("zoom:out"),
     resetZoom: () => ipcRenderer.invoke("zoom:reset"),
-    getZoom: () => ipcRenderer.invoke("zoom:get"),
+    getZoom: (): Promise<number> => ipcRenderer.invoke("zoom:get"),
     onZoomFactorChanged: (cb: (factor: number) => void) => {
         const handler = (_ev: IpcRendererEvent, factor: number) => cb(factor);
         ipcRenderer.on("zoom-factor-changed", handler);
         return () => ipcRenderer.removeListener("zoom-factor-changed", handler);
     }
-} as const;
+};
 
 let playerUpdateCallback: ((data: PlayerState) => void) | null = null;
 

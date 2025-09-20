@@ -7,7 +7,7 @@
         "src/shared/**/*"
     ],
     "compilerOptions": {
-        "module": "ES2022",
+        "module": "NodeNext",
         "moduleResolution": "NodeNext",
         "composite": true,
         "types": [

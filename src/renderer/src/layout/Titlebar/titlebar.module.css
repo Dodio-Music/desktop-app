@@ -57,3 +57,30 @@
     transition: 0s background-color;
     background-color: rgb(228, 60, 60);
 }
+
+.right {
+    height: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+}
+
+.zoomContainer {
+    border: none;
+    transition: background-color 0.1s;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.14);
+    -webkit-app-region: no-drag;
+}
+
+.zoomContainer:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+.zoomLevel {
+    color: #e5e5e5;
+    padding: 9px;
+    line-height: 1;
+    font-size: 0.85rem;
+}
