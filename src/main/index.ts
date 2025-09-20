@@ -22,7 +22,7 @@ app.whenReady().then(() => {
 
     createWindow();
     registerWindowControlsIPC();
-    registerSongIndexer();
+    registerSongIndexer(mainWindow);
     registerPreferencesIPC();
     registerPlayerIPC(mainWindow);
     registerMagnifierIPC(mainWindow);

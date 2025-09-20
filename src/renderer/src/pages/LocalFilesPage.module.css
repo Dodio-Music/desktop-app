@@ -136,6 +136,11 @@
     font-size: 1.1rem;
 }
 
+.timestamp {
+    color: var(--secondary);
+    font-size: 1.1rem;
+}
+
 .songList a, .link {
     cursor: pointer;
     width: fit-content;
@@ -164,4 +169,31 @@
 
 .songRow:hover .playButton {
     opacity: 1;
+}
+
+.error {
+    color: #e1e1e1;
+}
+
+.dirButton {
+    transition: 0.1s;
+    background-color: #207fc3;
+    color: white;
+    text-transform: uppercase;
+    padding: 10px;
+    font-size: 1.1rem;
+    margin-top: 10px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.dirButton:hover {
+    filter: brightness(1.1);
+}
+
+.dirButton:active {
+    transition: 0s;
+    filter: brightness(0.7);
+    transform: scale(0.97);
 }

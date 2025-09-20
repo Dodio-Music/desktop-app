@@ -2,6 +2,7 @@ import {contextBridge, ipcRenderer} from "electron";
 import {ElectronAPI, electronAPI} from "@electron-toolkit/preload";
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerState} from "../shared/PlayerState.js";
+import {IPreferences} from "../main/preferences.js";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -32,7 +33,11 @@ const api = {
         const handler = (_ev: IpcRendererEvent, factor: number) => cb(factor);
         ipcRenderer.on("zoom-factor-changed", handler);
         return () => ipcRenderer.removeListener("zoom-factor-changed", handler);
-    }
+    },
+    getPreferences: (): Promise<IPreferences> => ipcRenderer.invoke("preferences:get"),
+    setPreferences: () => ipcRenderer.invoke("preferences:set"),
+    onPreferencesUpdated: (callback: () => void) => ipcRenderer.on("preferences:update", callback),
+    showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory"),
 };
 
 let playerUpdateCallback: ((data: PlayerState) => void) | null = null;
