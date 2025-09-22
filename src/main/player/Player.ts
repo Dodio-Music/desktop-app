@@ -1,15 +1,16 @@
-import {AudioIO, IoStreamWrite} from "naudiodon";
+import {AudioIO, IoStreamWrite, SampleFormatFloat32} from "naudiodon";
 import ffmpeg from "ffmpeg-static";
 import {Readable} from "node:stream";
 import {ChildProcessByStdio} from "node:child_process";
 import {PlayerState} from "../../shared/PlayerState.js";
 import {PCMSource} from "./FLACStreamSource.js";
+
 const ffmpegPath = typeof ffmpeg === "string" ? ffmpeg : (ffmpeg as unknown as { default: string }).default;
+const BITDEPTH = 32;
 
 type PlayerSession = {
     index: number;
     ai: IoStreamWrite;
-    bitDepth: 16 | 24 | 32;
     numberOfChannels: number;
     sampleRate: number;
     readOffset: number;
@@ -40,9 +41,8 @@ export class Player {
             let outputBuffer = this.userPaused || session.waitingForData ? session.silentBuffer : buffer;
             if (!this.userPaused && validPCM) session.readOffset += buffer.length;
 
-            if(validPCM) {
-                // quick fix: small headroom to avoid clipping
-                outputBuffer = this.applyVolume(outputBuffer, 0.98, session.bitDepth);
+            if (validPCM) {
+                outputBuffer = this.applyVolume(outputBuffer, 1);
             }
 
             if (!session.ai.write(outputBuffer)) {
@@ -60,11 +60,11 @@ export class Player {
             session.ai.quit(() => {
                 resolve();
             });
-        })
+        });
     }
 
     async load(source: PCMSource, duration: number) {
-        await this.stop();
+        this.stop();
 
         this.userPaused = false;
 
@@ -76,17 +76,16 @@ export class Player {
 
         const numberOfChannels = source.channels || 2;
         const sampleRate = source.sampleRate || 44100;
-        const bitDepth = source.bitDepth;
         this.trackDuration = duration;
 
         const ai = AudioIO({
             outOptions: {
                 channelCount: numberOfChannels,
-                sampleFormat: bitDepth,
+                sampleFormat: SampleFormatFloat32,
                 sampleRate: sampleRate,
                 deviceId: -1,
                 closeOnError: false,
-                maxQueue: 8
+                maxQueue: 4
             }
         });
 
@@ -96,7 +95,7 @@ export class Player {
             throw new Error("Error while trying to create naudiodon instance!");
         }
 
-        const bytesPerSample = bitDepth / 8;
+        const bytesPerSample = BITDEPTH / 8;
         const framesPerBuffer = 1024 / 4; // TODO: have this be compatibility setting
         const chunkSize = framesPerBuffer * numberOfChannels * bytesPerSample;
         const silentChunk = Buffer.alloc(chunkSize);
@@ -104,7 +103,6 @@ export class Player {
         const session: PlayerSession = {
             index: this.count++,
             ai,
-            bitDepth,
             numberOfChannels,
             sampleRate,
             readOffset: 0,
@@ -113,7 +111,7 @@ export class Player {
             bufferSize: chunkSize,
             silentBuffer: silentChunk,
             pcmSource: source
-        }
+        };
         this.session = session;
 
         this.chunkerLoopPromise = this.chunkerLoop(session);
@@ -123,33 +121,38 @@ export class Player {
         this.userPaused = !this.userPaused;
     }
 
-    async stop() {
+    stop() {
         if (this.ffmpeg) {
             this.ffmpeg.kill("SIGKILL");
             this.ffmpeg = null;
         }
 
-        if(this.session) {
+        if (this.session) {
             this.session.cancelled = true;
-            this.session.ai.emit('drain');
+            this.session.ai.emit("drain");
         }
 
         if (this.chunkerLoopPromise) {
-            await this.chunkerLoopPromise;
             this.chunkerLoopPromise = null;
         }
     }
 
-    toSeconds(bitDepth: number, numberOfChannels: number, sampleRate: number, timeInBytes: number) {
-        const bytesPerSample = bitDepth / 8;
+    toSeconds(numberOfChannels: number, sampleRate: number, timeInBytes: number) {
+        const bytesPerSample = BITDEPTH / 8;
         const framesPlayed = timeInBytes / (bytesPerSample * numberOfChannels);
         return framesPlayed / sampleRate;
     }
 
-    private notifyState() {
-        if(!this.session) return;
+    toBytes(numberOfChannels: number, sampleRate: number, timeInSeconds: number) {
+        const bytesPerSample = BITDEPTH / 8;
+        const framesPlayed = timeInSeconds * (bytesPerSample * numberOfChannels);
+        return framesPlayed * sampleRate;
+    }
 
-        const currentTime = this.toSeconds(this.session.bitDepth, this.session.numberOfChannels, this.session.sampleRate, this.session.readOffset) ?? 0;
+    private notifyState() {
+        if (!this.session) return;
+
+        const currentTime = this.toSeconds(this.session.numberOfChannels, this.session.sampleRate, this.session.readOffset) ?? 0;
 
         this.onStateChange?.({
             currentTrack: this.currentPath,
@@ -160,35 +163,11 @@ export class Player {
         });
     }
 
-    applyVolume(buf: Buffer, volume: number, bitDepth: 16 | 24 | 32): Buffer {
-        switch (bitDepth) {
-            case 16: {
-                for (let i = 0; i < buf.length; i += 2) {
-                    let sample = buf.readInt16LE(i);
-                    sample = Math.max(-32768, Math.min(32767, Math.round(sample * volume)));
-                    buf.writeInt16LE(sample, i);
-                }
-                break;
-            }
-            case 24: {
-                for (let i = 0; i < buf.length; i += 3) {
-                    let sample = buf[i] | (buf[i + 1] << 8) | (buf[i + 2] << 16);
-                    if (sample & 0x800000) sample |= 0xff000000;
-                    sample = Math.max(-8388608, Math.min(8388607, Math.round(sample * volume)));
-                    buf[i] = sample & 0xff;
-                    buf[i + 1] = (sample >> 8) & 0xff;
-                    buf[i + 2] = (sample >> 16) & 0xff;
-                }
-                break;
-            }
-            case 32: {
-                for (let i = 0; i < buf.length; i += 4) {
-                    let sample = buf.readFloatLE(i);
-                    sample = Math.max(-1, Math.min(1, sample * volume));
-                    buf.writeFloatLE(sample, i);
-                }
-                break;
-            }
+    applyVolume(buf: Buffer, volume: number): Buffer {
+        for (let i = 0; i < buf.length; i += 4) {
+            let sample = buf.readFloatLE(i);
+            sample = Math.max(-1, Math.min(1, sample * volume));
+            buf.writeFloatLE(sample, i);
         }
         return buf;
     }

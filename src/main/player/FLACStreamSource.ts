@@ -11,7 +11,6 @@ export interface PCMSource {
     size(): number;
     append(chunk: Buffer): void;
     url: string;
-    bitDepth: 16 | 24 | 32;
     channels: number;
     sampleRate: number;
 }
@@ -24,7 +23,6 @@ export class FLACStreamSource implements PCMSource {
 
     constructor(
         public url: string,
-        public bitDepth: 16 | 24 | 32 = 16,
         public channels = 2,
         public sampleRate = 44100
     ) {}
@@ -34,8 +32,8 @@ export class FLACStreamSource implements PCMSource {
 
         this.ffmpegProcess = spawn(ffmpegPath, [
             "-i", this.url,
-            "-f", `s${this.bitDepth}le`,
-            "-acodec", `pcm_s${this.bitDepth}le`,
+            "-f", "f32le",
+            "-acodec", "pcm_f32le",
             "-ac", `${this.channels}`,
             "-ar", `${this.sampleRate}`,
             "pipe:1"
@@ -91,18 +89,4 @@ export class FLACStreamSource implements PCMSource {
         this.cancelled = true;
         this.ffmpegProcess?.kill("SIGKILL");
     }
-}
-
-export function formatMatch(bitDepth: number) {
-    const allowed = [16, 24, 32];
-
-    let match = allowed[0];
-    for (const val of allowed) {
-        if (bitDepth >= val) {
-            match = val;
-        } else {
-            break;
-        }
-    }
-    return match as 16 | 24 | 32;
 }
