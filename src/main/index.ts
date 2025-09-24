@@ -3,9 +3,9 @@ import {electronApp, optimizer} from "@electron-toolkit/utils";
 import {registerSongIndexer} from "./songIndexer.js";
 import {registerWindowControlsIPC} from "./ipc/registerWindowControls.js";
 import {registerMagnifierIPC} from "./ipc/registerMagnifier.js";
-import {registerPlayerIPC} from "./ipc/registerPlayer.js";
 import {registerPreferencesIPC} from "./preferences.js";
 import {createMainWindow, registerAppLifecycle} from "./window.js";
+import {registerPlayerEchogardenWorkerIPC} from "./ipc/registerPlayerEchogarden.js";
 
 let mainWindow: BrowserWindow;
 
@@ -23,8 +23,8 @@ app.whenReady().then(() => {
     registerWindowControlsIPC();
     registerSongIndexer(mainWindow);
     registerPreferencesIPC();
-    registerPlayerIPC(mainWindow);
-    registerMagnifierIPC(mainWindow);
+    registerPlayerEchogardenWorkerIPC(mainWindow);
+    void registerMagnifierIPC(mainWindow);
 
     registerAppLifecycle(createWindow);
 });
