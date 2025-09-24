@@ -1,11 +1,6 @@
 import {AudioIO, IoStreamWrite, SampleFormatFloat32} from "naudiodon";
-import ffmpeg from "ffmpeg-static";
-import {Readable} from "node:stream";
-import {ChildProcessByStdio} from "node:child_process";
 import {PlayerState} from "../../shared/PlayerState.js";
 import {PCMSource} from "./FLACStreamSource.js";
-
-const ffmpegPath = typeof ffmpeg === "string" ? ffmpeg : (ffmpeg as unknown as { default: string }).default;
 const BITDEPTH = 32;
 
 type PlayerSession = {
@@ -23,7 +18,6 @@ type PlayerSession = {
 
 export class Player {
     private session: PlayerSession | null = null;
-    private ffmpeg: ChildProcessByStdio<null, Readable, null> | null = null;
     private count: number = 0;
 
     onStateChange?: (state: PlayerState) => void;
@@ -69,10 +63,6 @@ export class Player {
         this.userPaused = false;
 
         void source.start();
-
-        if (!ffmpegPath) {
-            throw new Error("ffmpeg binary not found. Please check your system for compatibility!");
-        }
 
         const numberOfChannels = source.channels || 2;
         const sampleRate = source.sampleRate || 44100;
@@ -122,11 +112,6 @@ export class Player {
     }
 
     stop() {
-        if (this.ffmpeg) {
-            this.ffmpeg.kill("SIGKILL");
-            this.ffmpeg = null;
-        }
-
         if (this.session) {
             this.session.cancelled = true;
             this.session.ai.emit("drain");

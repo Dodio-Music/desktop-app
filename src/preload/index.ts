@@ -23,7 +23,7 @@ const windowControls: CustomWindowControls = {
 };
 
 const api = {
-    listLocalSongs: (folderPath: string) => ipcRenderer.invoke("songs:list", folderPath),
+    listLocalSongs: async(folderPath: string) => await ipcRenderer.invoke("songs:list", folderPath),
     loadTrack: (songPath: string) => ipcRenderer.invoke("player:load-local", songPath),
     loadTrackRemote: (trackInfo: TrackInfo) => ipcRenderer.invoke("player:load-remote", trackInfo),
     pauseOrResume: () => ipcRenderer.invoke("player:pause-or-resume"),

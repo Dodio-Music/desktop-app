@@ -4,7 +4,7 @@ import fsp from "fs/promises";
 import fs from "fs";
 import {parseFile} from "music-metadata";
 import {dialog} from "electron";
-import {store} from "./preferences.js";
+import {savePreferences} from "./preferences.js";
 
 export interface SongEntry {
     name: string;
@@ -33,7 +33,7 @@ async function setSongDirectory(mainWindow: BrowserWindow) {
     if(result.canceled) {
         return;
     }
-    store.set("localFilesDir", result.filePaths[0]);
+    await savePreferences({localFilesDir: result.filePaths[0]});
     mainWindow.webContents.send("preferences:update");
 }
 

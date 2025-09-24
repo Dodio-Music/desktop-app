@@ -1,8 +1,12 @@
 import {spawn} from "child_process";
 import {ChildProcessByStdio} from "node:child_process";
 import {Readable} from "node:stream";
-import ffmpeg from "ffmpeg-static";
-const ffmpegPath = typeof ffmpeg === "string" ? ffmpeg : (ffmpeg as unknown as { default: string }).default;
+import ffmpegStatic from "ffmpeg-static";
+import path from "path";
+const ffmpegPath =
+    process.env.NODE_ENV === "development"
+        ? (typeof ffmpegStatic === "string" ? ffmpegStatic : ffmpegStatic.default)
+        : path.join(process.resourcesPath, "ffmpeg", process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg");
 
 export interface PCMSource {
     read(offset: number, length: number): Buffer;
@@ -30,7 +34,7 @@ export class FLACStreamSource implements PCMSource {
     async start() {
         if(this.cancelled) return;
 
-        this.ffmpegProcess = spawn(ffmpegPath, [
+        this.ffmpegProcess = spawn(ffmpegPath!, [
             "-i", this.url,
             "-f", "f32le",
             "-acodec", "pcm_f32le",

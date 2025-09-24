@@ -5,6 +5,36 @@
     "main": "./out/main/index.js",
     "author": "underswing",
     "type": "module",
+    "build": {
+        "appId": "com.underswing.dodio",
+        "productName": "Dodio",
+        "directories": {
+            "output": "dist"
+        },
+        "files": [
+            "out/**/*",
+            "package.json",
+            "node_modules/ffmpeg-static/**/*"
+        ],
+        "extraResources": [
+            {
+                "from": "node_modules/ffmpeg-static",
+                "to": "ffmpeg",
+                "filter": [
+                    "**/*"
+                ]
+            }
+        ],
+        "win": {
+            "target": "nsis"
+        },
+        "mac": {
+            "target": "dmg"
+        },
+        "linux": {
+            "target": "AppImage"
+        }
+    },
     "scripts": {
         "lint": "eslint --cache .",
         "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
@@ -12,7 +42,7 @@
         "typecheck": "npm run typecheck:node && npm run typecheck:web",
         "start": "electron-vite preview",
         "dev": "electron-vite dev",
-        "build": "npm run typecheck && electron-vite build",
+        "build": "npm run typecheck && electron-vite build && electron-builder",
         "postinstall": "electron-builder install-app-deps",
         "build:unpack": "npm run build && electron-builder --dir",
         "build:win": "npm run build && electron-builder --win",
@@ -20,11 +50,11 @@
         "build:linux": "electron-vite build && electron-builder --linux"
     },
     "dependencies": {
+        "@echogarden/audio-io": "^0.4.2",
         "@electron-toolkit/preload": "^3.0.2",
         "@electron-toolkit/utils": "^4.0.0",
         "@phosphor-icons/react": "^2.1.10",
         "@reduxjs/toolkit": "^2.9.0",
-        "electron-store": "^10.1.0",
         "electron-updater": "^6.3.9",
         "ffmpeg-static": "^5.2.0",
         "music-metadata": "^11.8.3",
