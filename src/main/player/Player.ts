@@ -1,4 +1,4 @@
-import {AudioIO, IoStreamWrite, SampleFormatFloat32} from "naudiodon-no-segfault-handler";
+import {AudioIO, IoStreamWrite, SampleFormatFloat32} from "@underswing/naudiodon";
 import ffmpeg from "ffmpeg-static";
 import {Readable} from "node:stream";
 import {ChildProcessByStdio} from "node:child_process";
