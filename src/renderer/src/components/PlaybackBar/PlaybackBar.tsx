@@ -2,15 +2,42 @@ import s from "./PlaybackBar.module.css";
 import {useSelector} from "react-redux";
 import {RootState} from "../../redux/store";
 import {FaPause, FaPlay} from "react-icons/fa6";
+import {useEffect, useState, WheelEvent} from "react";
+import {FiVolume1, FiVolume2, FiVolumeX} from "react-icons/fi";
 
 const PlaybackBar = () => {
+    const [volume, setVolume] = useState(1);
+    const [muted, setMuted] = useState(false);
+    const displayVolume = round2Dec(!muted ? volume : 0);
+
+    useEffect(() => {
+        const v = !muted ? volume : 0;
+        window.api.setVolume(round2Dec(v));
+    }, [muted, volume]);
+
+    const handleDrag = (v: number) => {
+        setMuted(false);
+        setVolume(v);
+    }
+
+    const handleWheel = (e: WheelEvent<HTMLInputElement>) => {
+        const delta = e.deltaY < 0 ? 0.1 : -0.1;
+        const m = muted;
+        setMuted(false);
+        setVolume((prev) => {
+            let v = prev + delta;
+            if(m) v = 0 + delta;
+            return Math.min(1, Math.max(0, v));
+        });
+    }
+
     const {currentTrack, duration, currentTime, userPaused} = useSelector(
         (state: RootState) => state.player
-    )
+    );
 
     const pauseOrResume = () => {
         window.api.pauseOrResume();
-    }
+    };
 
     function formatTime(seconds: number): string {
         const totalSeconds = Math.round(seconds);
@@ -19,6 +46,9 @@ const PlaybackBar = () => {
         return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     }
 
+    const percent = round2Dec(displayVolume * 100);
+    const sliderBackground = `linear-gradient(to right, white 0%, white ${percent}%, #4c4c4c ${percent}%, #4c4c4c 100%)`;
+
     return (
         <div className={s.container}>
             <div>
@@ -26,17 +56,42 @@ const PlaybackBar = () => {
             </div>
             <div className={s.middleContainer}>
                 <div className={s.row}>
-                    <button className={s.play} onClick={() => pauseOrResume()}>{userPaused ? <FaPlay /> : <FaPause /> }</button>
+                    <button className={`${s.play} ${s.btnAnim}`} onClick={() => pauseOrResume()}>{userPaused ? <FaPlay/> :
+                        <FaPause/>}</button>
                 </div>
                 <div className={s.row}>
                     <p>{formatTime(currentTime)}</p>
                     <p>{formatTime(duration)}</p>
                 </div>
             </div>
-            <div>
+            <div className={s.rightContainer}>
+                <div className={s.volumeControl}>
+                    <button onClick={() => setMuted(!muted)} className={`${s.volBtn} ${s.btnAnim}`}>
+                        {displayVolume > 0 ? displayVolume >= 1 ?
+                            <FiVolume2 size={23}/>
+                            :
+                            <FiVolume1 size={23}/> : <FiVolumeX size={23}/>}
+                    </button>
+                    <input
+                        style={{background: sliderBackground}}
+                        className={s.slider}
+                        type="range"
+                        onWheel={(e) => handleWheel(e)}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={displayVolume}
+                        onChange={(e) => handleDrag(Number(e.target.value))}
+                    />
+                    <p>{percent}</p>
+                </div>
             </div>
         </div>
     );
 };
+
+const round2Dec = (v: number) => {
+    return Math.round(v * 100) / 100;
+}
 
 export default PlaybackBar;

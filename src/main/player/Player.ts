@@ -31,6 +31,7 @@ export class Player {
     private trackDuration: number = 0;
     private currentPath: string | null = null;
     private chunkerLoopPromise: Promise<void> | null = null;
+    private volume: number = 1;
 
     private async chunkerLoop(session: PlayerSession) {
         while (!session.cancelled) {
@@ -42,7 +43,7 @@ export class Player {
             if (!this.userPaused && validPCM) session.readOffset += buffer.length;
 
             if (validPCM) {
-                outputBuffer = this.applyVolume(outputBuffer, 1);
+                outputBuffer = this.applyVolume(outputBuffer, this.volume);
             }
 
             if (!session.ai.write(outputBuffer)) {
@@ -161,6 +162,20 @@ export class Player {
             userPaused: this.userPaused,
             duration: this.trackDuration
         });
+    }
+
+    setVolume(slider: number) {
+        slider = Math.max(0, Math.min(1, slider));
+        const minDb = -50;
+        const maxDb = 0;
+
+        if(slider <= 0) {
+            this.volume = 0;
+            return;
+        }
+
+        const db = minDb + (maxDb - minDb) * slider;
+        this.volume = Math.pow(10, db / 20);
     }
 
     applyVolume(buf: Buffer, volume: number): Buffer {

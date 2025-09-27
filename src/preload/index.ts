@@ -27,6 +27,7 @@ const api = {
     loadTrack: (songPath: string) => ipcRenderer.invoke("player:load-local", songPath),
     loadTrackRemote: (trackInfo: TrackInfo) => ipcRenderer.invoke("player:load-remote", trackInfo),
     pauseOrResume: () => ipcRenderer.invoke("player:pause-or-resume"),
+    setVolume: (volume: number) => ipcRenderer.invoke("player:set-volume", volume),
     zoomIn: () => ipcRenderer.invoke("zoom:in"),
     zoomOut: () => ipcRenderer.invoke("zoom:out"),
     resetZoom: () => ipcRenderer.invoke("zoom:reset"),
@@ -39,7 +40,7 @@ const api = {
     getPreferences: (): Promise<IPreferences> => ipcRenderer.invoke("preferences:get"),
     setPreferences: () => ipcRenderer.invoke("preferences:set"),
     onPreferencesUpdated: (callback: () => void) => ipcRenderer.on("preferences:update", callback),
-    showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory"),
+    showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory")
 };
 
 let playerUpdateCallback: ((data: PlayerState) => void) | null = null;

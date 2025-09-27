@@ -15,6 +15,10 @@ export const registerPlayerIPC = (mainWindow: BrowserWindow) => {
         await player.load(new FLACStreamSource(track.manifest.url, track.manifest.channels, track.manifest.sampleRate), track.duration);
     });
 
+    ipcMain.handle("player:set-volume", (_, volume: number) => {
+        player.setVolume(volume);
+    })
+
     ipcMain.handle("player:load-local", async(_, path: string) => {
         const metadata = await parseFile(path);
 
@@ -25,5 +29,5 @@ export const registerPlayerIPC = (mainWindow: BrowserWindow) => {
         await player.load(new FLACStreamSource(path, numberOfChannels, sampleRate), trackDuration);
     });
 
-    ipcMain.handle('player:pause-or-resume', () => player.pauseOrResume());
+    ipcMain.handle("player:pause-or-resume", () => player.pauseOrResume());
 }
