@@ -12,7 +12,7 @@ const getDeviceInfo = () => {
     const devices = getDevices();
     const defaultDevice = devices[defaultId];
 
-    return {sampleRate: defaultDevice.defaultSampleRate, channels: defaultDevice.maxOutputChannels};
+    return {sampleRate: defaultDevice.defaultSampleRate, channels: defaultDevice.maxOutputChannels, deviceId: defaultId};
 };
 
 export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
@@ -57,7 +57,8 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
                 pcmSab,
                 path: pathOrUrl,
                 writtenSab,
-                duration
+                duration,
+                devInfo
             }
         });
     };
@@ -79,6 +80,10 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
 
     ipcMain.handle("player:pause-or-resume", () => {
         playerProcess.postMessage({type: "pause-or-resume"});
+    });
+
+    ipcMain.handle("player:seek", (_, time: number) => {
+        playerProcess.postMessage({type: "seek", payload: time});
     });
 };
 

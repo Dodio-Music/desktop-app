@@ -6,11 +6,12 @@ import {useEffect, useState, WheelEvent} from "react";
 import {FiVolume1, FiVolume2, FiVolumeX} from "react-icons/fi";
 import SeekBar from "./SeekBar/SeekBar";
 import { useDebounce } from "@uidotdev/usehooks";
+import {formatTime} from "../../util/timeUtils";
 
 const PlaybackBar = () => {
     const [volume, setVolume] = useState(1);
     const [muted, setMuted] = useState(false);
-    const [waveformData, setWaveformData] = useState<number[]>([]);
+    // const [waveformData, setWaveformData] = useState<number[]>([]);
     const displayVolume = round2Dec(!muted ? volume : 0);
     const debouncedVolume = useDebounce(displayVolume, 1000);
 
@@ -27,15 +28,15 @@ const PlaybackBar = () => {
         void getSetPrefs();
     }, []);
 
-    useEffect(() => {
-        const unsubscribe = window.api.onWaveformData((peaks) => {
-            setWaveformData(prev => [...prev, ...peaks]);
-        });
-
-        return () => {
-            unsubscribe();
-        };
-    }, []);
+    // useEffect(() => {
+    //     const unsubscribe = window.api.onWaveformData((peaks) => {
+    //         setWaveformData(prev => [...prev, ...peaks]);
+    //     });
+    //
+    //     return () => {
+    //         unsubscribe();
+    //     };
+    // }, []);
 
     useEffect(() => {
         const v = !muted ? volume : 0;
@@ -66,13 +67,6 @@ const PlaybackBar = () => {
         window.api.pauseOrResume();
     };
 
-    function formatTime(seconds: number): string {
-        const totalSeconds = Math.round(seconds);
-        const minutes = Math.floor(totalSeconds / 60);
-        const secs = totalSeconds % 60;
-        return `${minutes.toString().padStart(1, "0")}:${secs.toString().padStart(2, "0")}`;
-    }
-
     const percent = round2Dec(displayVolume * 100);
     const sliderBackground = `linear-gradient(to right, white 0%, white ${percent}%, #4c4c4c ${percent}%, #4c4c4c 100%)`;
 
@@ -88,7 +82,7 @@ const PlaybackBar = () => {
                 </div>
                 <div className={s.row} id={s.middleRow}>
                     <p className={s.time}>{formatTime(currentTime)}</p>
-                    <SeekBar waveformData={waveformData}/>
+                    <SeekBar currentTime={currentTime} duration={duration}/* waveformData={waveformData}*//>
                     <p className={s.time}>{formatTime(duration)}</p>
                 </div>
             </div>

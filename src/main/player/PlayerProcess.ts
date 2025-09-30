@@ -1,8 +1,10 @@
 import {AudioIO, getDevices, getHostAPIs, IoStreamWrite, SampleFormatFloat32} from "@underswing/naudiodon";
 import {parentPort} from "node:worker_threads";
+import {clearInterval} from "node:timers";
 
 const BUFFER_SIZE = 1024;
-const MAX_QUEUE = 8;
+const MAX_QUEUE = 4;
+const IPC_UPDATE_INTERVAL = 200;
 
 type PlayerSession = {
     path: string;
@@ -14,11 +16,16 @@ type PlayerSession = {
 };
 
 interface DeviceInformation {
+    silentBuffer: Buffer;
+    samplesPerBuffer: number;
+    inactive: boolean;
+    out: OutputDevice;
+}
+
+interface OutputDevice {
     channels: number;
     sampleRate: number;
     deviceId: number;
-    silentBuffer: Buffer;
-    samplesPerBuffer: number;
 }
 
 type StateMessage = {
@@ -40,16 +47,19 @@ export class PlayerProcess {
     private userPaused = false;
     private volume: number = 1;
 
+    private stateLoopInterval: NodeJS.Timeout | null = null;
+
     private async chunkerLoop() {
-        while (this.deviceInfo && this.io) {
+        while (this.deviceInfo && this.io && !this.deviceInfo.inactive) {
             let outputBuf: Buffer = this.deviceInfo.silentBuffer;
 
             if (this.session && !this.userPaused) {
                 const {readOffset, pcm, writtenIndex} = this.session;
                 const written = Atomics.load(writtenIndex, 0);
-                const end = readOffset + this.deviceInfo.samplesPerBuffer;
+                let end = readOffset + this.deviceInfo.samplesPerBuffer;
+                end = Math.min(end, written);
 
-                if (end <= written) {
+                if (readOffset < end) {
                     const chunk = pcm.subarray(readOffset, end);
                     outputBuf = this.applyVolume(
                         Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength),
@@ -59,7 +69,6 @@ export class PlayerProcess {
                     this.session.readOffset += this.deviceInfo.samplesPerBuffer;
                     this.session.waitingForData = false;
                 } else {
-                    outputBuf = this.deviceInfo.silentBuffer;
                     this.session.waitingForData = true;
                 }
             }
@@ -70,8 +79,7 @@ export class PlayerProcess {
 
             if (Date.now() - this.lastActiveTime > this.idleTimeoutMs) {
                 console.log("Idle timeout reached. Shutting down audio device.");
-                await this.suspendAudioDevice();
-                return;
+                void this.suspendAudioDevice();
             }
 
             if (!this.io.write(outputBuf)) {
@@ -83,8 +91,6 @@ export class PlayerProcess {
                     this.io!.once("drain", onDrain);
                 });
             }
-
-            this.notifyState();
         }
 
         await new Promise<void>(resolve => {
@@ -94,46 +100,72 @@ export class PlayerProcess {
         });
     }
 
-    registerAudioDevice() {
+    private startStateLoop() {
+        this.stopStateLoop();
+
+        this.stateLoopInterval = setInterval(() => {
+            if (!this.userPaused) this.notifyState();
+        }, IPC_UPDATE_INTERVAL);
+    }
+
+    private stopStateLoop() {
+        if (this.stateLoopInterval) {
+            clearInterval(this.stateLoopInterval);
+            this.stateLoopInterval = null;
+        }
+    }
+
+    registerAudioDevice(devInfo?: OutputDevice) {
         if (this.io && this.deviceInfo) return;
 
-        const hostAPIs = getHostAPIs();
-        const defaultId = hostAPIs.HostAPIs[hostAPIs.defaultHostAPI].defaultOutput;
-        const devices = getDevices();
-        const defaultDevice = devices[defaultId];
+        if(!devInfo) {
+            const hostAPIs = getHostAPIs();
+            const defaultId = hostAPIs.HostAPIs[hostAPIs.defaultHostAPI].defaultOutput;
+            const devices = getDevices();
+            const defaultDevice = devices[defaultId];
+            devInfo = {
+                channels: defaultDevice.maxOutputChannels,
+                deviceId: defaultId,
+                sampleRate: defaultDevice.defaultSampleRate
+            };
+        }
 
-        const samplesPerBuffer = BUFFER_SIZE * defaultDevice.maxOutputChannels;
+        const samplesPerBuffer = BUFFER_SIZE * devInfo.channels;
         const silentChunk = Buffer.alloc(samplesPerBuffer * Float32Array.BYTES_PER_ELEMENT);
 
         this.deviceInfo = {
-            channels: defaultDevice.maxOutputChannels,
-            sampleRate: defaultDevice.defaultSampleRate,
-            deviceId: defaultId,
             samplesPerBuffer: samplesPerBuffer,
-            silentBuffer: silentChunk
+            silentBuffer: silentChunk,
+            inactive: false,
+            out: {
+                channels: devInfo.channels,
+                sampleRate: devInfo.sampleRate,
+                deviceId: devInfo.deviceId,
+            }
         };
 
         this.io = AudioIO({
             outOptions: {
-                channelCount: this.deviceInfo.channels,
+                channelCount: this.deviceInfo.out.channels,
                 sampleFormat: SampleFormatFloat32,
-                sampleRate: this.deviceInfo.sampleRate,
-                deviceId: this.deviceInfo.deviceId,
+                sampleRate: this.deviceInfo.out.sampleRate,
+                deviceId: this.deviceInfo.out.deviceId,
                 closeOnError: false,
                 maxQueue: MAX_QUEUE
             }
         });
         this.io.start();
+
         console.log("Buffer transfer latency is " + Intl.NumberFormat("en", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
-        }).format(BUFFER_SIZE / this.deviceInfo.sampleRate * MAX_QUEUE * 1000) + "ms.");
+        }).format(BUFFER_SIZE / this.deviceInfo.out.sampleRate * MAX_QUEUE * 1000) + "ms.");
 
         this.chunkerLoopPromise = this.chunkerLoop();
     }
 
     private async suspendAudioDevice() {
-        this.deviceInfo = null;
+        if(this.deviceInfo) this.deviceInfo.inactive = true;
         this.userPaused = true;
         if (this.chunkerLoopPromise) {
             await this.chunkerLoopPromise;
@@ -142,7 +174,7 @@ export class PlayerProcess {
         this.io = null;
     }
 
-    load(path: string, duration: number, pcm: Float32Array, writtenIndex: Int32Array) {
+    load(path: string, duration: number, pcm: Float32Array, writtenIndex: Int32Array, devInfo: OutputDevice) {
         this.userPaused = false;
 
         this.session = {
@@ -154,7 +186,10 @@ export class PlayerProcess {
             writtenIndex
         };
 
-        this.registerAudioDevice();
+        this.registerAudioDevice(devInfo);
+        this.notifyState();
+
+        this.startStateLoop();
     }
 
     pauseOrResume() {
@@ -166,6 +201,15 @@ export class PlayerProcess {
         } else {
             this.userPaused = true;
         }
+
+        this.notifyState();
+    }
+
+    seek(time: number) {
+        if(!this.session || !this.deviceInfo) return;
+
+        this.session.readOffset = this.toFrames(this.deviceInfo.out.channels, this.deviceInfo.out.sampleRate, time);
+        this.notifyState();
     }
 
     private sliderToAmplitude(slider: number): number {
@@ -179,7 +223,9 @@ export class PlayerProcess {
     }
 
     async shutdown() {
+        this.stopStateLoop();
         await this.suspendAudioDevice();
+        this.deviceInfo = null;
         this.session = null;
         this.userPaused = true;
 
@@ -199,7 +245,7 @@ export class PlayerProcess {
     private notifyState() {
         if (!this.deviceInfo || !this.session) return;
 
-        const currentTime = this.toSeconds(this.deviceInfo.channels, this.deviceInfo.sampleRate, this.session.readOffset) ?? 0;
+        const currentTime = this.toSeconds(this.deviceInfo.out.channels, this.deviceInfo.out.sampleRate, this.session.readOffset) ?? 0;
 
         const state: StateMessage = {
             currentTrack: this.session.path,
@@ -217,12 +263,15 @@ export class PlayerProcess {
     }
 
     applyVolume(buf: Buffer, volume: number): Buffer {
+        const out = Buffer.allocUnsafe(buf.length);
+
         for (let i = 0; i < buf.length; i += 4) {
             let sample = buf.readFloatLE(i);
             sample = Math.max(-1, Math.min(1, sample * volume));
-            buf.writeFloatLE(sample, i);
+            out.writeFloatLE(sample, i);
         }
-        return buf;
+
+        return out;
     }
 }
 
@@ -238,13 +287,14 @@ interface LoadPayload {
     duration: number;
     pcmSab: SharedArrayBuffer;
     writtenSab: SharedArrayBuffer;
+    devInfo: OutputDevice;
 }
 
 parentPort?.on("message", (msg: IMsg) => {
     switch (msg.type) {
         case "load": {
             const info = msg.payload as LoadPayload;
-            playerProcess.load(info.path, info.duration, new Float32Array(info.pcmSab), new Int32Array(info.writtenSab));
+            playerProcess.load(info.path, info.duration, new Float32Array(info.pcmSab), new Int32Array(info.writtenSab), info.devInfo);
             break;
         }
         case "set-volume": {
@@ -253,6 +303,10 @@ parentPort?.on("message", (msg: IMsg) => {
         }
         case "pause-or-resume": {
             playerProcess.pauseOrResume();
+            break;
+        }
+        case "seek": {
+            playerProcess.seek(msg.payload as number);
             break;
         }
         case "shutdown": {

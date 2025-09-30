@@ -28,6 +28,7 @@ const api = {
     loadTrackRemote: (trackInfo: TrackInfo) => ipcRenderer.invoke("player:load-remote", trackInfo),
     pauseOrResume: () => ipcRenderer.invoke("player:pause-or-resume"),
     setVolume: (volume: number) => ipcRenderer.invoke("player:set-volume", volume),
+    seek: (time: number) => ipcRenderer.invoke("player:seek", time),
     zoomIn: () => ipcRenderer.invoke("zoom:in"),
     zoomOut: () => ipcRenderer.invoke("zoom:out"),
     resetZoom: () => ipcRenderer.invoke("zoom:reset"),
