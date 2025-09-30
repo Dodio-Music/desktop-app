@@ -1,11 +1,11 @@
 import {BrowserWindow, ipcMain} from "electron";
-import {loadPreferences, savePreferences} from "../preferences.js";
+import {loadPreferences, setPreferences} from "../preferences.js";
 
 export const registerMagnifierIPC = async (mainWindow: BrowserWindow) => {
     let zoomFactor = (await loadPreferences()).zoomFactor;
 
     const updateZoomFactor = async () => {
-        await savePreferences({zoomFactor: zoomFactor});
+        await setPreferences({zoomFactor: zoomFactor});
         mainWindow.webContents.setZoomFactor(zoomFactor);
         mainWindow.webContents.send("zoom-factor-changed", zoomFactor);
     }

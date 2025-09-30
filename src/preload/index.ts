@@ -38,9 +38,14 @@ const api = {
         return () => ipcRenderer.removeListener("zoom-factor-changed", handler);
     },
     getPreferences: (): Promise<IPreferences> => ipcRenderer.invoke("preferences:get"),
-    setPreferences: () => ipcRenderer.invoke("preferences:set"),
+    setPreferences: (pref: Partial<IPreferences>) => ipcRenderer.invoke("preferences:set", pref),
     onPreferencesUpdated: (callback: () => void) => ipcRenderer.on("preferences:update", callback),
-    showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory")
+    showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory"),
+    onWaveformData: (cb: (peaks: number[]) => void) => {
+        const handler = (_ev: IpcRendererEvent, peaks: number[]) => cb(peaks);
+        ipcRenderer.on("waveform:data", handler);
+        return () => ipcRenderer.removeListener("waveform:data", handler);
+    }
 };
 
 let playerUpdateCallback: ((data: PlayerState) => void) | null = null;

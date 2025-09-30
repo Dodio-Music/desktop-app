@@ -5,7 +5,7 @@ import {registerWindowControlsIPC} from "./ipc/registerWindowControls.js";
 import {registerMagnifierIPC} from "./ipc/registerMagnifier.js";
 import {registerPreferencesIPC} from "./preferences.js";
 import {createMainWindow, registerAppLifecycle} from "./window.js";
-import {registerPlayerIPC} from "./ipc/registerPlayer.js";
+import {registerPlayerProcessIPC} from "./ipc/registerPlayerProcess.js";
 
 let mainWindow: BrowserWindow;
 
@@ -23,7 +23,7 @@ app.whenReady().then(() => {
     registerWindowControlsIPC();
     registerSongIndexer(mainWindow);
     registerPreferencesIPC();
-    registerPlayerIPC(mainWindow);
+    registerPlayerProcessIPC(mainWindow);
     void registerMagnifierIPC(mainWindow);
 
     registerAppLifecycle(createWindow);

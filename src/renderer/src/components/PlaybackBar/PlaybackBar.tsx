@@ -4,11 +4,38 @@ import {RootState} from "../../redux/store";
 import {FaPause, FaPlay} from "react-icons/fa6";
 import {useEffect, useState, WheelEvent} from "react";
 import {FiVolume1, FiVolume2, FiVolumeX} from "react-icons/fi";
+import SeekBar from "./SeekBar/SeekBar";
+import { useDebounce } from "@uidotdev/usehooks";
 
 const PlaybackBar = () => {
     const [volume, setVolume] = useState(1);
     const [muted, setMuted] = useState(false);
+    const [waveformData, setWaveformData] = useState<number[]>([]);
     const displayVolume = round2Dec(!muted ? volume : 0);
+    const debouncedVolume = useDebounce(displayVolume, 1000);
+
+    useEffect(() => {
+        window.api.setPreferences({volume, muted});
+    }, [debouncedVolume]);
+
+    useEffect(() => {
+        const getSetPrefs = async () => {
+            const prefs = await window.api.getPreferences();
+            setVolume(prefs.volume);
+            setMuted(prefs.muted);
+        }
+        void getSetPrefs();
+    }, []);
+
+    useEffect(() => {
+        const unsubscribe = window.api.onWaveformData((peaks) => {
+            setWaveformData(prev => [...prev, ...peaks]);
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, []);
 
     useEffect(() => {
         const v = !muted ? volume : 0;
@@ -43,7 +70,7 @@ const PlaybackBar = () => {
         const totalSeconds = Math.round(seconds);
         const minutes = Math.floor(totalSeconds / 60);
         const secs = totalSeconds % 60;
-        return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+        return `${minutes.toString().padStart(1, "0")}:${secs.toString().padStart(2, "0")}`;
     }
 
     const percent = round2Dec(displayVolume * 100);
@@ -57,11 +84,12 @@ const PlaybackBar = () => {
             <div className={s.middleContainer}>
                 <div className={s.row}>
                     <button className={`${s.play} ${s.btnAnim}`} onClick={() => pauseOrResume()}>{userPaused ? <FaPlay/> :
-                        <FaPause/>}</button>
+                        <FaPause size={27}/>}</button>
                 </div>
-                <div className={s.row}>
-                    <p>{formatTime(currentTime)}</p>
-                    <p>{formatTime(duration)}</p>
+                <div className={s.row} id={s.middleRow}>
+                    <p className={s.time}>{formatTime(currentTime)}</p>
+                    <SeekBar waveformData={waveformData}/>
+                    <p className={s.time}>{formatTime(duration)}</p>
                 </div>
             </div>
             <div className={s.rightContainer}>

@@ -3,16 +3,15 @@ import {ChildProcessByStdio} from "node:child_process";
 import {Readable} from "node:stream";
 import ffmpegStatic from "ffmpeg-static";
 import path from "path";
+
 const ffmpegPath =
     process.env.NODE_ENV === "development"
         ? (typeof ffmpegStatic === "string" ? ffmpegStatic : ffmpegStatic.default)
         : path.join(process.resourcesPath, "ffmpeg", process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg");
 
 export interface PCMSource {
-    read(offset: number, length: number): Buffer;
     start(): Promise<void>;
     cancel(): void;
-    size(): number;
     append(chunk: Buffer): void;
     url: string;
     channels: number;
@@ -20,19 +19,44 @@ export interface PCMSource {
 }
 
 export class FLACStreamSource implements PCMSource {
-    private buffers: Buffer[] = [];
-    private length = 0;
     private ffmpegProcess: ChildProcessByStdio<null, Readable, null> | null = null;
     private cancelled = false;
+    private writeOffset = 0;
+    private pcm?: Float32Array;
+    private writtenIndex?: Int32Array;
+    // private numPeaks = 700;
+    // private waveformBuckets: Float32Array = new Float32Array(this.numPeaks);
+    // private currentBucketIndex = 0;
+    // private currentBucketOffset = 0;
+    // private bucketSize = 0;
+    // private lastEmit = Date.now();
+
+    // private initializeWaveformBuckets(durationSeconds: number) {
+    //     const totalSamples = Math.ceil(durationSeconds * this.sampleRate);
+    //     this.bucketSize = Math.ceil(totalSamples / this.numPeaks);
+    //     this.waveformBuckets = new Float32Array(this.numPeaks);
+    //     this.currentBucketIndex = 0;
+    //     this.currentBucketOffset = 0;
+    // }
+
+    // public startWaveform(durationSeconds: number) {
+    //     this.initializeWaveformBuckets(durationSeconds);
+    // }
 
     constructor(
         public url: string,
         public channels = 2,
-        public sampleRate = 44100
-    ) {}
+        public sampleRate = 44100,
+        public pcmSab?: SharedArrayBuffer,
+        public writtenSab?: SharedArrayBuffer
+        // private mainWindow: BrowserWindow | null
+    ) {
+        if (pcmSab) this.pcm = new Float32Array(pcmSab);
+        if (writtenSab) this.writtenIndex = new Int32Array(writtenSab);
+    }
 
     async start() {
-        if(this.cancelled) return;
+        if (this.cancelled) return;
 
         this.ffmpegProcess = spawn(ffmpegPath!, [
             "-i", this.url,
@@ -53,44 +77,55 @@ export class FLACStreamSource implements PCMSource {
     }
 
     append(chunk: Buffer) {
-        this.buffers.push(chunk);
-        this.length += chunk.length;
-    }
+        if (!this.pcm) return;
 
-    read(offset: number, length: number): Buffer {
-        if (offset >= this.length) return Buffer.alloc(0);
+        const floatChunk = new Float32Array(chunk.buffer, chunk.byteOffset, chunk.byteLength / Float32Array.BYTES_PER_ELEMENT);
 
-        const out = Buffer.alloc(Math.min(length, this.length - offset));
-        let copied = 0;
-        let remaining = out.length;
-        let pos = 0;
+        this.pcm.set(floatChunk, this.writeOffset);
+        this.writeOffset += floatChunk.length;
 
-        for (const buffer of this.buffers) {
-            if (offset >= pos + buffer.length) {
-                pos += buffer.length;
-                continue;
-            }
-
-            const start = Math.max(0, offset - pos);
-            const toCopy = Math.min(buffer.length - start, remaining);
-            buffer.copy(out, copied, start, start + toCopy);
-
-            copied += toCopy;
-            remaining -= toCopy;
-            pos += buffer.length;
-
-            if (remaining <= 0) break;
+        if(this.writtenIndex) {
+            Atomics.store(this.writtenIndex, 0, this.writeOffset);
         }
-
-        return out;
-    }
-
-    size() {
-        return this.length;
+        //this.processChunkForWaveform(chunk);
     }
 
     cancel() {
         this.cancelled = true;
         this.ffmpegProcess?.kill("SIGKILL");
     }
+
+    // private processChunkForWaveform(chunk: Buffer) {
+    //     if (!this.waveformBuckets) return;
+    //
+    //     const floatData = new Float32Array(chunk.buffer, chunk.byteOffset, chunk.length / 4);
+    //
+    //     for (let i = 0; i < floatData.length; i += this.channels) {
+    //         if (this.currentBucketIndex >= this.numPeaks) break;
+    //
+    //         let sample = 0;
+    //         for (let c = 0; c < this.channels; c++) {
+    //             sample = Math.max(sample, Math.abs(floatData[i + c]));
+    //         }
+    //
+    //         if (sample > this.waveformBuckets[this.currentBucketIndex]) {
+    //             this.waveformBuckets[this.currentBucketIndex] = sample;
+    //         }
+    //
+    //         this.currentBucketOffset++;
+    //
+    //         if (this.currentBucketOffset >= this.bucketSize) {
+    //             this.currentBucketOffset = 0;
+    //             this.currentBucketIndex++;
+    //         }
+    //     }
+    //
+    //     if (Date.now() - this.lastEmit > 50) {
+    //         const peaksToSend = this.waveformBuckets.slice(0, this.currentBucketIndex + 1);
+    //         this.lastEmit = Date.now();
+    //         if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+    //             this.mainWindow.webContents.send("waveform:data", peaksToSend);
+    //         }
+    //     }
+    // }
 }
