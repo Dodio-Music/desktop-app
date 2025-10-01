@@ -46,6 +46,14 @@ const api = {
         const handler = (_ev: IpcRendererEvent, peaks: number[]) => cb(peaks);
         ipcRenderer.on("waveform:data", handler);
         return () => ipcRenderer.removeListener("waveform:data", handler);
+    },
+    onPlayerUpdate: (cb: (data: PlayerState) => void) => {
+        playerUpdateCallback = cb;
+    },
+    onTrackChange: (cb: () => void) => {
+        const handler = () => cb();
+        ipcRenderer.on("player:track-change", handler);
+        return () => ipcRenderer.removeListener("player:track-change", handler);
     }
 };
 
@@ -63,8 +71,5 @@ contextBridge.exposeInMainWorld("electron", {
 });
 
 contextBridge.exposeInMainWorld("api", {
-    ...api,
-    onPlayerUpdate: (cb: (data: PlayerState) => void) => {
-        playerUpdateCallback = cb;
-    }
+    ...api
 });

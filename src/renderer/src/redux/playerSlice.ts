@@ -7,6 +7,9 @@ const initialState: PlayerState = {
     currentTime: 0,
     duration: 0,
     waitingForData: false,
+    sourceType: "remote",
+    latency: 0,
+    trackChangeToken: 0,
 };
 
 const playerSlice = createSlice({
@@ -16,8 +19,11 @@ const playerSlice = createSlice({
         updatePlayerState(state, action: PayloadAction<PlayerState>) {
             return { ...state, ...action.payload };
         },
+        markTrackChange(state) {
+            state.trackChangeToken++;
+        }
     },
 });
 
-export const { updatePlayerState } = playerSlice.actions;
+export const { updatePlayerState, markTrackChange } = playerSlice.actions;
 export default playerSlice.reducer;

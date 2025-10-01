@@ -5,6 +5,7 @@ import playerProcessPath from "../player/PlayerProcess?modulePath";
 import {getDevices, getHostAPIs} from "@underswing/naudiodon";
 import {Worker} from "node:worker_threads";
 import {FLACStreamSource} from "../player/FlacStreamSource.js";
+import {SourceType} from "../../shared/PlayerState.js";
 
 const getDeviceInfo = () => {
     const hostAPIs = getHostAPIs();
@@ -21,7 +22,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
 
     playerProcess.on("message", async (state) => {
         if (!mainWindow.isDestroyed() && mainWindow.webContents) {
-            mainWindow.webContents.send("player:update", state);
+            mainWindow.webContents.send("player:update", state.state);
         }
     });
 
@@ -38,7 +39,9 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
         app.exit();
     });
 
-    const loadTrackInWorker = async (pathOrUrl: string, duration: number) => {
+    const loadTrackInWorker = async (pathOrUrl: string, duration: number, sourceType: SourceType) => {
+        mainWindow.webContents.send("player:track-change");
+
         const devInfo = getDeviceInfo();
         const totalSamples = Math.ceil(duration * devInfo.sampleRate * devInfo.channels);
 
@@ -48,7 +51,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
         writtenIndex[0] = 0;
 
         if (source) source.cancel();
-        source = new FLACStreamSource(pathOrUrl, devInfo.channels, devInfo.sampleRate, pcmSab, writtenSab);
+        source = new FLACStreamSource(pathOrUrl, devInfo.channels, devInfo.sampleRate, duration, pcmSab, writtenSab, mainWindow, sourceType);
         void source.start();
 
         playerProcess.postMessage({
@@ -58,20 +61,21 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
                 path: pathOrUrl,
                 writtenSab,
                 duration,
-                devInfo
+                devInfo,
+                sourceType
             }
         });
     };
 
     ipcMain.handle("player:load-remote", async (_, track: TrackInfo) => {
-        await loadTrackInWorker(track.manifest.url, track.duration);
+        await loadTrackInWorker(track.manifest.url, track.duration, "remote");
     });
 
     ipcMain.handle("player:load-local", async (_, pathToFile: string) => {
         const metadata = await parseFile(pathToFile);
         const duration = metadata.format.duration ?? 0;
 
-        await loadTrackInWorker(pathToFile, duration);
+        await loadTrackInWorker(pathToFile, duration, "local");
     });
 
     ipcMain.handle("player:set-volume", (_, volume: number) => {

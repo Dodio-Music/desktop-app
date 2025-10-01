@@ -1,15 +1,27 @@
 import s from "../PlaybackBar.module.css";
 import {MouseEvent, FC, useEffect, useRef, useState} from "react";
 import {formatTime} from "../../../util/timeUtils";
+import {SourceType} from "../../../../../shared/PlayerState";
+import {useSelector} from "react-redux";
+import {RootState} from "../../../redux/store";
 
 interface SeekBarProps {
-    //waveformData: number[];
     currentTime: number;
     duration: number;
+    sourceType: SourceType;
 }
 
-const SeekBar: FC<SeekBarProps> = ({currentTime, duration}) => {
-    //const canvasRef = useRef<HTMLCanvasElement>(null);
+enum SeekBarDisplayStyle {
+    DEFAULT, WAVEFORM
+}
+
+const SeekBar: FC<SeekBarProps> = ({currentTime, duration, sourceType}) => {
+    // CUSTOMIZABLE
+    const [displayStyle] = useState(SeekBarDisplayStyle.DEFAULT);
+    const [seekbarWidth] = useState(600);
+
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [peaks, setPeaks] = useState<number[]>([]);
     const [coverUpWidth, setCoverUpWidth] = useState(1);
     const [hoverX, setHoverX] = useState<number>(0);
     const [isDragging, setIsDragging] = useState(false);
@@ -17,6 +29,12 @@ const SeekBar: FC<SeekBarProps> = ({currentTime, duration}) => {
     const barRef = useRef<HTMLDivElement>(null);
     const hoverTimeRef = useRef<number | null>(null);
     const lastSeekRef = useRef<number | null>(null);
+    const seekbarHeight = displayStyle === SeekBarDisplayStyle.WAVEFORM ? "30px" : "5px";
+    const {trackChangeToken, latency} = useSelector((state: RootState) => state.player);
+
+    useEffect(() => {
+        //setDisplayStyle(sourceType === "local" ? SeekBarDisplayStyle.WAVEFORM : SeekBarDisplayStyle.DEFAULT);
+    }, [sourceType]);
 
     useEffect(() => {
         if (isDragging) return;
@@ -24,7 +42,7 @@ const SeekBar: FC<SeekBarProps> = ({currentTime, duration}) => {
         if (lastSeekRef.current !== null) {
             const percent = lastSeekRef.current / duration;
             setCoverUpWidth(1 - percent);
-            if (Math.abs(currentTime - lastSeekRef.current) < 0.05) {
+            if (Math.abs((currentTime + latency) - lastSeekRef.current) < 0.05) {
                 lastSeekRef.current = null;
             }
         } else {
@@ -32,28 +50,54 @@ const SeekBar: FC<SeekBarProps> = ({currentTime, duration}) => {
         }
     }, [currentTime, duration, isDragging]);
 
-    /*useEffect(() => {
+    useEffect(() => {
+        drawWaveform();
+    }, [peaks, displayStyle]);
+
+    const drawWaveform = () => {
         const canvas = canvasRef.current;
-        if (!canvas || !waveformData?.length) return;
+        const ctx = canvasRef.current?.getContext("2d");
+        if (!ctx || !canvas) return;
 
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
+        const {width, height} = canvas;
+        ctx.clearRect(0, 0, width, height);
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if(displayStyle !== SeekBarDisplayStyle.WAVEFORM) return;
+        if(!peaks) return;
 
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
+        const middle = height / 2;
+        const barWidth = width / peaks.length;
+        const minHeightFraction = 0.075;
 
-        const { width, height } = canvas;
-        for (let i = 0; i < waveformData.length; i++) {
-            const x = (i / waveformData.length) * width;
-            const y = (1 - waveformData[i]) * height * 0.5;
-            ctx.lineTo(x, y);
-        }
+        const drawPeaks = () => {
+            if (!peaks) return;
 
-        ctx.stroke();
-    }, [waveformData]);*/
+            for (let i = 0; i < peaks.length; i++) {
+                let value = peaks[i] * 0.95;
+                value = Math.max(value, minHeightFraction);
+                const barHeight = value * height;
+                const x = i * barWidth;
+                ctx.fillRect(x, middle - barHeight / 2, barWidth, barHeight);
+            }
+        };
+
+        ctx.fillStyle = "rgb(255,255,255)";
+        drawPeaks();
+    };
+
+    useEffect(() => {
+        const unsubscribe = window.api.onWaveformData((peaks) => {
+            setPeaks(peaks);
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, []);
+
+    useEffect(() => {
+        setPeaks([]);
+    }, [trackChangeToken]);
 
     const updateHover = (clientX: number, dragging: boolean) => {
         if (!barRef.current || duration <= 0) return;
@@ -86,7 +130,7 @@ const SeekBar: FC<SeekBarProps> = ({currentTime, duration}) => {
 
         document.addEventListener("mousemove", handleMove);
         document.addEventListener("mouseup", handleUp);
-    }
+    };
 
     const handleMouseEnter = () => setIsHovering(true);
     const handleMouseLeave = () => {
@@ -95,19 +139,21 @@ const SeekBar: FC<SeekBarProps> = ({currentTime, duration}) => {
     };
 
     return (
-        <div className={s.seekBar}
-             onMouseEnter={handleMouseEnter}
-             onMouseLeave={handleMouseLeave}
-             onMouseDown={handleMouseDown}
-             onMouseMove={(e) => {
-                 updateHover(e.clientX, false);
-             }}
-             ref={barRef}>
-            <div className={s.barWrapper}>
-                <canvas className={s.canvas}/>
+        <div
+            style={{width: seekbarWidth}}
+            className={s.seekBar}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onMouseDown={handleMouseDown}
+            onMouseMove={(e) => {
+                updateHover(e.clientX, false);
+            }}
+            ref={barRef}>
+            <div className={s.barWrapper} style={{height: seekbarHeight}}>
+                <canvas className={s.canvas} ref={canvasRef} width={seekbarWidth} height={seekbarHeight}
+                        style={displayStyle === SeekBarDisplayStyle.WAVEFORM ? {backgroundColor: "transparent"} : {borderRadius: "2px"}}/>
                 <div style={{
-                    transform: `scaleX(${coverUpWidth})`,
-                    transformOrigin: "right center",
+                    transform: `scaleX(${coverUpWidth})`
                 }} className={s.coverUp}/>
                 {(isDragging || isHovering) && hoverTimeRef.current !== null && (
                     <div

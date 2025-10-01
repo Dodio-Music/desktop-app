@@ -3,7 +3,7 @@ import {createRoot} from "react-dom/client";
 import App from "./App";
 import {HashRouter} from "react-router-dom";
 import {store} from "./redux/store";
-import {updatePlayerState} from "./redux/playerSlice";
+import {markTrackChange, updatePlayerState} from "./redux/playerSlice";
 import {Provider} from "react-redux";
 
 createRoot(document.getElementById("root")!).render(
@@ -19,3 +19,7 @@ createRoot(document.getElementById("root")!).render(
 window.api.onPlayerUpdate((state) => {
     store.dispatch(updatePlayerState(state));
 });
+
+window.api.onTrackChange(() => {
+    store.dispatch(markTrackChange());
+})

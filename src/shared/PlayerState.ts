@@ -4,4 +4,9 @@ export interface PlayerState {
     currentTime: number;
     duration: number;
     waitingForData: boolean;
+    sourceType: SourceType;
+    latency: number;
+    trackChangeToken: number;
 }
+
+export type SourceType = "remote" | "local";

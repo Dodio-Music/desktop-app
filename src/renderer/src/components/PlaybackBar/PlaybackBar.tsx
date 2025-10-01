@@ -11,9 +11,11 @@ import {formatTime} from "../../util/timeUtils";
 const PlaybackBar = () => {
     const [volume, setVolume] = useState(1);
     const [muted, setMuted] = useState(false);
-    // const [waveformData, setWaveformData] = useState<number[]>([]);
     const displayVolume = round2Dec(!muted ? volume : 0);
     const debouncedVolume = useDebounce(displayVolume, 1000);
+    const {currentTrack, duration, currentTime, userPaused, sourceType} = useSelector(
+        (state: RootState) => state.player
+    );
 
     useEffect(() => {
         window.api.setPreferences({volume, muted});
@@ -27,16 +29,6 @@ const PlaybackBar = () => {
         }
         void getSetPrefs();
     }, []);
-
-    // useEffect(() => {
-    //     const unsubscribe = window.api.onWaveformData((peaks) => {
-    //         setWaveformData(prev => [...prev, ...peaks]);
-    //     });
-    //
-    //     return () => {
-    //         unsubscribe();
-    //     };
-    // }, []);
 
     useEffect(() => {
         const v = !muted ? volume : 0;
@@ -59,10 +51,6 @@ const PlaybackBar = () => {
         });
     }
 
-    const {currentTrack, duration, currentTime, userPaused} = useSelector(
-        (state: RootState) => state.player
-    );
-
     const pauseOrResume = () => {
         window.api.pauseOrResume();
     };
@@ -82,7 +70,7 @@ const PlaybackBar = () => {
                 </div>
                 <div className={s.row} id={s.middleRow}>
                     <p className={s.time}>{formatTime(currentTime)}</p>
-                    <SeekBar currentTime={currentTime} duration={duration}/* waveformData={waveformData}*//>
+                    <SeekBar currentTime={currentTime} duration={duration} sourceType={sourceType}/>
                     <p className={s.time}>{formatTime(duration)}</p>
                 </div>
             </div>

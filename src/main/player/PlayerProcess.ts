@@ -1,6 +1,7 @@
 import {AudioIO, getDevices, getHostAPIs, IoStreamWrite, SampleFormatFloat32} from "@underswing/naudiodon";
 import {parentPort} from "node:worker_threads";
 import {clearInterval} from "node:timers";
+import {SourceType} from "../../shared/PlayerState.js";
 
 const BUFFER_SIZE = 1024;
 const MAX_QUEUE = 4;
@@ -13,6 +14,7 @@ type PlayerSession = {
     duration: number;
     pcm: Float32Array;
     writtenIndex: Int32Array;
+    sourceType: SourceType;
 };
 
 interface DeviceInformation {
@@ -34,6 +36,8 @@ type StateMessage = {
     waitingForData: boolean;
     userPaused: boolean;
     duration: number;
+    latency: number;
+    sourceType: SourceType;
 };
 
 export class PlayerProcess {
@@ -174,7 +178,7 @@ export class PlayerProcess {
         this.io = null;
     }
 
-    load(path: string, duration: number, pcm: Float32Array, writtenIndex: Int32Array, devInfo: OutputDevice) {
+    load(path: string, duration: number, pcm: Float32Array, writtenIndex: Int32Array, devInfo: OutputDevice, sourceType: SourceType) {
         this.userPaused = false;
 
         this.session = {
@@ -183,7 +187,8 @@ export class PlayerProcess {
             duration,
             path,
             pcm,
-            writtenIndex
+            writtenIndex,
+            sourceType
         };
 
         this.registerAudioDevice(devInfo);
@@ -245,17 +250,32 @@ export class PlayerProcess {
     private notifyState() {
         if (!this.deviceInfo || !this.session) return;
 
-        const currentTime = this.toSeconds(this.deviceInfo.out.channels, this.deviceInfo.out.sampleRate, this.session.readOffset) ?? 0;
+        const queuedLatencyFrames =
+            this.deviceInfo.samplesPerBuffer * MAX_QUEUE;
+        const latencySeconds = this.toSeconds(
+            this.deviceInfo.out.channels,
+            this.deviceInfo.out.sampleRate,
+            queuedLatencyFrames
+        );
+
+        const currentTime =
+            this.toSeconds(
+                this.deviceInfo.out.channels,
+                this.deviceInfo.out.sampleRate,
+                this.session.readOffset
+            ) - latencySeconds;
 
         const state: StateMessage = {
             currentTrack: this.session.path,
-            currentTime,
+            currentTime: Math.max(0, currentTime),
             waitingForData: this.session.waitingForData,
             userPaused: this.userPaused,
-            duration: this.session.duration
+            duration: this.session.duration,
+            sourceType: this.session.sourceType,
+            latency: latencySeconds
         };
 
-        parentPort?.postMessage(state);
+        parentPort?.postMessage({type: "player-state", state});
     }
 
     setVolume(slider: number) {
@@ -288,13 +308,14 @@ interface LoadPayload {
     pcmSab: SharedArrayBuffer;
     writtenSab: SharedArrayBuffer;
     devInfo: OutputDevice;
+    sourceType: SourceType;
 }
 
 parentPort?.on("message", (msg: IMsg) => {
     switch (msg.type) {
         case "load": {
             const info = msg.payload as LoadPayload;
-            playerProcess.load(info.path, info.duration, new Float32Array(info.pcmSab), new Int32Array(info.writtenSab), info.devInfo);
+            playerProcess.load(info.path, info.duration, new Float32Array(info.pcmSab), new Int32Array(info.writtenSab), info.devInfo, info.sourceType);
             break;
         }
         case "set-volume": {
