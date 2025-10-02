@@ -13,7 +13,7 @@ const getDeviceInfo = () => {
     const devices = getDevices();
     const defaultDevice = devices[defaultId];
 
-    return {sampleRate: defaultDevice.defaultSampleRate, channels: Math.max(defaultDevice.maxOutputChannels, 2), deviceId: defaultId};
+    return {sampleRate: defaultDevice.defaultSampleRate, channels: Math.min(defaultDevice.maxOutputChannels, 2), deviceId: defaultId};
 };
 
 export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
