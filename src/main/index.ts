@@ -2,7 +2,6 @@ import { electronApp, optimizer } from "@electron-toolkit/utils";
 import { app, BrowserWindow } from "electron";
 import { registerAuthIPC } from "./auth.js";
 import { registerMagnifierIPC } from "./ipc/registerMagnifier.js";
-import { registerPlayerIPC } from "./ipc/registerPlayer.js";
 import { registerPlayerProcessIPC } from "./ipc/registerPlayerProcess.js";
 import { registerWindowControlsIPC } from "./ipc/registerWindowControls.js";
 import { registerPreferencesIPC } from "./preferences.js";
@@ -27,7 +26,6 @@ app.whenReady().then(() => {
     registerPreferencesIPC();
     registerPlayerProcessIPC(mainWindow);
     registerAuthIPC();
-    registerPlayerIPC(mainWindow);
     void registerMagnifierIPC(mainWindow);
 
     registerAppLifecycle(createWindow);

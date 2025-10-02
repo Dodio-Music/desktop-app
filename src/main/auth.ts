@@ -1,8 +1,8 @@
 import {app, ipcMain} from "electron";
 import path from "path";
 import fs from "fs/promises";
-import safeStorage = Electron.safeStorage;
 import {IAuth} from "../shared/Typing.js";
+import {safeStorage} from "electron"
 
 export const authPath = path.join(app.getPath("userData"), "auth.json");
 
