@@ -56,6 +56,7 @@
         "@reduxjs/toolkit": "^2.9.0",
         "@uidotdev/usehooks": "^2.4.1",
         "@underswing/naudiodon": "github:underswing/naudiodon",
+        "axios": "^1.12.2",
         "electron-updater": "^6.3.9",
         "ffmpeg-static": "^5.2.0",
         "music-metadata": "^11.8.3",
