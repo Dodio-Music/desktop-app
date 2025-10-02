@@ -66,7 +66,7 @@ export class FLACStreamSource implements PCMSource {
             "-i", this.url,
             "-f", "f32le",
             "-acodec", "pcm_f32le",
-            "-ac", `${this.channels}`,
+            "-ac", `${Math.max(this.channels, 2)}`,
             "-ar", `${this.sampleRate}`,
             "pipe:1"
         ], {stdio: ["ignore", "pipe", "ignore"]});
