@@ -4,6 +4,7 @@ import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerState} from "../shared/PlayerState.js";
 import {IPreferences} from "../main/preferences.js";
 import {TrackInfo} from "../shared/TrackInfo.js";
+import {IAuth} from "../main/auth.js";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -38,6 +39,8 @@ const api = {
         ipcRenderer.on("zoom-factor-changed", handler);
         return () => ipcRenderer.removeListener("zoom-factor-changed", handler);
     },
+    getAuth: (): Promise<IAuth> => ipcRenderer.invoke("auth:get"),
+    setAuth: () => ipcRenderer.invoke("auth:set"),
     getPreferences: (): Promise<IPreferences> => ipcRenderer.invoke("preferences:get"),
     setPreferences: (pref: Partial<IPreferences>) => ipcRenderer.invoke("preferences:set", pref),
     onPreferencesUpdated: (callback: () => void) => ipcRenderer.on("preferences:update", callback),

@@ -15,6 +15,8 @@ const Sidebar = () => {
                 <NavButton url={"/collection/albums"}><BiAlbum id={s.album}/> Liked Albums</NavButton>
                 <NavButton url={"/collection/artists"}><PiMicrophoneStageBold id={s.artist}/> Followed
                     Artists</NavButton>
+                <NavButton url={"/collection/login"}><PiMicrophoneStageBold/> Followed
+                    Artists</NavButton>
             </div>
         </div>
     );
