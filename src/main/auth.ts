@@ -5,7 +5,6 @@ import {IAuth} from "../shared/Typing.js";
 import {safeStorage} from "electron"
 
 export const authPath = path.join(app.getPath("userData"), "auth.json");
-
 export async function loadAuth(): Promise<IAuth> {
     try {
         const data = await fs.readFile(authPath);
