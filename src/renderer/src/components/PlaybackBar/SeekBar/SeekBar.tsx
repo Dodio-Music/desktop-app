@@ -140,7 +140,7 @@ const SeekBar: FC<SeekBarProps> = ({currentTime, duration, sourceType}) => {
 
     return (
         <div
-            style={{width: seekbarWidth}}
+            style={{width: seekbarWidth, padding: displayStyle === SeekBarDisplayStyle.WAVEFORM ? 0 : "10px 0"}}
             className={s.seekBar}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}

@@ -39,6 +39,9 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
         app.exit();
     });
 
+    mainWindow.on("focus", () => playerProcess.postMessage({type: "focus-update", payload: true}));
+    mainWindow.on("blur", () => playerProcess.postMessage({type: "focus-update", payload: false}));
+
     const loadTrackInWorker = async (pathOrUrl: string, duration: number, sourceType: SourceType) => {
         mainWindow.webContents.send("player:track-change");
 

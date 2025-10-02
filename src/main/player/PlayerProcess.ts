@@ -3,9 +3,10 @@ import {parentPort} from "node:worker_threads";
 import {clearInterval} from "node:timers";
 import {SourceType} from "../../shared/PlayerState.js";
 
-const BUFFER_SIZE = 1024;
+const BUFFER_SIZE = 512;
 const MAX_QUEUE = 4;
 const IPC_UPDATE_INTERVAL = 200;
+const IDLE_TIMEOUT_MS = 2 * 60 * 1000;
 
 type PlayerSession = {
     path: string;
@@ -46,9 +47,9 @@ export class PlayerProcess {
     private chunkerLoopPromise: Promise<void> | null = null;
     private session: PlayerSession | null = null;
     private lastActiveTime: number = Date.now();
-    private idleTimeoutMs: number = 2 * 60 * 1000;
+    public focused = true;
 
-    private userPaused = false;
+    private userPaused = true;
     private volume: number = 1;
 
     private stateLoopInterval: NodeJS.Timeout | null = null;
@@ -77,11 +78,11 @@ export class PlayerProcess {
                 }
             }
 
-            if (!this.userPaused) {
+            if (!this.userPaused || this.focused) {
                 this.lastActiveTime = Date.now();
             }
 
-            if (Date.now() - this.lastActiveTime > this.idleTimeoutMs) {
+            if (Date.now() - this.lastActiveTime > IDLE_TIMEOUT_MS) {
                 console.log("Idle timeout reached. Shutting down audio device.");
                 void this.suspendAudioDevice();
             }
@@ -293,6 +294,13 @@ export class PlayerProcess {
 
         return out;
     }
+
+    setFocused(focused: boolean) {
+        this.focused = focused;
+        if(this.focused) {
+            this.registerAudioDevice();
+        }
+    }
 }
 
 const playerProcess = new PlayerProcess();
@@ -332,6 +340,11 @@ parentPort?.on("message", (msg: IMsg) => {
         }
         case "shutdown": {
             void playerProcess.shutdown();
+            break;
+        }
+        case "focus-update": {
+            playerProcess.setFocused(msg.payload as boolean);
+            break;
         }
     }
 });
