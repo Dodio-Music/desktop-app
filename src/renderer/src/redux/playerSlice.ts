@@ -10,6 +10,7 @@ const initialState: PlayerState = {
     sourceType: "remote",
     latency: 0,
     trackChangeToken: 0,
+    playbackRunning: false
 };
 
 const playerSlice = createSlice({

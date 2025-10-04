@@ -7,7 +7,13 @@ import {Worker} from "node:worker_threads";
 import {FLACStreamSource} from "../player/FlacStreamSource.js";
 import {SourceType} from "../../shared/PlayerState.js";
 
-const getDeviceInfo = () => {
+interface DeviceInfo {
+    sampleRate: number,
+    channels: number,
+    deviceId: number
+}
+
+const getDeviceInfo = (): DeviceInfo => {
     const hostAPIs = getHostAPIs();
     const defaultId = hostAPIs.HostAPIs[hostAPIs.defaultHostAPI].defaultOutput;
     const devices = getDevices();
@@ -19,6 +25,7 @@ const getDeviceInfo = () => {
 export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     const playerProcess = new Worker(playerProcessPath);
     let source: FLACStreamSource | null = null;
+    let willWakeDevice = false;
 
     playerProcess.on("message", async (state) => {
         if (!mainWindow.isDestroyed() && mainWindow.webContents) {
@@ -39,11 +46,17 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
         app.exit();
     });
 
-    mainWindow.on("focus", () => playerProcess.postMessage({type: "focus-update", payload: true}));
     mainWindow.on("blur", () => playerProcess.postMessage({type: "focus-update", payload: false}));
+    mainWindow.on("focus", () => {
+        willWakeDevice = true;
+        setTimeout(() => {
+            if(willWakeDevice) playerProcess.postMessage({type: "focus-update", payload: true});
+        }, 1000);
+    });
 
     const loadTrackInWorker = async (pathOrUrl: string, duration: number, sourceType: SourceType) => {
         mainWindow.webContents.send("player:track-change");
+        willWakeDevice = false;
 
         const devInfo = getDeviceInfo();
         const totalSamples = Math.ceil(duration * devInfo.sampleRate * devInfo.channels);

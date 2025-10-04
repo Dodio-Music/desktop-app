@@ -1,88 +1,77 @@
 import s from "../PlaybackBar.module.css";
-import {MouseEvent, FC, useEffect, useRef, useState} from "react";
+import {MouseEvent, useEffect, useRef, useState} from "react";
 import {formatTime} from "../../../util/timeUtils";
-import {SourceType} from "../../../../../shared/PlayerState";
 import {useSelector} from "react-redux";
 import {RootState} from "../../../redux/store";
-
-interface SeekBarProps {
-    currentTime: number;
-    duration: number;
-    sourceType: SourceType;
-}
 
 enum SeekBarDisplayStyle {
     DEFAULT, WAVEFORM
 }
 
-const SeekBar: FC<SeekBarProps> = ({currentTime, duration, sourceType}) => {
+const wantedDisplayStyle = SeekBarDisplayStyle.WAVEFORM;
+
+const SeekBar = () => {
     // CUSTOMIZABLE
-    const [displayStyle] = useState(SeekBarDisplayStyle.DEFAULT);
+    const [displayStyle, setDisplayStyle] = useState(wantedDisplayStyle);
     const [seekbarWidth] = useState(600);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [peaks, setPeaks] = useState<number[]>([]);
-    const [coverUpWidth, setCoverUpWidth] = useState(1);
     const [hoverX, setHoverX] = useState<number>(0);
-    const [isDragging, setIsDragging] = useState(false);
     const [isHovering, setIsHovering] = useState(false);
     const barRef = useRef<HTMLDivElement>(null);
     const hoverTimeRef = useRef<number | null>(null);
+    const dragTimeRef = useRef<number | null>(null);
     const lastSeekRef = useRef<number | null>(null);
-    const seekbarHeight = displayStyle === SeekBarDisplayStyle.WAVEFORM ? "30px" : "5px";
-    const {trackChangeToken, latency} = useSelector((state: RootState) => state.player);
+    const seekbarHeight = displayStyle === SeekBarDisplayStyle.WAVEFORM ? 25 : 5;
+    const {trackChangeToken, latency, duration, currentTime, sourceType, playbackRunning} = useSelector((state: RootState) => state.player);
+
+    const offscreenCanvasRef = useRef<HTMLCanvasElement>(null);
+    const lastIpcTimeRef = useRef<number>(0);
+    const lastIpcTimestampRef = useRef<number>(0);
+    const rafRef = useRef<number | null>(null);
+    const playbackRunningRef = useRef(playbackRunning);
 
     useEffect(() => {
-        //setDisplayStyle(sourceType === "local" ? SeekBarDisplayStyle.WAVEFORM : SeekBarDisplayStyle.DEFAULT);
-    }, [sourceType]);
+        playbackRunningRef.current = playbackRunning;
+    }, [playbackRunning]);
 
     useEffect(() => {
-        if (isDragging) return;
+        let targetDisplay: SeekBarDisplayStyle = wantedDisplayStyle;
+        if(sourceType === "remote") targetDisplay = SeekBarDisplayStyle.DEFAULT;
 
-        if (lastSeekRef.current !== null) {
-            const percent = lastSeekRef.current / duration;
-            setCoverUpWidth(1 - percent);
-            if (Math.abs((currentTime + latency) - lastSeekRef.current) < 0.05) {
-                lastSeekRef.current = null;
-            }
-        } else {
-            setCoverUpWidth(1 - currentTime / duration);
-        }
-    }, [currentTime, duration, isDragging]);
+        setDisplayStyle(targetDisplay);
+    }, [sourceType, peaks]);
 
     useEffect(() => {
-        drawWaveform();
+        if(!canvasRef.current || displayStyle !== SeekBarDisplayStyle.WAVEFORM) return;
+        const offscreen = document.createElement("canvas");
+        offscreen.width = seekbarWidth;
+        offscreen.height = seekbarHeight;
+        const ctx = offscreen.getContext("2d");
+        if(!ctx) return;
+
+        drawWaveform(ctx, peaks, offscreen.width, offscreen.height);
+
+        offscreenCanvasRef.current = offscreen;
     }, [peaks, displayStyle]);
 
-    const drawWaveform = () => {
-        const canvas = canvasRef.current;
-        const ctx = canvasRef.current?.getContext("2d");
-        if (!ctx || !canvas) return;
-
-        const {width, height} = canvas;
+    const drawWaveform = (ctx: CanvasRenderingContext2D, peaks: number[], width: number, height: number) => {
         ctx.clearRect(0, 0, width, height);
-
-        if(displayStyle !== SeekBarDisplayStyle.WAVEFORM) return;
-        if(!peaks) return;
 
         const middle = height / 2;
         const barWidth = width / peaks.length;
-        const minHeightFraction = 0.075;
-
-        const drawPeaks = () => {
-            if (!peaks) return;
-
-            for (let i = 0; i < peaks.length; i++) {
-                let value = peaks[i] * 0.95;
-                value = Math.max(value, minHeightFraction);
-                const barHeight = value * height;
-                const x = i * barWidth;
-                ctx.fillRect(x, middle - barHeight / 2, barWidth, barHeight);
-            }
-        };
-
+        const minHeightFraction = 0.08;
         ctx.fillStyle = "rgb(255,255,255)";
-        drawPeaks();
+        if(peaks.length === 0) ctx.fillRect(0, middle - minHeightFraction * height / 2, width, minHeightFraction * height);
+
+        for (let i = 0; i < peaks.length; i++) {
+            let value = peaks[i];
+            value = Math.max(value, minHeightFraction);
+            const barHeight = value * height;
+            const x = i * barWidth;
+            ctx.fillRect(x, middle - barHeight / 2, barWidth, barHeight);
+        }
     };
 
     useEffect(() => {
@@ -99,6 +88,60 @@ const SeekBar: FC<SeekBarProps> = ({currentTime, duration, sourceType}) => {
         setPeaks([]);
     }, [trackChangeToken]);
 
+    useEffect(() => {
+        lastIpcTimeRef.current = currentTime;
+        lastIpcTimestampRef.current = performance.now();
+    }, [currentTime, playbackRunning]);
+
+    useEffect(() => {
+        const ctx = canvasRef.current?.getContext("2d");
+        if (!ctx) return;
+
+        const loop = () => {
+            const now = performance.now();
+            const elapsed = (now - lastIpcTimestampRef.current) / 1000;
+            let interpolatedTime = lastIpcTimeRef.current + elapsed;
+            if(interpolatedTime > duration) interpolatedTime = duration;
+            if(interpolatedTime < 0) interpolatedTime = 0;
+
+            ctx.fillStyle = "rgba(0,0,0,0.5)";
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+            if (offscreenCanvasRef.current) {
+                ctx.drawImage(offscreenCanvasRef.current, 0, 0);
+            }
+
+            let progressTime: number;
+            if(dragTimeRef.current !== null) {
+                progressTime = dragTimeRef.current;
+            } else if(lastSeekRef.current !== null) {
+                const diff = Math.abs(lastIpcTimeRef.current - lastSeekRef.current);
+                if (diff > 0.05) {
+                    progressTime = lastSeekRef.current;
+                } else {
+                    lastSeekRef.current = null;
+                    progressTime = playbackRunningRef.current
+                        ? interpolatedTime
+                        : lastIpcTimeRef.current;
+                }
+            } else {
+                progressTime = playbackRunningRef.current ? interpolatedTime : lastIpcTimeRef.current;
+            }
+
+            const progressX = progressTime / duration * ctx.canvas.width;
+            ctx.fillStyle = "rgba(0,0,0,0.7)";
+            ctx.fillRect(progressX, 0, ctx.canvas.width - progressX, ctx.canvas.height);
+
+            rafRef.current = requestAnimationFrame(loop);
+        };
+
+        rafRef.current = requestAnimationFrame(loop);
+
+        return () => {
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        };
+    }, [duration]);
+
     const updateHover = (clientX: number, dragging: boolean) => {
         if (!barRef.current || duration <= 0) return;
         const rect = barRef.current.getBoundingClientRect();
@@ -108,20 +151,19 @@ const SeekBar: FC<SeekBarProps> = ({currentTime, duration, sourceType}) => {
         hoverTimeRef.current = newTime;
         setHoverX(relativeX);
 
-        if (dragging) setCoverUpWidth(1 - newTime / duration);
+        if (dragging) dragTimeRef.current = newTime - latency;
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-        setIsDragging(true);
         updateHover(e.clientX, true);
 
         const handleMove = (e: globalThis.MouseEvent) => updateHover(e.clientX, true);
         const handleUp = () => {
             if (hoverTimeRef.current !== null) {
                 window.api.seek(hoverTimeRef.current);
-                lastSeekRef.current = hoverTimeRef.current;
+                lastSeekRef.current = dragTimeRef.current;
             }
-            setIsDragging(false);
+            dragTimeRef.current = null;
 
 
             document.removeEventListener("mousemove", handleMove);
@@ -135,7 +177,7 @@ const SeekBar: FC<SeekBarProps> = ({currentTime, duration, sourceType}) => {
     const handleMouseEnter = () => setIsHovering(true);
     const handleMouseLeave = () => {
         setIsHovering(false);
-        if (!isDragging) hoverTimeRef.current = null;
+        hoverTimeRef.current = null;
     };
 
     return (
@@ -149,13 +191,10 @@ const SeekBar: FC<SeekBarProps> = ({currentTime, duration, sourceType}) => {
                 updateHover(e.clientX, false);
             }}
             ref={barRef}>
-            <div className={s.barWrapper} style={{height: seekbarHeight}}>
-                <canvas className={s.canvas} ref={canvasRef} width={seekbarWidth} height={seekbarHeight}
+            <div className={s.barWrapper} style={{height: seekbarHeight + "px"}}>
+                <canvas className={s.canvas} ref={canvasRef} width={seekbarWidth} height={seekbarHeight + "px"}
                         style={displayStyle === SeekBarDisplayStyle.WAVEFORM ? {backgroundColor: "transparent"} : {borderRadius: "2px"}}/>
-                <div style={{
-                    transform: `scaleX(${coverUpWidth})`
-                }} className={s.coverUp}/>
-                {(isDragging || isHovering) && hoverTimeRef.current !== null && (
+                {(isHovering || dragTimeRef.current) && hoverTimeRef.current !== null && (
                     <div
                         className={s.tooltip}
                         style={{left: hoverX}}

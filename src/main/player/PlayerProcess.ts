@@ -2,9 +2,8 @@ import {AudioIO, getDevices, getHostAPIs, IoStreamWrite, SampleFormatFloat32} fr
 import {parentPort} from "node:worker_threads";
 import {clearInterval} from "node:timers";
 import {SourceType} from "../../shared/PlayerState.js";
+import {activePreset} from "../../shared/latencyPresets.js";
 
-const BUFFER_SIZE = 512;
-const MAX_QUEUE = 4;
 const IPC_UPDATE_INTERVAL = 200;
 const IDLE_TIMEOUT_MS = 2 * 60 * 1000;
 
@@ -16,6 +15,7 @@ type PlayerSession = {
     pcm: Float32Array;
     writtenIndex: Int32Array;
     sourceType: SourceType;
+    ended: boolean;
 };
 
 interface DeviceInformation {
@@ -38,6 +38,7 @@ type StateMessage = {
     userPaused: boolean;
     duration: number;
     latency: number;
+    playbackRunning: boolean;
     sourceType: SourceType;
 };
 
@@ -54,17 +55,30 @@ export class PlayerProcess {
 
     private stateLoopInterval: NodeJS.Timeout | null = null;
 
+    private playheadAnchorFrames = 0;
+    private playheadAnchorWall = Date.now();
+
     private async chunkerLoop() {
         while (this.deviceInfo && this.io && !this.deviceInfo.inactive) {
             let outputBuf: Buffer = this.deviceInfo.silentBuffer;
 
-            if (this.session && !this.userPaused) {
+            if (this.session && !this.userPaused && !this.session.ended) {
                 const {readOffset, pcm, writtenIndex} = this.session;
                 const written = Atomics.load(writtenIndex, 0);
                 let end = readOffset + this.deviceInfo.samplesPerBuffer;
                 end = Math.min(end, written);
 
+                if(readOffset > pcm.length) {
+                    this.session.ended = true;
+                }
+
                 if (readOffset < end) {
+                    if (this.session.waitingForData) {
+                        const queuedLatencyFrames = this.getQueuedLatencyFrames();
+                        this.playheadAnchorFrames = readOffset - queuedLatencyFrames;
+                        this.playheadAnchorWall = Date.now();
+                    }
+
                     const chunk = pcm.subarray(readOffset, end);
                     outputBuf = this.applyVolume(
                         Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength),
@@ -135,7 +149,7 @@ export class PlayerProcess {
             };
         }
 
-        const samplesPerBuffer = BUFFER_SIZE * devInfo.channels;
+        const samplesPerBuffer = activePreset.bufferSize * devInfo.channels;
         const silentChunk = Buffer.alloc(samplesPerBuffer * Float32Array.BYTES_PER_ELEMENT);
 
         this.deviceInfo = {
@@ -156,7 +170,7 @@ export class PlayerProcess {
                 sampleRate: this.deviceInfo.out.sampleRate,
                 deviceId: this.deviceInfo.out.deviceId,
                 closeOnError: false,
-                maxQueue: MAX_QUEUE
+                maxQueue: activePreset.maxQueue
             }
         });
         this.io.start();
@@ -164,7 +178,7 @@ export class PlayerProcess {
         console.log("Buffer transfer latency is " + Intl.NumberFormat("en", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
-        }).format(BUFFER_SIZE / this.deviceInfo.out.sampleRate * MAX_QUEUE * 1000) + "ms.");
+        }).format(activePreset.bufferSize / this.deviceInfo.out.sampleRate * (activePreset.maxQueue + 1) * 1000) + "ms.");
 
         this.chunkerLoopPromise = this.chunkerLoop();
     }
@@ -184,29 +198,55 @@ export class PlayerProcess {
 
         this.session = {
             readOffset: 0,
-            waitingForData: false,
+            waitingForData: true,
             duration,
             path,
             pcm,
             writtenIndex,
-            sourceType
+            sourceType,
+            ended: false
         };
 
         this.registerAudioDevice(devInfo);
+
+        const queuedLatencyFrames = this.getQueuedLatencyFrames();
+        this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
+        this.playheadAnchorWall = Date.now();
+
         this.notifyState();
 
         this.startStateLoop();
     }
 
-    pauseOrResume() {
-        if (this.userPaused) {
-            this.userPaused = false;
-            if (!this.io || !this.deviceInfo) {
-                this.registerAudioDevice();
-            }
-        } else {
-            this.userPaused = true;
+    pause() {
+        if (this.deviceInfo && this.session) {
+            const {out} = this.deviceInfo;
+            const now = Date.now();
+            const elapsed = (now - this.playheadAnchorWall) / 1000;
+            const advancedFrames = elapsed * out.sampleRate * out.channels;
+            this.playheadAnchorFrames = this.playheadAnchorFrames + advancedFrames;
+            this.playheadAnchorWall = now;
         }
+        this.userPaused = true;
+    }
+
+    resume() {
+        this.userPaused = false;
+
+        if (this.session && this.deviceInfo) {
+            const queuedLatencyFrames = this.getQueuedLatencyFrames();
+            this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
+            this.playheadAnchorWall = Date.now();
+        }
+
+        if (!this.io || !this.deviceInfo) {
+            this.registerAudioDevice();
+        }
+    }
+
+    pauseOrResume() {
+        if(this.userPaused) this.resume();
+        else this.pause();
 
         this.notifyState();
     }
@@ -215,7 +255,16 @@ export class PlayerProcess {
         if(!this.session || !this.deviceInfo) return;
 
         this.session.readOffset = this.toFrames(this.deviceInfo.out.channels, this.deviceInfo.out.sampleRate, time);
+        const queuedLatencyFrames = this.getQueuedLatencyFrames();
+        this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
+        this.playheadAnchorWall = Date.now();
+
         this.notifyState();
+    }
+
+    private getQueuedLatencyFrames(): number {
+        if (!this.deviceInfo) return 0;
+        return this.deviceInfo.samplesPerBuffer * (activePreset.maxQueue + 1);
     }
 
     private sliderToAmplitude(slider: number): number {
@@ -251,26 +300,29 @@ export class PlayerProcess {
     private notifyState() {
         if (!this.deviceInfo || !this.session) return;
 
-        const queuedLatencyFrames =
-            this.deviceInfo.samplesPerBuffer * MAX_QUEUE;
-        const latencySeconds = this.toSeconds(
-            this.deviceInfo.out.channels,
-            this.deviceInfo.out.sampleRate,
-            queuedLatencyFrames
-        );
+        const {out} = this.deviceInfo;
+        const queuedLatencyFrames = this.getQueuedLatencyFrames();
+        const latencySeconds = this.toSeconds(out.channels, out.sampleRate, queuedLatencyFrames);
 
-        const currentTime =
-            this.toSeconds(
-                this.deviceInfo.out.channels,
-                this.deviceInfo.out.sampleRate,
-                this.session.readOffset
-            ) - latencySeconds;
+        let playheadFrames: number;
+
+        if (this.session.ended) {
+            playheadFrames = Atomics.load(this.session.writtenIndex, 0);
+        } else if (!this.userPaused && !this.session.waitingForData) {
+            const elapsed = (Date.now() - this.playheadAnchorWall) / 1000;
+            playheadFrames = this.playheadAnchorFrames + elapsed * out.sampleRate * out.channels;
+        } else {
+            playheadFrames = this.playheadAnchorFrames;
+        }
+
+        const currentTimeSeconds = this.toSeconds(out.channels, out.sampleRate, playheadFrames);
 
         const state: StateMessage = {
             currentTrack: this.session.path,
-            currentTime: Math.max(0, currentTime),
+            currentTime: currentTimeSeconds,
             waitingForData: this.session.waitingForData,
             userPaused: this.userPaused,
+            playbackRunning: !this.session.waitingForData && !this.userPaused,
             duration: this.session.duration,
             sourceType: this.session.sourceType,
             latency: latencySeconds

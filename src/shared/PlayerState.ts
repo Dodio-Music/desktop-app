@@ -7,6 +7,7 @@ export interface PlayerState {
     sourceType: SourceType;
     latency: number;
     trackChangeToken: number;
+    playbackRunning: boolean;
 }
 
 export type SourceType = "remote" | "local";

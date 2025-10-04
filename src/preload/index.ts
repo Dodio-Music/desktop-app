@@ -43,7 +43,11 @@ const api = {
     setAuth: () => ipcRenderer.invoke("auth:set"),
     getPreferences: (): Promise<IPreferences> => ipcRenderer.invoke("preferences:get"),
     setPreferences: (pref: Partial<IPreferences>) => ipcRenderer.invoke("preferences:set", pref),
-    onPreferencesUpdated: (callback: () => void) => ipcRenderer.on("preferences:update", callback),
+    onPreferencesUpdated: (callback: () => void) => {
+        const handler = () => callback();
+        ipcRenderer.on("preferences:update", handler);
+        return () => ipcRenderer.removeListener("preferences:update", handler);
+    },
     showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory"),
     onWaveformData: (cb: (peaks: number[]) => void) => {
         const handler = (_ev: IpcRendererEvent, peaks: number[]) => cb(peaks);

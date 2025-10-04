@@ -13,9 +13,12 @@ const PlaybackBar = () => {
     const [muted, setMuted] = useState(false);
     const displayVolume = round2Dec(!muted ? volume : 0);
     const debouncedVolume = useDebounce(displayVolume, 1000);
+    const [songPath, setSongPath] = useState("");
     const {currentTrack, duration, currentTime, userPaused, sourceType} = useSelector(
         (state: RootState) => state.player
     );
+
+    const trackName = !currentTrack ? "No info available." : sourceType === "local" ? currentTrack.replace(songPath + "\\", "") : currentTrack;
 
     useEffect(() => {
         window.api.setPreferences({volume, muted});
@@ -26,6 +29,7 @@ const PlaybackBar = () => {
             const prefs = await window.api.getPreferences();
             setVolume(prefs.volume);
             setMuted(prefs.muted);
+            setSongPath(prefs.localFilesDir ?? "");
         }
         void getSetPrefs();
     }, []);
@@ -61,7 +65,7 @@ const PlaybackBar = () => {
     return (
         <div className={s.container}>
             <div>
-                <p>{currentTrack}</p>
+                <p>{trackName}</p>
             </div>
             <div className={s.middleContainer}>
                 <div className={s.row}>
@@ -69,8 +73,8 @@ const PlaybackBar = () => {
                         <FaPause size={27}/>}</button>
                 </div>
                 <div className={s.row} id={s.middleRow}>
-                    <p className={s.time}>{formatTime(currentTime)}</p>
-                    <SeekBar currentTime={currentTime} duration={duration} sourceType={sourceType}/>
+                    <p className={s.time}>{formatTime(Math.max(currentTime, 0))}</p>
+                    <SeekBar/>
                     <p className={s.time}>{formatTime(duration)}</p>
                 </div>
             </div>

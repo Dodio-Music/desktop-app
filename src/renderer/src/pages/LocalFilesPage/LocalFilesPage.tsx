@@ -58,7 +58,11 @@ const LocalFilesPage = () => {
             };
             handler();
 
-            window.api.onPreferencesUpdated(handler);
+            const unsub = window.api.onPreferencesUpdated(handler);
+
+            return () => {
+                unsub();
+            }
         }, []);
 
         const playSong = (path: string) => {
