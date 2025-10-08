@@ -50,12 +50,16 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     mainWindow.on("focus", () => {
         willWakeDevice = true;
         setTimeout(() => {
-            if(willWakeDevice) playerProcess.postMessage({type: "focus-update", payload: true});
+            if(willWakeDevice) {
+                playerProcess.postMessage({type: "focus-update", payload: true});
+                willWakeDevice = false;
+            }
         }, 1000);
     });
 
     const loadTrackInWorker = async (pathOrUrl: string, duration: number, sourceType: SourceType) => {
         mainWindow.webContents.send("player:track-change");
+        mainWindow.webContents.send("player:loading-progress", 0);
         willWakeDevice = false;
 
         const devInfo = getDeviceInfo();

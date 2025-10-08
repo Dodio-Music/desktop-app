@@ -71,12 +71,27 @@ export class FLACStreamSource implements PCMSource {
             "pipe:1"
         ], {stdio: ["ignore", "pipe", "ignore"]});
 
+        const totalSamples = Math.ceil(this.duration * this.sampleRate * this.channels);
+
+        const progressInterval = setInterval(() => {
+            const written = Atomics.load(this.writtenIndex, 0);
+            const progress = Math.min(written / totalSamples, 1);
+            if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+                this.mainWindow.webContents.send("player:loading-progress", progress);
+            }
+        }, 100);
+
         this.ffmpegProcess.stdout.on("data", (chunk: Buffer) => {
             this.append(chunk);
         });
 
         this.ffmpegProcess.on("exit", () => {
+            clearInterval(progressInterval);
             this.cancelled = true;
+
+            if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+                this.mainWindow.webContents.send("player:loading-progress", 1);
+            }
 
             const peaksToSend = this.waveformBuckets;
             if (this.mainWindow && !this.mainWindow.isDestroyed() && this.sourceType === "local") {

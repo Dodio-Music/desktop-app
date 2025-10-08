@@ -61,6 +61,11 @@ const api = {
         const handler = () => cb();
         ipcRenderer.on("player:track-change", handler);
         return () => ipcRenderer.removeListener("player:track-change", handler);
+    },
+    onLoadingProgress: (callback: (progress: number) => void) => {
+        const handler = (_: IpcRendererEvent, progress: number) => callback(progress);
+        ipcRenderer.on("player:loading-progress", handler);
+        return () => ipcRenderer.removeListener("player:loading-progress", handler);
     }
 };
 
