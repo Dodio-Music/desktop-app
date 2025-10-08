@@ -143,7 +143,7 @@ export class PlayerProcess {
             const devices = getDevices();
             const defaultDevice = devices[defaultId];
             devInfo = {
-                channels: defaultDevice.maxOutputChannels,
+                channels: Math.min(defaultDevice.maxOutputChannels, 2),
                 deviceId: defaultId,
                 sampleRate: defaultDevice.defaultSampleRate
             };
