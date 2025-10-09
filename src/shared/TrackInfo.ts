@@ -9,8 +9,5 @@ export interface TrackInfo {
 }
 
 export interface TrackManifest {
-    bitDepth: number;
-    sampleRate: number;
-    channels: number;
     url: string;
 }

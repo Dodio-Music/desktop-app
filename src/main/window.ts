@@ -2,7 +2,7 @@ import {app, BrowserWindow, ipcMain, screen, shell} from "electron";
 import {join} from "path";
 import * as fs from "fs";
 import * as path from "path";
-import icon from "../../resources/icon.png?asset";
+import icon from "../../resources/dodo_whiteondark_512.png?asset";
 import {is} from "@electron-toolkit/utils";
 
 export type WindowState = {
@@ -54,9 +54,10 @@ export function createMainWindow(): BrowserWindow {
         show: false,
         frame: false,
 
+        icon: icon,
         titleBarStyle: "hidden",
         autoHideMenuBar: true,
-        ...(process.platform === "linux" ? {icon} : {}),
+        // ...(process.platform === "linux" ? {iconPath} : {}),
         webPreferences: {
             preload: join(__dirname, "../preload/index.mjs"),
             sandbox: false,

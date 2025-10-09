@@ -1,4 +1,6 @@
-export default [
+import {TrackInfo} from "../../../shared/TrackInfo";
+
+const tracks: TrackInfo[] = [
     {
         id: "5cdafd76-2ff5-4d2a-9ad7-81cc5ff92f93",
         title: "Butterhund Macarena Salat Sonett",
@@ -11,3 +13,5 @@ export default [
         }
     }
 ]
+
+export default tracks;

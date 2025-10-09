@@ -14,7 +14,8 @@
         "files": [
             "out/**/*",
             "package.json",
-            "node_modules/ffmpeg-static/**/*"
+            "node_modules/ffmpeg-static/**/*",
+            "resources/**/*"
         ],
         "extraResources": [
             {
@@ -26,13 +27,15 @@
             }
         ],
         "win": {
-            "target": "nsis"
+            "target": "nsis",
+            "icon": "resources/dodo_whiteondark_256.png"
         },
         "mac": {
             "target": "dmg"
         },
         "linux": {
-            "target": "AppImage"
+            "target": "AppImage",
+            "icon": "resources/dodo_whiteondark_512.png"
         }
     },
     "scripts": {
