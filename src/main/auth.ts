@@ -1,35 +1,53 @@
-import {app, ipcMain} from "electron";
+import {app, BrowserWindow} from "electron";
 import path from "path";
 import fs from "fs/promises";
-import {IAuth} from "../shared/Typing.js";
+import {IAuthData} from "./web/Typing.js";
 import {safeStorage} from "electron"
+import {AuthStatus} from "../shared/Api.js";
+import dodio_api from "./web/dodio_api.js";
 
 export const authPath = path.join(app.getPath("userData"), "auth.json");
-export async function loadAuth(): Promise<IAuth> {
+
+async function loadAuth(): Promise<IAuthData> {
     try {
         const data = await fs.readFile(authPath);
-        const decrypted = safeStorage.decryptString(data)
-        return JSON.parse(decrypted);
+        const decrypted = safeStorage.decryptString(data);
+        const parsed = JSON.parse(decrypted);
+        console.log("loaded auth:", parsed)
+        return {
+            hasAccount: parsed.hasAccount,
+            access_token_expiry: new Date(Date.parse(parsed.access_token_expiry)),
+            refresh_token_expiry: new Date(Date.parse(parsed.refresh_token_expiry)),
+            refresh_token: parsed.refresh_token,
+            access_token: parsed.access_token
+        };
     } catch {
-        return {};
+        return {hasAccount: false};
     }
 }
 
-export async function saveAuth(prefs: IAuth): Promise<void> {
-    const data = JSON.stringify(prefs, null, 2);
+export let auth: IAuthData | null = null;
+
+export function updateAuth(new_auth: Partial<IAuthData>) {
+    auth = {...auth, ...new_auth} as IAuthData;
+    const authStatus: AuthStatus = auth.access_token || auth.refresh_token
+        ? "account"
+        : auth.hasAccount
+            ? "login"
+            : "signup";
+    console.log("new auth status", authStatus);
+    mainWindow.webContents.send("auth:statusChange",authStatus);
+    const data = JSON.stringify(new_auth, null, 2);
+    console.log("writing auth:", data);
     const encrypted = safeStorage.encryptString(data);
-    await fs.writeFile(authPath, encrypted);
+    fs.writeFile(authPath, encrypted)
+        .then(() => console.log("Saved auth"))
+        .catch(err => console.error("could not save auth data", err));
 }
-
-export function registerAuthIPC() {
-    ipcMain.handle("auth:get", async () => {
-        return await loadAuth();
-    });
-
-    ipcMain.handle("auth:set", async (_event, prefs: IAuth) => {
-        const existing = await loadAuth();
-        const newAuth = { ...existing, ...prefs };
-        await saveAuth(newAuth);
-        return newAuth;
-    });
+let mainWindow: BrowserWindow;
+export async function setupAuth(window: BrowserWindow) {
+    console.log("Setup auth")
+    mainWindow = window;
+    updateAuth(await loadAuth());
+    await dodio_api.refresh();
 }

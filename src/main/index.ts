@@ -1,12 +1,14 @@
 import { electronApp, optimizer } from "@electron-toolkit/utils";
 import { app, BrowserWindow } from "electron";
-import { registerAuthIPC } from "./auth.js";
 import { registerMagnifierIPC } from "./ipc/registerMagnifier.js";
 import { registerPlayerProcessIPC } from "./ipc/registerPlayerProcess.js";
 import { registerWindowControlsIPC } from "./ipc/registerWindowControls.js";
 import { registerPreferencesIPC } from "./preferences.js";
 import { registerSongIndexer } from "./songIndexer.js";
 import { createMainWindow, registerAppLifecycle } from "./window.js";
+import {registerDodioApiIPC} from "./ipc/registerDodioApi.js";
+import {setupAuth} from "./auth.js";
+import {setupApi} from "./web/dodio_api.js";
 
 let mainWindow: BrowserWindow;
 
@@ -15,7 +17,7 @@ function createWindow() {
     return mainWindow;
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     electronApp.setAppUserModelId("com.underswing");
     app.on("browser-window-created", (_, window) => {
         optimizer.watchWindowShortcuts(window);
@@ -25,8 +27,10 @@ app.whenReady().then(() => {
     registerSongIndexer(mainWindow);
     registerPreferencesIPC();
     registerPlayerProcessIPC(mainWindow);
-    registerAuthIPC();
+    registerDodioApiIPC();
+    await setupAuth(mainWindow);
     void registerMagnifierIPC(mainWindow);
+    void setupApi();
 
     registerAppLifecycle(createWindow);
 });

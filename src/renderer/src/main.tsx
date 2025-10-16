@@ -5,6 +5,7 @@ import {HashRouter} from "react-router-dom";
 import {store} from "./redux/store";
 import {markTrackChange, updatePlayerState} from "./redux/playerSlice";
 import {Provider} from "react-redux";
+import {setAuthStatus} from "@renderer/redux/authSlice";
 
 createRoot(document.getElementById("root")!).render(
     <Provider store={store}>
@@ -22,4 +23,9 @@ window.api.onPlayerUpdate((state) => {
 
 window.api.onTrackChange(() => {
     store.dispatch(markTrackChange());
+})
+
+window.api.onAuthUpdate((status) => {
+    console.log("new auth status", status)
+    store.dispatch(setAuthStatus(status));
 })

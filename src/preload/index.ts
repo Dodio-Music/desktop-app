@@ -4,7 +4,8 @@ import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerState} from "../shared/PlayerState.js";
 import {IPreferences} from "../main/preferences.js";
 import {TrackInfo} from "../shared/TrackInfo.js";
-import {IAuth} from "../shared/Typing.js";
+import {AuthStatus, DodioApi, RequestMethods} from "../shared/Api.js";
+import {AxiosInstance, AxiosResponse} from "axios";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -13,6 +14,9 @@ export interface CustomWindowControls {
     onMaximizeChange: (callback: (isMaximized: boolean) => void) => void;
     isMaximized: () => Promise<boolean>;
 }
+
+
+console.log("DeineMamer")
 
 const windowControls: CustomWindowControls = {
     minimize: () => ipcRenderer.send("window-minimize"),
@@ -34,13 +38,12 @@ const api = {
     zoomOut: () => ipcRenderer.invoke("zoom:out"),
     resetZoom: () => ipcRenderer.invoke("zoom:reset"),
     getZoom: (): Promise<number> => ipcRenderer.invoke("zoom:get"),
+    dodioApi: <T extends keyof DodioApi>(request: T, ...args: Parameters<DodioApi[T]>) => ipcRenderer.invoke("api:"+request, ...args),
     onZoomFactorChanged: (cb: (factor: number) => void) => {
         const handler = (_ev: IpcRendererEvent, factor: number) => cb(factor);
         ipcRenderer.on("zoom-factor-changed", handler);
         return () => ipcRenderer.removeListener("zoom-factor-changed", handler);
     },
-    getAuth: (): Promise<IAuth> => ipcRenderer.invoke("auth:get"),
-    setAuth: () => ipcRenderer.invoke("auth:set"),
     getPreferences: (): Promise<IPreferences> => ipcRenderer.invoke("preferences:get"),
     setPreferences: (pref: Partial<IPreferences>) => ipcRenderer.invoke("preferences:set", pref),
     onPreferencesUpdated: (callback: () => void) => {
@@ -57,11 +60,21 @@ const api = {
     onPlayerUpdate: (cb: (data: PlayerState) => void) => {
         playerUpdateCallback = cb;
     },
+    onAuthUpdate: (cb: (data: AuthStatus) => void) => {
+        authUpdateCallback = cb;
+        if(authStatusCache !== null) cb(authStatusCache);
+    },
     onTrackChange: (cb: () => void) => {
         const handler = () => cb();
         ipcRenderer.on("player:track-change", handler);
         return () => ipcRenderer.removeListener("player:track-change", handler);
     },
+    authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>): Promise<AxiosResponse<T>|undefined> {
+        return ipcRenderer.invoke("api:authRequest", method, ...args);
+    },
+    login(login: string, password: string): Promise<boolean> { return ipcRenderer.invoke("api:login", login, password); },
+    signup: (username: string, email: string, password: string): Promise<boolean> => ipcRenderer.invoke("api:signup", username, email, password),
+    logout: (): Promise<boolean> => ipcRenderer.invoke("api:logout"),
     onLoadingProgress: (callback: (progress: number) => void) => {
         const handler = (_: IpcRendererEvent, progress: number) => callback(progress);
         ipcRenderer.on("player:loading-progress", handler);
@@ -70,9 +83,16 @@ const api = {
 };
 
 let playerUpdateCallback: ((data: PlayerState) => void) | null = null;
+let authUpdateCallback: ((data: AuthStatus) => void) | null = null;
 
 ipcRenderer.on("player:update", (_event, data) => {
     if(playerUpdateCallback) playerUpdateCallback(data);
+});
+
+let authStatusCache: AuthStatus | null = null;
+ipcRenderer.on("auth:statusChange", (_event, newStatus: AuthStatus) => {
+    if(authUpdateCallback === null) authStatusCache = newStatus;
+    else authUpdateCallback(newStatus)
 });
 
 export type ApiType = typeof api;
