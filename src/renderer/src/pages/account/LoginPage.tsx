@@ -1,5 +1,5 @@
 import {useRef} from "react";
-import {useNavigate, useSearchParams} from "react-router-dom";
+import {Link, useNavigate, useSearchParams} from "react-router-dom";
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -27,6 +27,7 @@ const LoginPage = () => {
             <label>password</label>
             <input ref={pwRef} type="password" />
             <button onClick={onLogin}>Login</button>
+            <Link to="/signup">Create Account</Link>
         </div>
     );
 };
