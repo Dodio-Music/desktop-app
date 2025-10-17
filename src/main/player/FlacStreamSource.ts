@@ -1,10 +1,11 @@
 import {spawn} from "child_process";
 import {ChildProcessByStdio} from "node:child_process";
-import {Readable} from "node:stream";
+import {Readable, Writable} from "node:stream";
 import ffmpegStatic from "ffmpeg-static";
 import path from "path";
 import {BrowserWindow} from "electron";
 import {SourceType} from "../../shared/PlayerState.js";
+import type { ReadableStream } from 'node:stream/web';
 
 const ffmpegPath =
     process.env.NODE_ENV === "development"
@@ -21,7 +22,7 @@ export interface PCMSource {
 }
 
 export class FLACStreamSource implements PCMSource {
-    private ffmpegProcess: ChildProcessByStdio<null, Readable, null> | null = null;
+    private ffmpegProcess: ChildProcessByStdio<Writable, Readable, null> | null = null;
     private cancelled = false;
     private writeOffset = 0;
     private pcm: Float32Array;
@@ -62,14 +63,30 @@ export class FLACStreamSource implements PCMSource {
     async start() {
         if (this.cancelled) return;
 
+        let inputStream: Readable | null = null;
+        let inputArg = this.url;
+        if(this.sourceType === "remote") {
+            const res = await fetch(this.url);
+            if(!res.ok) throw new Error(`HTTP ${res.status}`);
+            if(!res.body) throw new Error("No response body!");
+
+            inputStream = Readable.fromWeb(res.body as ReadableStream<Uint8Array>);
+            inputArg = "pipe:0";
+        }
+
+
         this.ffmpegProcess = spawn(ffmpegPath!, [
-            "-i", this.url,
+            "-i", inputArg,
             "-f", "f32le",
             "-acodec", "pcm_f32le",
             "-ac", `${this.channels}`,
             "-ar", `${this.sampleRate}`,
             "pipe:1"
-        ], {stdio: ["ignore", "pipe", "ignore"]});
+        ], {stdio: ["pipe", "pipe", "ignore"]});
+
+        if (inputStream) {
+            inputStream.pipe(this.ffmpegProcess.stdin!);
+        }
 
         const totalSamples = Math.ceil(this.duration * this.sampleRate * this.channels);
 
@@ -112,7 +129,10 @@ export class FLACStreamSource implements PCMSource {
 
     cancel() {
         this.cancelled = true;
-        this.ffmpegProcess?.kill("SIGKILL");
+        if(this.ffmpegProcess) {
+            this.ffmpegProcess.stdin.destroy();
+            this.ffmpegProcess?.kill("SIGTERM");
+        }
     }
 
     private processChunkForWaveform(chunk: Buffer) {
