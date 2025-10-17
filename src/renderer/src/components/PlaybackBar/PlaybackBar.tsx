@@ -7,11 +7,11 @@ import {FiVolume1, FiVolume2, FiVolumeX} from "react-icons/fi";
 import SeekBar from "./SeekBar/SeekBar";
 import { useDebounce } from "@uidotdev/usehooks";
 import {formatTime} from "../../util/timeUtils";
+import {playpackStore} from "@renderer/zustand/playbackStore";
 
 const PlaybackBar = () => {
-    const [volume, setVolume] = useState(1);
-    const [muted, setMuted] = useState(false);
-    const displayVolume = round2Dec(!muted ? volume : 0);
+    const {volume, setVolume, isMuted, setIsMuted} = playpackStore();
+    const displayVolume = round2Dec(!isMuted ? volume : 0);
     const debouncedVolume = useDebounce(displayVolume, 1000);
     const [songPath, setSongPath] = useState("");
     const {currentTrack, duration, currentTime, userPaused, sourceType} = useSelector(
@@ -21,39 +21,45 @@ const PlaybackBar = () => {
     const trackName = !currentTrack ? "No info available." : sourceType === "local" ? currentTrack.replace(songPath + "\\", "") : currentTrack;
 
     useEffect(() => {
-        window.api.setPreferences({volume, muted});
+        window.api.setPreferences({volume, muted: isMuted});
     }, [debouncedVolume]);
 
     useEffect(() => {
         const getSetPrefs = async () => {
             const prefs = await window.api.getPreferences();
             setVolume(prefs.volume);
-            setMuted(prefs.muted);
+            setIsMuted(prefs.muted);
             setSongPath(prefs.localFilesDir ?? "");
         }
         void getSetPrefs();
     }, []);
 
     useEffect(() => {
-        const v = !muted ? volume : 0;
+        const v = !isMuted ? volume : 0;
         window.api.setVolume(round2Dec(v));
-    }, [muted, volume]);
+    }, [isMuted, volume]);
 
     const handleDrag = (v: number) => {
-        setMuted(false);
+        setIsMuted(false);
         setVolume(v);
     }
 
     const handleWheel = (e: WheelEvent<HTMLInputElement>) => {
+        // direction of the scroll wheel
         const delta = e.deltaY < 0 ? 0.1 : -0.1;
-        const m = muted;
-        setMuted(false);
-        setVolume((prev) => {
-            let v = prev + delta;
-            if(m) v = 0 + delta;
-            return Math.min(1, Math.max(0, v));
-        });
-    }
+
+        // Calculate the new volume using the current state value (volume)
+        const newVolume = volume + delta;
+
+        // The rest of your old logic (simplified for correctness):
+
+        // Unmute immediately if adjusting volume
+        setIsMuted(false);
+
+        // 2. Pass the final calculated number to the Zustand action
+        // setVolume will handle the clamping (min/max) based on your store definition
+        setVolume(newVolume);
+    };
 
     const pauseOrResume = () => {
         window.api.pauseOrResume();
@@ -80,7 +86,7 @@ const PlaybackBar = () => {
             </div>
             <div className={s.rightContainer}>
                 <div className={s.volumeControl}>
-                    <button onClick={() => setMuted(!muted)} className={`${s.volBtn} ${s.btnAnim}`}>
+                    <button onClick={() => setIsMuted(!isMuted)} className={`${s.volBtn} ${s.btnAnim}`}>
                         {displayVolume > 0 ? displayVolume >= 1 ?
                             <FiVolume2 size={23}/>
                             :
