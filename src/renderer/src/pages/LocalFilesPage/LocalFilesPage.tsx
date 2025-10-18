@@ -1,13 +1,8 @@
 import {useEffect, useState} from "react";
 
 import s from "./LocalFilesPage.module.css";
-import {secondsToTime} from "../../util/timeUtils";
 import {WiTime3} from "react-icons/wi";
-import {FaPlay, FaPause} from "react-icons/fa6";
-import {MouseEvent} from "react";
-import {format} from "timeago.js";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
+import {SongList} from "@renderer/pages/LocalFilesPage/SongList";
 
 export interface SongEntry {
     name: string;
@@ -25,15 +20,9 @@ const LocalFilesPage = () => {
         const [songs, setSongs] = useState<SongEntry[]>([]);
         const [error, setError] = useState("");
         const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
-        const {currentTrack, userPaused} = useSelector((root: RootState) => root.nativePlayer);
 
         const handleWrapperClick = () => {
             setSelectedRow(undefined);
-        };
-
-        const handleRowClick = (e: MouseEvent, name: string) => {
-            e.stopPropagation();
-            setSelectedRow(name);
         };
 
         const handleDialog = () => {
@@ -68,18 +57,6 @@ const LocalFilesPage = () => {
             }
         }, []);
 
-        const pauseOrLoadSong = (song: SongEntry) => {
-            if(isActiveTrack(song)) {
-                window.api.pauseOrResume();
-            } else {
-                window.api.loadTrack(song.fullPath);
-            }
-        };
-
-        const isActiveTrack = (song: SongEntry) => {
-            return song.fullPath === currentTrack;
-        }
-
         return (
             <div className={"pageWrapper"} onClick={handleWrapperClick}>
                 <h1>Local Files</h1>
@@ -104,34 +81,11 @@ const LocalFilesPage = () => {
                             <p></p>
                         </div>
                         <div className={s.divider}/>
-                        {songs.map(((song, i) => (
-                            <div key={song.fullPath} id={selectedRow === song.name ? s.activeRow : ""}
-                                 className={`${s.songRow} ${s.grid}`} onClick={(e) => handleRowClick(e, song.name)}>
-                                <div className={s.trackColumn}>
-                                    <div className={s.trackNumberWrapper}>
-                                        <p className={`${s.trackNumber}`}>{i + 1}</p>
-                                        <button className={s.playButton} onClick={() => pauseOrLoadSong(song)}>
-                                            {isActiveTrack(song) && !userPaused ? <FaPause size={23}/> : <FaPlay size={19}/>}
-                                        </button>
-                                    </div>
-                                    <div className={s.trackElement}>
-                                        <div className={s.cover}>
-                                            <img className={s.img} src={song.picture} alt={"cover"}/>
-                                        </div>
-                                        <div className={s.trackInfo}>
-                                            <p className={`${s.trackTitle}`}>{song.title}</p>
-                                            <p className={`${s.trackArtist}`}>{song.artists.map(((a, i) => <span
-                                                key={a}><span
-                                                className={s.link}>{a}</span>{i < song.artists.length - 1 ? ", " : ""}</span>))}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <a className={s.trackAlbum}>{song.album}</a>
-                                <p className={s.timestamp}>{format(song.createdAt)}</p>
-                                <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
-                                <p></p>
-                            </div>
-                        )))}
+                        <SongList
+                            songs={songs}
+                            selectedRow={selectedRow}
+                            setSelectedRow={setSelectedRow}
+                        />
                     </div>
                 }
             </div>

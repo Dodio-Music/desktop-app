@@ -60,12 +60,15 @@
         "@uidotdev/usehooks": "^2.4.1",
         "@underswing/naudiodon": "github:underswing/naudiodon",
         "axios": "^1.12.2",
+        "classnames": "^2.5.1",
         "electron-updater": "^6.3.9",
         "ffmpeg-static": "^5.2.0",
         "music-metadata": "^11.8.3",
+        "p-limit": "^7.1.1",
         "react-icons": "^5.5.0",
         "react-redux": "^9.2.0",
         "react-router-dom": "^7.8.2",
+        "sharp": "^0.34.4",
         "timeago.js": "^4.0.2"
     },
     "devDependencies": {

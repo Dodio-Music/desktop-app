@@ -35,7 +35,7 @@
 
 .grid {
     display: grid;
-    grid-template-columns: 3.5fr 2.5fr 1.5fr 1fr 40px;
+    grid-template-columns: 4.5fr 3fr 1.8fr 0.5fr 40px;
     gap: 20px;
 }
 
@@ -63,6 +63,7 @@
     justify-content: flex-start;
     align-items: center;
     gap: 15px;
+    min-width: 0;
 }
 
 .trackInfo {
@@ -70,6 +71,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    min-width: 0;
 }
 
 .cover {
@@ -77,6 +79,7 @@
     aspect-ratio: 1;
     border-radius: 4px;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .cover img {
@@ -86,6 +89,12 @@
 .trackTitle {
     color: var(--primary);
     font-size: 1.2rem;
+}
+
+.ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .trackArtist {
@@ -139,7 +148,6 @@
 
 .songList a, .link {
     cursor: pointer;
-    width: fit-content;
 }
 
 .songList a:hover, .link:hover {
@@ -157,6 +165,8 @@
     display: flex;
     justify-content: flex-start;
     align-items: center;
+
+    overflow: hidden;
 }
 
 .songRow:hover .trackNumber {
