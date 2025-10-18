@@ -5,12 +5,16 @@ import ffmpegStatic from "ffmpeg-static";
 import path from "path";
 import {BrowserWindow} from "electron";
 import {SourceType} from "../../shared/PlayerState.js";
-import type { ReadableStream } from 'node:stream/web';
+import type {ReadableStream} from "node:stream/web";
 
 const ffmpegPath =
     process.env.NODE_ENV === "development"
         ? (typeof ffmpegStatic === "string" ? ffmpegStatic : ffmpegStatic.default)
         : path.join(process.resourcesPath, "ffmpeg", process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg");
+
+export enum WaveformMode {
+    RMS, LUFS
+}
 
 export interface PCMSource {
     start(): Promise<void>;
@@ -33,6 +37,8 @@ export class FLACStreamSource implements PCMSource {
     private currentBucketOffset = 0;
     private bucketSize = 0;
 
+    private lufsPromise: Promise<void> | null = null;
+
     private initializeWaveformBuckets(durationSeconds: number) {
         const totalSamples = Math.ceil(durationSeconds * this.sampleRate);
         this.bucketSize = Math.ceil(totalSamples / this.numPeaks);
@@ -53,7 +59,8 @@ export class FLACStreamSource implements PCMSource {
         public pcmSab: SharedArrayBuffer,
         public writtenSab: SharedArrayBuffer,
         private mainWindow: BrowserWindow,
-        private sourceType: SourceType
+        private sourceType: SourceType,
+        private waveformMode: WaveformMode = WaveformMode.LUFS
     ) {
         this.pcm = new Float32Array(pcmSab);
         this.writtenIndex = new Int32Array(writtenSab);
@@ -65,6 +72,7 @@ export class FLACStreamSource implements PCMSource {
 
         let inputStream: Readable | null = null;
         let inputArg = this.url;
+
         if(this.sourceType === "remote") {
             const res = await fetch(this.url);
             if(!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -98,16 +106,31 @@ export class FLACStreamSource implements PCMSource {
             }
         }, 100);
 
+        if (this.waveformMode === WaveformMode.LUFS && this.sourceType === "local") {
+            this.lufsPromise = this.calculateLUFSWaveform();
+        }
+
         this.ffmpegProcess.stdout.on("data", (chunk: Buffer) => {
             this.append(chunk);
+            if (this.waveformMode === WaveformMode.RMS && this.sourceType === "local") {
+                this.processChunkForWaveform(chunk);
+            }
         });
 
-        this.ffmpegProcess.on("exit", () => {
+        this.ffmpegProcess.on("exit", async () => {
             clearInterval(progressInterval);
             this.cancelled = true;
 
             if (this.mainWindow && !this.mainWindow.isDestroyed()) {
                 this.mainWindow.webContents.send("player:loading-progress", 1);
+            }
+
+            if (this.lufsPromise) {
+                try {
+                    await this.lufsPromise;
+                } catch (e) {
+                    console.error("LUFS calculation failed:", e);
+                }
             }
 
             const peaksToSend = this.waveformBuckets;
@@ -123,8 +146,6 @@ export class FLACStreamSource implements PCMSource {
         this.pcm.set(floatChunk, this.writeOffset);
         this.writeOffset += floatChunk.length;
         Atomics.store(this.writtenIndex, 0, this.writeOffset);
-
-        if(this.sourceType === "local") this.processChunkForWaveform(chunk);
     }
 
     cancel() {
@@ -135,6 +156,52 @@ export class FLACStreamSource implements PCMSource {
         }
     }
 
+    /** LUFS-based waveform (background process) */
+    private async calculateLUFSWaveform() {
+        return new Promise<void>((resolve, reject) => {
+            const lufsProcess = spawn(ffmpegPath!, [
+                "-i", this.url,
+                "-filter_complex", "ebur128",
+                "-f", "null", "-"
+            ], {stdio: ["pipe", "pipe", "pipe"]});
+
+            let buffer = "";
+            lufsProcess.stderr.setEncoding("utf-8");
+
+            lufsProcess.stderr.on("data", (data) => buffer += data);
+
+            lufsProcess.on("exit", () => {
+                const lines = buffer.split(/\r?\n/);
+                const lufsValues: number[] = [];
+
+                for (const line of lines) {
+                    const match = line.match(/M:\s*(-?\d+(\.\d+)?)/); // momentary loudness
+                    if (match) {
+                        const val = parseFloat(match[1]);
+                        lufsValues.push(val);
+                    }
+                }
+
+                if (lufsValues.length === 0) {
+                    return reject(new Error("No LUFS data found"));
+                }
+
+                const maxLUFS = Math.max(...lufsValues);
+                const minLUFS = Math.max(maxLUFS - 20, -40);
+                for (let i = 0; i < this.numPeaks; i++) {
+                    const idx = Math.floor((i / this.numPeaks) * lufsValues.length);
+                    let normalized = (lufsValues[idx] - minLUFS) / (maxLUFS - minLUFS);
+                    normalized = Math.min(Math.max(normalized, 0), 1);
+                    normalized = Math.pow(normalized, 2);
+                    this.waveformBuckets[i] = normalized;
+                }
+
+                resolve();
+            });
+        });
+    }
+
+    /** RMS peak-based waveform (during decoding) */
     private processChunkForWaveform(chunk: Buffer) {
         if (!this.waveformBuckets) return;
 
@@ -143,13 +210,15 @@ export class FLACStreamSource implements PCMSource {
         for (let i = 0; i < floatData.length; i += this.channels) {
             if (this.currentBucketIndex >= this.numPeaks) break;
 
-            let sample = 0;
+            let sumSquares = 0;
             for (let c = 0; c < this.channels; c++) {
-                sample = Math.max(sample, Math.abs(floatData[i + c]));
+                sumSquares += floatData[i + c] ** 2;
             }
 
-            if (sample > this.waveformBuckets[this.currentBucketIndex]) {
-                this.waveformBuckets[this.currentBucketIndex] = sample;
+            const rms = Math.sqrt(sumSquares / this.channels);
+
+            if (rms > this.waveformBuckets[this.currentBucketIndex]) {
+                this.waveformBuckets[this.currentBucketIndex] = rms;
             }
 
             this.currentBucketOffset++;
