@@ -15,9 +15,6 @@ export interface CustomWindowControls {
     isMaximized: () => Promise<boolean>;
 }
 
-
-console.log("DeineMamer")
-
 const windowControls: CustomWindowControls = {
     minimize: () => ipcRenderer.send("window-minimize"),
     maximize: () => ipcRenderer.send("window-maximize"),

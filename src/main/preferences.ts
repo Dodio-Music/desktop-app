@@ -7,6 +7,7 @@ export interface IPreferences {
     localFilesDir?: string;
     volume: number;
     muted: boolean;
+    latencyPreset: string;
 }
 
 const prefsPath = path.join(app.getPath("userData"), "preferences.json");
@@ -15,7 +16,8 @@ const defaultPrefs: IPreferences = {
     zoomFactor: 1,
     localFilesDir: undefined,
     volume: 1,
-    muted: false
+    muted: false,
+    latencyPreset: "safe"
 };
 
 export async function loadPreferences(): Promise<IPreferences> {

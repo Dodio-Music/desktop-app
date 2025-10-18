@@ -3,9 +3,11 @@ import {useEffect, useState} from "react";
 import s from "./LocalFilesPage.module.css";
 import {secondsToTime} from "../../util/timeUtils";
 import {WiTime3} from "react-icons/wi";
-import {FaPlay} from "react-icons/fa6";
+import {FaPlay, FaPause} from "react-icons/fa6";
 import {MouseEvent} from "react";
 import {format} from "timeago.js";
+import {useSelector} from "react-redux";
+import {RootState} from "@renderer/redux/store";
 
 export interface SongEntry {
     name: string;
@@ -23,6 +25,7 @@ const LocalFilesPage = () => {
         const [songs, setSongs] = useState<SongEntry[]>([]);
         const [error, setError] = useState("");
         const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
+        const {currentTrack, userPaused} = useSelector((root: RootState) => root.nativePlayer);
 
         const handleWrapperClick = () => {
             setSelectedRow(undefined);
@@ -65,9 +68,17 @@ const LocalFilesPage = () => {
             }
         }, []);
 
-        const playSong = (path: string) => {
-            window.api.loadTrack(path);
+        const pauseOrLoadSong = (song: SongEntry) => {
+            if(isActiveTrack(song)) {
+                window.api.pauseOrResume();
+            } else {
+                window.api.loadTrack(song.fullPath);
+            }
         };
+
+        const isActiveTrack = (song: SongEntry) => {
+            return song.fullPath === currentTrack;
+        }
 
         return (
             <div className={"pageWrapper"} onClick={handleWrapperClick}>
@@ -99,8 +110,8 @@ const LocalFilesPage = () => {
                                 <div className={s.trackColumn}>
                                     <div className={s.trackNumberWrapper}>
                                         <p className={`${s.trackNumber}`}>{i + 1}</p>
-                                        <button className={s.playButton} onClick={() => playSong(song.fullPath)}>
-                                            <FaPlay/>
+                                        <button className={s.playButton} onClick={() => pauseOrLoadSong(song)}>
+                                            {isActiveTrack(song) && !userPaused ? <FaPause size={23}/> : <FaPlay size={19}/>}
                                         </button>
                                     </div>
                                     <div className={s.trackElement}>

@@ -43,6 +43,6 @@ export const latencyPresets: Record<string, LatencyPreset> = {
     }
 }
 
-const fallback = latencyPresets.compatibility;
-const preset = "safe";
+const fallback = latencyPresets.safe;
+const preset = "low";
 export const activePreset = latencyPresets[preset] || fallback;

@@ -25,7 +25,7 @@ interface DeviceInformation {
     out: OutputDevice;
 }
 
-interface OutputDevice {
+export interface OutputDevice {
     channels: number;
     sampleRate: number;
     deviceId: number;
@@ -44,7 +44,7 @@ type StateMessage = {
 
 export class PlayerProcess {
     private io: IoStreamWrite | null = null;
-    private deviceInfo: DeviceInformation | null = null;
+    public deviceInfo: DeviceInformation | null = null;
     private chunkerLoopPromise: Promise<void> | null = null;
     private session: PlayerSession | null = null;
     private lastActiveTime: number = Date.now();
@@ -193,7 +193,9 @@ export class PlayerProcess {
         this.io = null;
     }
 
-    load(path: string, duration: number, pcm: Float32Array, writtenIndex: Int32Array, devInfo: OutputDevice, sourceType: SourceType) {
+    load(path: string, duration: number, pcm: Float32Array, writtenIndex: Int32Array, sourceType: SourceType) {
+        if(!this.deviceInfo) return;
+
         this.userPaused = false;
 
         this.session = {
@@ -206,8 +208,6 @@ export class PlayerProcess {
             sourceType,
             ended: false
         };
-
-        this.registerAudioDevice(devInfo);
 
         const queuedLatencyFrames = this.getQueuedLatencyFrames();
         this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
@@ -357,9 +357,9 @@ export class PlayerProcess {
 
 const playerProcess = new PlayerProcess();
 
-interface IMsg {
+export interface IMsg<T> {
     type: string;
-    payload: unknown;
+    payload: T;
 }
 
 interface LoadPayload {
@@ -367,15 +367,23 @@ interface LoadPayload {
     duration: number;
     pcmSab: SharedArrayBuffer;
     writtenSab: SharedArrayBuffer;
-    devInfo: OutputDevice;
     sourceType: SourceType;
 }
 
-parentPort?.on("message", (msg: IMsg) => {
+parentPort?.on("message", (msg: IMsg<unknown>) => {
     switch (msg.type) {
+        case "get-init-device": {
+            playerProcess.registerAudioDevice();
+            if(!playerProcess.deviceInfo) return;
+            parentPort?.postMessage({
+                type: "device-info",
+                payload: playerProcess.deviceInfo.out
+            });
+            break;
+        }
         case "load": {
             const info = msg.payload as LoadPayload;
-            playerProcess.load(info.path, info.duration, new Float32Array(info.pcmSab), new Int32Array(info.writtenSab), info.devInfo, info.sourceType);
+            playerProcess.load(info.path, info.duration, new Float32Array(info.pcmSab), new Int32Array(info.writtenSab), info.sourceType);
             break;
         }
         case "set-volume": {

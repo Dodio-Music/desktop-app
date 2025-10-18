@@ -2,30 +2,14 @@ import {app, BrowserWindow, ipcMain} from "electron";
 import {TrackInfo} from "../../shared/TrackInfo.js";
 import {parseFile} from "music-metadata";
 import playerProcessPath from "../player/PlayerProcess?modulePath";
-import {getDevices, getHostAPIs} from "@underswing/naudiodon";
+import {OutputDevice, IMsg} from "../player/PlayerProcess.js";
 import {Worker} from "node:worker_threads";
 import {FLACStreamSource} from "../player/FlacStreamSource.js";
 import {SourceType} from "../../shared/PlayerState.js";
 
-interface DeviceInfo {
-    sampleRate: number,
-    channels: number,
-    deviceId: number
-}
-
-const getDeviceInfo = (): DeviceInfo => {
-    const hostAPIs = getHostAPIs();
-    const defaultId = hostAPIs.HostAPIs[hostAPIs.defaultHostAPI].defaultOutput;
-    const devices = getDevices();
-    const defaultDevice = devices[defaultId];
-
-    return {sampleRate: defaultDevice.defaultSampleRate, channels: Math.min(defaultDevice.maxOutputChannels, 2), deviceId: defaultId};
-};
-
 export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     const playerProcess = new Worker(playerProcessPath);
     let source: FLACStreamSource | null = null;
-    let willWakeDevice = false;
 
     playerProcess.on("message", async (state) => {
         if (!mainWindow.isDestroyed() && mainWindow.webContents) {
@@ -47,22 +31,13 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     });
 
     mainWindow.on("blur", () => playerProcess.postMessage({type: "focus-update", payload: false}));
-    mainWindow.on("focus", () => {
-        willWakeDevice = true;
-        setTimeout(() => {
-            if(willWakeDevice) {
-                playerProcess.postMessage({type: "focus-update", payload: true});
-                willWakeDevice = false;
-            }
-        }, 1000);
-    });
+    mainWindow.on("focus", () => playerProcess.postMessage({type: "focus-update", payload: true}));
 
     const loadTrackInWorker = async (pathOrUrl: string, duration: number, sourceType: SourceType) => {
         mainWindow.webContents.send("player:track-change");
         mainWindow.webContents.send("player:loading-progress", 0);
-        willWakeDevice = false;
 
-        const devInfo = getDeviceInfo();
+        const devInfo = await getDeviceInfoFromWorker();
         const totalSamples = Math.ceil(duration * devInfo.sampleRate * devInfo.channels);
 
         const pcmSab = new SharedArrayBuffer(totalSamples * Float32Array.BYTES_PER_ELEMENT);
@@ -84,6 +59,25 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
                 devInfo,
                 sourceType
             }
+        });
+    };
+
+    const getDeviceInfoFromWorker = async (): Promise<OutputDevice> => {
+        return new Promise((resolve, reject) => {
+            const onMessage = (msg: IMsg<OutputDevice>) => {
+                if (msg.type === "device-info") {
+                    playerProcess.off("message", onMessage);
+                    resolve(msg.payload);
+                }
+            };
+            playerProcess.on("message", onMessage);
+
+            playerProcess.postMessage({ type: "get-init-device" });
+
+            setTimeout(() => {
+                playerProcess.off("message", onMessage);
+                reject(new Error("Device info request timed out"));
+            }, 2000);
         });
     };
 
