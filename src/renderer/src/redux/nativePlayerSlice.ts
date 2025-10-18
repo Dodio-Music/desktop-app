@@ -13,7 +13,7 @@ const initialState: PlayerState = {
     playbackRunning: false
 };
 
-const playerSlice = createSlice({
+const nativePlayerSlice = createSlice({
     name: "player",
     initialState,
     reducers: {
@@ -26,5 +26,5 @@ const playerSlice = createSlice({
     },
 });
 
-export const { updatePlayerState, markTrackChange } = playerSlice.actions;
-export default playerSlice.reducer;
+export const { updatePlayerState, markTrackChange } = nativePlayerSlice.actions;
+export default nativePlayerSlice.reducer;

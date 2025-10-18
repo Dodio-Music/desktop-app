@@ -1,11 +1,15 @@
 import {configureStore} from "@reduxjs/toolkit";
-import playerSlice from "./playerSlice";
-import authSlice from "@renderer/redux/authSlice";
+import nativePlayerSlice from "./nativePlayerSlice";
+import authSlice from "./authSlice";
+import shortcutsSlice from "./shortcutsSlice";
+import rendererPlayerSlice from "./rendererPlayerSlice";
 
 export const store = configureStore({
     reducer: {
-        player: playerSlice,
+        nativePlayer: nativePlayerSlice,
         auth: authSlice,
+        shortcuts: shortcutsSlice,
+        rendererPlayer: rendererPlayerSlice
     }
 });
 

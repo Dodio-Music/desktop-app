@@ -1,21 +1,22 @@
 import s from "./PlaybackBar.module.css";
-import {useSelector} from "react-redux";
-import {RootState} from "../../redux/store";
+import {useDispatch, useSelector} from "react-redux";
+import {AppDispatch, RootState} from "../../redux/store";
 import {FaPause, FaPlay} from "react-icons/fa6";
 import {useEffect, useState, WheelEvent} from "react";
 import {FiVolume1, FiVolume2, FiVolumeX} from "react-icons/fi";
 import SeekBar from "./SeekBar/SeekBar";
 import { useDebounce } from "@uidotdev/usehooks";
 import {formatTime} from "../../util/timeUtils";
-import {playpackStore} from "@renderer/zustand/playbackStore";
+import {setVolume, setIsMuted} from "@renderer/redux/rendererPlayerSlice";
 
 const PlaybackBar = () => {
-    const {volume, setVolume, isMuted, setIsMuted} = playpackStore();
+    const dispatch = useDispatch<AppDispatch>();
+    const {volume, isMuted} = useSelector((state: RootState) => state.rendererPlayer);
     const displayVolume = round2Dec(!isMuted ? volume : 0);
     const debouncedVolume = useDebounce(displayVolume, 1000);
     const [songPath, setSongPath] = useState("");
     const {currentTrack, duration, currentTime, userPaused, sourceType} = useSelector(
-        (state: RootState) => state.player
+        (state: RootState) => state.nativePlayer
     );
 
     const trackName = !currentTrack ? "No info available." : sourceType === "local" ? currentTrack.replace(songPath + "\\", "") : currentTrack;
@@ -27,8 +28,8 @@ const PlaybackBar = () => {
     useEffect(() => {
         const getSetPrefs = async () => {
             const prefs = await window.api.getPreferences();
-            setVolume(prefs.volume);
-            setIsMuted(prefs.muted);
+            dispatch(setVolume(prefs.volume));
+            dispatch(setIsMuted(prefs.muted));
             setSongPath(prefs.localFilesDir ?? "");
         }
         void getSetPrefs();
@@ -40,8 +41,8 @@ const PlaybackBar = () => {
     }, [isMuted, volume]);
 
     const handleDrag = (v: number) => {
-        setIsMuted(false);
-        setVolume(v);
+        dispatch(setIsMuted(false));
+        dispatch(setVolume(v));
     }
 
     const handleWheel = (e: WheelEvent<HTMLInputElement>) => {
@@ -54,11 +55,11 @@ const PlaybackBar = () => {
         // The rest of your old logic (simplified for correctness):
 
         // Unmute immediately if adjusting volume
-        setIsMuted(false);
+        dispatch(setIsMuted(false));
 
         // 2. Pass the final calculated number to the Zustand action
         // setVolume will handle the clamping (min/max) based on your store definition
-        setVolume(newVolume);
+        dispatch(setVolume(newVolume));
     };
 
     const pauseOrResume = () => {
@@ -86,7 +87,7 @@ const PlaybackBar = () => {
             </div>
             <div className={s.rightContainer}>
                 <div className={s.volumeControl}>
-                    <button onClick={() => setIsMuted(!isMuted)} className={`${s.volBtn} ${s.btnAnim}`}>
+                    <button onClick={() => dispatch(setIsMuted(!isMuted))} className={`${s.volBtn} ${s.btnAnim}`}>
                         {displayVolume > 0 ? displayVolume >= 1 ?
                             <FiVolume2 size={23}/>
                             :

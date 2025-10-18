@@ -3,7 +3,7 @@ import {createRoot} from "react-dom/client";
 import App from "./App";
 import {HashRouter} from "react-router-dom";
 import {store} from "./redux/store";
-import {markTrackChange, updatePlayerState} from "./redux/playerSlice";
+import {markTrackChange, updatePlayerState} from "./redux/nativePlayerSlice";
 import {Provider} from "react-redux";
 import {setAuthStatus} from "@renderer/redux/authSlice";
 

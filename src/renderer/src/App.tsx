@@ -6,12 +6,12 @@ import PlaybackBar from "./components/PlaybackBar/PlaybackBar";
 import s from "./App.module.css";
 import {useZoom} from "./hooks/useZoom";
 import {useNavigationShortcuts} from "./hooks/useNavigationShortcuts";
-import {useDodioShortcuts} from "@renderer/hooks/useDodioShortcuts";
+import {useShortcuts} from "@renderer/hooks/useShortcuts";
 
 function App() {
     const zoomFactor = useZoom();
     useNavigationShortcuts();
-    useDodioShortcuts();
+    useShortcuts();
 
     return (
         <>

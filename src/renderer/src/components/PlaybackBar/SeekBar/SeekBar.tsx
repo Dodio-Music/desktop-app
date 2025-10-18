@@ -32,7 +32,7 @@ const SeekBar = () => {
         currentTime,
         sourceType,
         playbackRunning
-    } = useSelector((state: RootState) => state.player);
+    } = useSelector((state: RootState) => state.nativePlayer);
 
     const offscreenCanvasRef = useRef<HTMLCanvasElement>(null);
     const lastIpcTimeRef = useRef<number>(0);
