@@ -149,8 +149,8 @@ const SeekBar = () => {
             ctx.fillStyle = "rgba(0,0,0,0.7)";
             ctx.fillRect(progressX, 0, ctx.canvas.width - progressX, ctx.canvas.height);
 
-            //ctx.fillStyle = "rgba(90,255,90,0.3)";
-            //ctx.fillRect(0, 0, loadingProgressRef.current * ctx.canvas.width, ctx.canvas.height);
+            ctx.fillStyle = "rgba(90,189,255,0.3)";
+            ctx.fillRect(0, 0, loadingProgressRef.current * ctx.canvas.width, ctx.canvas.height);
 
             rafRef.current = requestAnimationFrame(loop);
         };

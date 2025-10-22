@@ -2,9 +2,9 @@ import {app, BrowserWindow, ipcMain} from "electron";
 import {TrackInfo} from "../../shared/TrackInfo.js";
 import {parseFile} from "music-metadata";
 import playerProcessPath from "../player/PlayerProcess?modulePath";
-import {OutputDevice, IMsg} from "../player/PlayerProcess.js";
+import {IMsg, OutputDevice} from "../player/PlayerProcess.js";
 import {Worker} from "node:worker_threads";
-import {FLACStreamSource} from "../player/FlacStreamSource.js";
+import {FLACStreamSource, SEGMENT_DURATION, WaveformMode} from "../player/FlacStreamSource.js";
 import {SourceType} from "../../shared/PlayerState.js";
 
 export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
@@ -41,12 +41,12 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
         const totalSamples = Math.ceil(duration * devInfo.sampleRate * devInfo.channels);
 
         const pcmSab = new SharedArrayBuffer(totalSamples * Float32Array.BYTES_PER_ELEMENT);
-        const writtenSab = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT);
-        const writtenIndex = new Int32Array(writtenSab);
-        writtenIndex[0] = 0;
+
+        const totalSegments = Math.ceil(duration / SEGMENT_DURATION);
+        const segmentSab = new SharedArrayBuffer(totalSegments);
 
         if (source) source.cancel();
-        source = new FLACStreamSource(pathOrUrl, devInfo.channels, devInfo.sampleRate, duration, pcmSab, writtenSab, mainWindow, sourceType);
+        source = new FLACStreamSource(pathOrUrl, devInfo.channels, devInfo.sampleRate, duration, pcmSab, mainWindow, sourceType, WaveformMode.LUFS, segmentSab);
         void source.start();
 
         playerProcess.postMessage({
@@ -54,9 +54,9 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
             payload: {
                 pcmSab,
                 path: pathOrUrl,
-                writtenSab,
                 duration,
                 devInfo,
+                segmentSab,
                 sourceType
             }
         });
@@ -87,7 +87,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
 
     ipcMain.handle("player:load-local", async (_, pathToFile: string) => {
         const metadata = await parseFile(pathToFile);
-        const duration = metadata.format.duration ?? 0;
+        const duration = (metadata.format.duration ?? 0) + 0.1;
 
         await loadTrackInWorker(pathToFile, duration, "local");
     });

@@ -16,6 +16,8 @@ export enum WaveformMode {
     RMS, LUFS
 }
 
+export const SEGMENT_DURATION = 1;
+
 export interface PCMSource {
     start(): Promise<void>;
     cancel(): void;
@@ -30,12 +32,12 @@ export class FLACStreamSource implements PCMSource {
     private cancelled = false;
     private writeOffset = 0;
     private pcm: Float32Array;
-    private readonly writtenIndex: Int32Array;
     private numPeaks = 600;
     private waveformBuckets: Float32Array = new Float32Array(this.numPeaks);
     private currentBucketIndex = 0;
     private currentBucketOffset = 0;
     private bucketSize = 0;
+    private segmentMap: Uint8Array;
 
     private lufsPromise: Promise<void> | null = null;
 
@@ -57,13 +59,13 @@ export class FLACStreamSource implements PCMSource {
         public sampleRate = 44100,
         public duration = 0,
         public pcmSab: SharedArrayBuffer,
-        public writtenSab: SharedArrayBuffer,
         private mainWindow: BrowserWindow,
         private sourceType: SourceType,
-        private waveformMode: WaveformMode = WaveformMode.LUFS
+        private waveformMode: WaveformMode = WaveformMode.LUFS,
+        segmentSab: SharedArrayBuffer
     ) {
         this.pcm = new Float32Array(pcmSab);
-        this.writtenIndex = new Int32Array(writtenSab);
+        this.segmentMap = new Uint8Array(segmentSab);
         this.startWaveform(duration);
     }
 
@@ -96,15 +98,24 @@ export class FLACStreamSource implements PCMSource {
             inputStream.pipe(this.ffmpegProcess.stdin!);
         }
 
-        const totalSamples = Math.ceil(this.duration * this.sampleRate * this.channels);
-
         const progressInterval = setInterval(() => {
-            const written = Atomics.load(this.writtenIndex, 0);
-            const progress = Math.min(written / totalSamples, 1);
+            const segmentMap = this.segmentMap;
+
+            const samplesPerSegment = Math.floor(this.sampleRate * SEGMENT_DURATION);
+            let fullyLoadedFrames = 0;
+            for (let i = 0; i < segmentMap.length; i++) {
+                if (Atomics.load(segmentMap, i) === 1) fullyLoadedFrames += samplesPerSegment;
+                else break;
+            }
+            const writtenFrames = this.writeOffset;
+            const loadedFrames = Math.min(fullyLoadedFrames, writtenFrames);
+
+            const progress = Math.min(loadedFrames / (this.duration * this.sampleRate), 1);
+
             if (this.mainWindow && !this.mainWindow.isDestroyed()) {
                 this.mainWindow.webContents.send("player:loading-progress", progress);
             }
-        }, 100);
+        }, 50);
 
         if (this.waveformMode === WaveformMode.LUFS && this.sourceType === "local") {
             this.lufsPromise = this.calculateLUFSWaveform();
@@ -120,6 +131,10 @@ export class FLACStreamSource implements PCMSource {
         this.ffmpegProcess.on("exit", async () => {
             clearInterval(progressInterval);
             this.cancelled = true;
+
+            if (this.segmentMap.length > 0) {
+                Atomics.store(this.segmentMap, this.segmentMap.length - 1, 1);
+            }
 
             if (this.mainWindow && !this.mainWindow.isDestroyed()) {
                 this.mainWindow.webContents.send("player:loading-progress", 1);
@@ -143,9 +158,33 @@ export class FLACStreamSource implements PCMSource {
     append(chunk: Buffer) {
         const floatChunk = new Float32Array(chunk.buffer, chunk.byteOffset, chunk.byteLength / Float32Array.BYTES_PER_ELEMENT);
 
+        if (this.writeOffset + floatChunk.length > this.pcm.length) {
+            const remaining = this.pcm.length - this.writeOffset;
+            if (remaining > 0) {
+                this.pcm.set(floatChunk.subarray(0, remaining), this.writeOffset);
+                this.writeOffset += remaining;
+            }
+            console.warn(`[FlacStreamSource] Clamped final write at ${this.writeOffset}/${this.pcm.length} samples (overflow prevented)`);
+            return;
+        }
+
         this.pcm.set(floatChunk, this.writeOffset);
+
+        const startSample = this.writeOffset;
         this.writeOffset += floatChunk.length;
-        Atomics.store(this.writtenIndex, 0, this.writeOffset);
+
+        const startFrame = Math.floor(startSample / this.channels);
+        const endFrame = Math.floor(this.writeOffset / this.channels);
+
+        const samplesPerSegment = Math.floor(this.sampleRate * SEGMENT_DURATION);
+
+        const startSeg = Math.floor(startFrame / samplesPerSegment);
+        const endSeg = Math.floor((endFrame - 1) / samplesPerSegment);
+
+
+        for (let i = startSeg; i < endSeg && i < this.segmentMap.length; i++) {
+            Atomics.store(this.segmentMap, i, 1);
+        }
     }
 
     cancel() {

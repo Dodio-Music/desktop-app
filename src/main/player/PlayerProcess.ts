@@ -3,6 +3,7 @@ import {parentPort} from "node:worker_threads";
 import {clearInterval} from "node:timers";
 import {SourceType} from "../../shared/PlayerState.js";
 import {activePreset} from "../../shared/latencyPresets.js";
+import {SEGMENT_DURATION} from "./FlacStreamSource.js";
 
 const IPC_UPDATE_INTERVAL = 200;
 const IDLE_TIMEOUT_MS = 2 * 60 * 1000;
@@ -13,7 +14,7 @@ type PlayerSession = {
     waitingForData: boolean;
     duration: number;
     pcm: Float32Array;
-    writtenIndex: Int32Array;
+    segmentIndex: Uint8Array;
     sourceType: SourceType;
     ended: boolean;
 };
@@ -63,20 +64,32 @@ export class PlayerProcess {
             let outputBuf: Buffer = this.deviceInfo.silentBuffer;
 
             if (this.session && !this.userPaused && !this.session.ended) {
-                const {readOffset, pcm, writtenIndex} = this.session;
-                const written = Atomics.load(writtenIndex, 0);
-                let end = readOffset + this.deviceInfo.samplesPerBuffer;
-                end = Math.min(end, written);
+                const {readOffset, pcm, segmentIndex} = this.session;
+                const segmentSize = this.samplesPerSegment();
+                const startSegment = Math.floor(readOffset / segmentSize);
+                const endSegment = Math.floor((readOffset + this.deviceInfo.samplesPerBuffer - 1) / segmentSize);
 
-                if(readOffset > pcm.length) {
-                    this.session.ended = true;
+                let allSegmentsReady = true;
+                for(let seg = startSegment; seg <= endSegment && seg < segmentIndex.length; seg++) {
+                    if(Atomics.load(segmentIndex, seg) === 0) {
+                        allSegmentsReady = false;
+                        break;
+                    }
                 }
 
-                if (readOffset < end) {
+                if(allSegmentsReady) {
                     if (this.session.waitingForData) {
                         const queuedLatencyFrames = this.getQueuedLatencyFrames();
                         this.playheadAnchorFrames = readOffset - queuedLatencyFrames;
                         this.playheadAnchorWall = Date.now();
+                    }
+
+                    const end = Math.min(readOffset + this.deviceInfo.samplesPerBuffer, pcm.length);
+
+                    if(readOffset >= pcm.length) {
+                        this.session.ended = true;
+                        this.session.readOffset = pcm.length;
+                        this.notifyState();
                     }
 
                     const chunk = pcm.subarray(readOffset, end);
@@ -89,6 +102,8 @@ export class PlayerProcess {
                     this.session.waitingForData = false;
                 } else {
                     this.session.waitingForData = true;
+                    this.playheadAnchorFrames = this.session.readOffset;
+                    this.playheadAnchorWall = Date.now();
                 }
             }
 
@@ -193,7 +208,7 @@ export class PlayerProcess {
         this.io = null;
     }
 
-    load(path: string, duration: number, pcm: Float32Array, writtenIndex: Int32Array, sourceType: SourceType) {
+    load(path: string, duration: number, pcm: Float32Array, segmentIndex: Uint8Array, sourceType: SourceType) {
         if(!this.deviceInfo) return;
 
         this.userPaused = false;
@@ -204,7 +219,7 @@ export class PlayerProcess {
             duration,
             path,
             pcm,
-            writtenIndex,
+            segmentIndex,
             sourceType,
             ended: false
         };
@@ -220,12 +235,14 @@ export class PlayerProcess {
 
     pause() {
         if (this.deviceInfo && this.session) {
-            const {out} = this.deviceInfo;
-            const now = Date.now();
-            const elapsed = (now - this.playheadAnchorWall) / 1000;
-            const advancedFrames = elapsed * out.sampleRate * out.channels;
-            this.playheadAnchorFrames = this.playheadAnchorFrames + advancedFrames;
-            this.playheadAnchorWall = now;
+            if (!this.session.waitingForData) {
+                const {out} = this.deviceInfo;
+                const now = Date.now();
+                const elapsed = (now - this.playheadAnchorWall) / 1000;
+                const advancedFrames = elapsed * out.sampleRate * out.channels;
+                this.playheadAnchorFrames += advancedFrames;
+            }
+            this.playheadAnchorWall = Date.now();
         }
         this.userPaused = true;
     }
@@ -307,7 +324,7 @@ export class PlayerProcess {
         let playheadFrames: number;
 
         if (this.session.ended) {
-            playheadFrames = Atomics.load(this.session.writtenIndex, 0);
+            playheadFrames = this.session.pcm.length;
         } else if (!this.userPaused && !this.session.waitingForData) {
             const elapsed = (Date.now() - this.playheadAnchorWall) / 1000;
             playheadFrames = this.playheadAnchorFrames + elapsed * out.sampleRate * out.channels;
@@ -353,6 +370,11 @@ export class PlayerProcess {
             this.registerAudioDevice();
         }
     }
+
+    samplesPerSegment(): number {
+        if (!this.deviceInfo) return 0;
+        return Math.floor(this.deviceInfo.out.sampleRate * this.deviceInfo.out.channels * SEGMENT_DURATION);
+    }
 }
 
 const playerProcess = new PlayerProcess();
@@ -366,7 +388,7 @@ interface LoadPayload {
     path: string;
     duration: number;
     pcmSab: SharedArrayBuffer;
-    writtenSab: SharedArrayBuffer;
+    segmentSab: SharedArrayBuffer;
     sourceType: SourceType;
 }
 
@@ -383,7 +405,7 @@ parentPort?.on("message", (msg: IMsg<unknown>) => {
         }
         case "load": {
             const info = msg.payload as LoadPayload;
-            playerProcess.load(info.path, info.duration, new Float32Array(info.pcmSab), new Int32Array(info.writtenSab), info.sourceType);
+            playerProcess.load(info.path, info.duration, new Float32Array(info.pcmSab), new Uint8Array(info.segmentSab), info.sourceType);
             break;
         }
         case "set-volume": {
