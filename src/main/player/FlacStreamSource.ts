@@ -99,18 +99,8 @@ export class FLACStreamSource implements PCMSource {
         }
 
         const progressInterval = setInterval(() => {
-            const segmentMap = this.segmentMap;
-
-            const samplesPerSegment = Math.floor(this.sampleRate * SEGMENT_DURATION);
-            let fullyLoadedFrames = 0;
-            for (let i = 0; i < segmentMap.length; i++) {
-                if (Atomics.load(segmentMap, i) === 1) fullyLoadedFrames += samplesPerSegment;
-                else break;
-            }
-            const writtenFrames = this.writeOffset;
-            const loadedFrames = Math.min(fullyLoadedFrames, writtenFrames);
-
-            const progress = Math.min(loadedFrames / (this.duration * this.sampleRate), 1);
+            const fullyLoadedFrames = this.getFullyLoadedFrames();
+            const progress = Math.min(fullyLoadedFrames / (this.duration * this.sampleRate), 1);
 
             if (this.mainWindow && !this.mainWindow.isDestroyed()) {
                 this.mainWindow.webContents.send("player:loading-progress", progress);
@@ -132,9 +122,7 @@ export class FLACStreamSource implements PCMSource {
             clearInterval(progressInterval);
             this.cancelled = true;
 
-            if (this.segmentMap.length > 0) {
-                Atomics.store(this.segmentMap, this.segmentMap.length - 1, 1);
-            }
+            this.markLastSegmentLoaded();
 
             if (this.mainWindow && !this.mainWindow.isDestroyed()) {
                 this.mainWindow.webContents.send("player:loading-progress", 1);
@@ -176,16 +164,35 @@ export class FLACStreamSource implements PCMSource {
         const startFrame = Math.floor(startSample / this.channels);
         const endFrame = Math.floor(this.writeOffset / this.channels);
 
-        const samplesPerSegment = Math.floor(this.sampleRate * SEGMENT_DURATION);
+        this.markSegmentsInRange(startFrame, endFrame);
+    }
 
+    private markSegmentsInRange(startFrame: number, endFrame: number) {
+        const samplesPerSegment = Math.floor(this.sampleRate * SEGMENT_DURATION);
         const startSeg = Math.floor(startFrame / samplesPerSegment);
         const endSeg = Math.floor((endFrame - 1) / samplesPerSegment);
-
 
         for (let i = startSeg; i < endSeg && i < this.segmentMap.length; i++) {
             Atomics.store(this.segmentMap, i, 1);
         }
     }
+
+    private markLastSegmentLoaded() {
+        if (this.segmentMap.length > 0) {
+            Atomics.store(this.segmentMap, this.segmentMap.length - 1, 1);
+        }
+    }
+
+    private getFullyLoadedFrames(): number {
+        const samplesPerSegment = Math.floor(this.sampleRate * SEGMENT_DURATION);
+        let fullyLoadedFrames = 0;
+        for (let i = 0; i < this.segmentMap.length; i++) {
+            if (Atomics.load(this.segmentMap, i) === 1) fullyLoadedFrames += samplesPerSegment;
+            else break;
+        }
+        return fullyLoadedFrames;
+    }
+
 
     cancel() {
         this.cancelled = true;

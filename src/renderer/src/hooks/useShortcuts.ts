@@ -9,9 +9,8 @@ export function useShortcuts(){
 
     const preventDefaultKeys = (e: KeyboardEvent) => {
         const forbiddenKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "space"];
-        if (forbiddenKeys.includes(e.code)) {
+        if (!isTyping(e) && forbiddenKeys.includes(e.code)) {
             e.preventDefault();
-            e.stopPropagation();
         }
     };
 
@@ -22,7 +21,25 @@ export function useShortcuts(){
         decreaseVolumeKey,
     } = useSelector((state: RootState) => state.shortcuts);
 
+    const isTyping = (e: KeyboardEvent) => {
+        const target = e.target as HTMLElement;
+        if (!target) return false;
+
+        if (target.isContentEditable) return true;
+        if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") return false;
+
+        const input = target as HTMLInputElement;
+        const textInputTypes = [
+            "text", "email", "number", "password", "search",
+            "tel", "url", "textarea",
+        ];
+
+        return textInputTypes.includes(input.type);
+    }
+
     const handleCustomShortcuts = useCallback((e: KeyboardEvent) => {
+        if(isTyping(e)) return;
+
         switch (e.code.toLowerCase()){
             case pauseOrResumeKey?.toLowerCase():
                 e.preventDefault();
