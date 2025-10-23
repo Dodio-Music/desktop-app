@@ -84,3 +84,19 @@
     line-height: 1;
     font-size: 0.85rem;
 }
+
+.settingsContainer {
+    font-size: 25px;
+    align-items: center;
+    transition: color 0.4s;
+}
+
+.settingsContainer:hover {
+    color: crimson;
+}
+
+.settings {
+    -webkit-app-region: no-drag;
+    cursor: pointer;
+}
+
