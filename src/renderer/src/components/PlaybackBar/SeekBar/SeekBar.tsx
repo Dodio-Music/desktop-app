@@ -8,7 +8,7 @@ enum SeekBarDisplayStyle {
     DEFAULT, WAVEFORM
 }
 
-const wantedDisplayStyle = SeekBarDisplayStyle.WAVEFORM;
+const wantedDisplayStyle = SeekBarDisplayStyle.DEFAULT;
 
 const SeekBar = () => {
     // CUSTOMIZABLE
@@ -18,7 +18,7 @@ const SeekBar = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [peaks, setPeaks] = useState<number[]>([]);
     const [hoverX, setHoverX] = useState<number>(0);
-    const loadingProgressRef = useRef<number>(0);
+    const loadingProgressRef = useRef<number[]>([]);
     const [isHovering, setIsHovering] = useState(false);
     const barRef = useRef<HTMLDivElement>(null);
     const hoverTimeRef = useRef<number | null>(null);
@@ -55,7 +55,10 @@ const SeekBar = () => {
 
     useEffect(() => {
         let targetDisplay: SeekBarDisplayStyle = wantedDisplayStyle;
-        if (sourceType === "remote") targetDisplay = SeekBarDisplayStyle.DEFAULT;
+        if (sourceType === "remote") {
+            targetDisplay = SeekBarDisplayStyle.DEFAULT;
+            offscreenCanvasRef.current = null;
+        }
 
         setDisplayStyle(targetDisplay);
     }, [sourceType, peaks]);
@@ -71,7 +74,7 @@ const SeekBar = () => {
         drawWaveform(ctx, peaks, offscreen.width, offscreen.height);
 
         offscreenCanvasRef.current = offscreen;
-    }, [peaks, displayStyle]);
+    }, [peaks, displayStyle, seekbarWidth, seekbarHeight]);
 
     const drawWaveform = (ctx: CanvasRenderingContext2D, peaks: number[], width: number, height: number) => {
         ctx.clearRect(0, 0, width, height);
@@ -103,6 +106,8 @@ const SeekBar = () => {
 
     useEffect(() => {
         setPeaks([]);
+        offscreenCanvasRef.current = null;
+        loadingProgressRef.current = [];
     }, [trackChangeToken]);
 
     useEffect(() => {
@@ -121,12 +126,39 @@ const SeekBar = () => {
             if (interpolatedTime > duration) interpolatedTime = duration;
             if (interpolatedTime < 0) interpolatedTime = 0;
 
-            ctx.fillStyle = "rgba(0,0,0,0.5)";
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-            if (offscreenCanvasRef.current) {
-                ctx.drawImage(offscreenCanvasRef.current, 0, 0);
+            const progressColor = "rgb(90,189,255)";
+
+            const waveCanvas = offscreenCanvasRef.current;
+            const hasWaveform =
+                waveCanvas &&
+                waveCanvas.width > 0 &&
+                waveCanvas.height > 0
+
+            if (hasWaveform) {
+                ctx.drawImage(waveCanvas, 0, 0);
             }
+
+            ctx.save();
+            const segments = loadingProgressRef.current;
+
+            if (segments.length > 0) {
+                const segmentWidth = ctx.canvas.width / segments.length;
+                ctx.beginPath();
+                for (let i = 0; i < segments.length; i++) {
+                    if (segments[i] === 1) {
+                        ctx.rect(i * segmentWidth, 0, segmentWidth, ctx.canvas.height);
+                    }
+                }
+                ctx.clip();
+
+                ctx.globalCompositeOperation = hasWaveform ? "source-in" : "source-over";
+                ctx.fillStyle = progressColor;
+                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            }
+            ctx.restore();
+            ctx.globalCompositeOperation = "source-over";
 
             let progressTime: number;
             if (dragTimeRef.current !== null) {
@@ -148,9 +180,6 @@ const SeekBar = () => {
             const progressX = progressTime / duration * ctx.canvas.width;
             ctx.fillStyle = "rgba(0,0,0,0.7)";
             ctx.fillRect(progressX, 0, ctx.canvas.width - progressX, ctx.canvas.height);
-
-            ctx.fillStyle = "rgba(90,189,255,0.3)";
-            ctx.fillRect(0, 0, loadingProgressRef.current * ctx.canvas.width, ctx.canvas.height);
 
             rafRef.current = requestAnimationFrame(loop);
         };

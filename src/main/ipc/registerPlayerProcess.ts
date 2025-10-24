@@ -35,7 +35,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
 
     const loadTrackInWorker = async (pathOrUrl: string, duration: number, sourceType: SourceType) => {
         mainWindow.webContents.send("player:track-change");
-        mainWindow.webContents.send("player:loading-progress", 0);
+        mainWindow.webContents.send("player:loading-progress", []);
 
         const devInfo = await getDeviceInfoFromWorker();
         const totalSamples = Math.ceil(duration * devInfo.sampleRate * devInfo.channels);
@@ -101,6 +101,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     });
 
     ipcMain.handle("player:seek", (_, time: number) => {
+        if(source) source.seek(time);
         playerProcess.postMessage({type: "seek", payload: time});
     });
 };

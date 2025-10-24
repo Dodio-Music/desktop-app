@@ -72,8 +72,8 @@ const api = {
     login(login: string, password: string): Promise<boolean> { return ipcRenderer.invoke("api:login", login, password); },
     signup: (username: string, email: string, password: string): Promise<boolean> => ipcRenderer.invoke("api:signup", username, email, password),
     logout: (): Promise<boolean> => ipcRenderer.invoke("api:logout"),
-    onLoadingProgress: (callback: (progress: number) => void) => {
-        const handler = (_: IpcRendererEvent, progress: number) => callback(progress);
+    onLoadingProgress: (callback: (progress: number[]) => void) => {
+        const handler = (_: IpcRendererEvent, progress: number[]) => callback(progress);
         ipcRenderer.on("player:loading-progress", handler);
         return () => ipcRenderer.removeListener("player:loading-progress", handler);
     }
