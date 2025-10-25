@@ -11,3 +11,5 @@ export interface TrackInfo {
 export interface TrackManifest {
     url: string;
 }
+
+export const SEGMENT_DURATION = 1;

@@ -1,10 +1,10 @@
 import {app, BrowserWindow, ipcMain} from "electron";
-import {TrackInfo} from "../../shared/TrackInfo.js";
+import {SEGMENT_DURATION, TrackInfo} from "../../shared/TrackInfo.js";
 import {parseFile} from "music-metadata";
 import playerProcessPath from "../player/PlayerProcess?modulePath";
 import {IMsg, OutputDevice} from "../player/PlayerProcess.js";
 import {Worker} from "node:worker_threads";
-import {FLACStreamSource, SEGMENT_DURATION, WaveformMode} from "../player/FlacStreamSource.js";
+import {FLACStreamSource, WaveformMode} from "../player/FlacStreamSource.js";
 import {SourceType} from "../../shared/PlayerState.js";
 
 export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {

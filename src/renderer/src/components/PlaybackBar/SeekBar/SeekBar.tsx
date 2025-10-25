@@ -3,12 +3,13 @@ import {MouseEvent, useEffect, useRef, useState} from "react";
 import {formatTime} from "../../../util/timeUtils";
 import {useSelector} from "react-redux";
 import {RootState} from "../../../redux/store";
+import {SEGMENT_DURATION} from "../../../../../shared/TrackInfo";
 
 enum SeekBarDisplayStyle {
     DEFAULT, WAVEFORM
 }
 
-const wantedDisplayStyle = SeekBarDisplayStyle.DEFAULT;
+const wantedDisplayStyle = SeekBarDisplayStyle.WAVEFORM;
 
 const SeekBar = () => {
     // CUSTOMIZABLE
@@ -144,11 +145,16 @@ const SeekBar = () => {
             const segments = loadingProgressRef.current;
 
             if (segments.length > 0) {
-                const segmentWidth = ctx.canvas.width / segments.length;
                 ctx.beginPath();
+
                 for (let i = 0; i < segments.length; i++) {
                     if (segments[i] === 1) {
-                        ctx.rect(i * segmentWidth, 0, segmentWidth, ctx.canvas.height);
+                        const startTime = i * SEGMENT_DURATION;
+                        const endTime = (i + 1) * SEGMENT_DURATION;
+                        const segmentWidth = ((endTime - startTime) / duration) * ctx.canvas.width;
+
+                        const x = (startTime / duration) * ctx.canvas.width;
+                        ctx.rect(x, 0, segmentWidth, ctx.canvas.height);
                     }
                 }
                 ctx.clip();

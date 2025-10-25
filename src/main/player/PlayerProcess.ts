@@ -3,7 +3,7 @@ import {parentPort} from "node:worker_threads";
 import {clearInterval} from "node:timers";
 import {SourceType} from "../../shared/PlayerState.js";
 import {activePreset} from "../../shared/latencyPresets.js";
-import {SEGMENT_DURATION} from "./FlacStreamSource.js";
+import {SEGMENT_DURATION} from "../../shared/TrackInfo.js";
 
 const IPC_UPDATE_INTERVAL = 200;
 const IDLE_TIMEOUT_MS = 2 * 60 * 1000;

@@ -7,6 +7,7 @@ import {BrowserWindow} from "electron";
 import {SourceType} from "../../shared/PlayerState.js";
 import type {ReadableStream} from "node:stream/web";
 import {clearInterval} from "node:timers";
+import {SEGMENT_DURATION} from "../../shared/TrackInfo.js";
 
 const ffmpegPath =
     process.env.NODE_ENV === "development"
@@ -16,8 +17,6 @@ const ffmpegPath =
 export enum WaveformMode {
     RMS, LUFS
 }
-
-export const SEGMENT_DURATION = 1;
 
 export class FLACStreamSource {
     private ffmpegProcess: ChildProcessByStdio<Writable, Readable, null> | null = null;
@@ -35,8 +34,6 @@ export class FLACStreamSource {
     private ffmpegExitResolver: (() => void) | null = null;
     private ffmpegStartSec = 0;
     private ffmpegEndSec = 0;
-
-    // private lufsPromise: Promise<void> | null = null;
 
     private initializeWaveformBuckets(durationSeconds: number) {
         const totalSamples = Math.ceil(durationSeconds * this.sampleRate);
@@ -72,12 +69,18 @@ export class FLACStreamSource {
 
     async start() {
         if (this.cancelled) return;
-        this.fillMissingSegments();
+
+        void this.fillMissingSegments();
         this.startProgressUpdates();
+
+        if(this.waveformMode === WaveformMode.LUFS && this.sourceType === "local") {
+            void this.calculateLUFSWaveform().catch(err => {
+                console.warn("LUFS waveform failed: ", err);
+            });
+        }
     }
 
     private startProgressUpdates() {
-        if (this.progressInterval) clearInterval(this.progressInterval);
         this.progressInterval = setInterval(() => {
             if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
             const progress = Array.from(this.segmentMap).map((_, i) => Atomics.load(this.segmentMap, i));
@@ -85,57 +88,80 @@ export class FLACStreamSource {
         }, 100);
     }
 
-    // if (this.waveformMode === WaveformMode.LUFS && this.sourceType === "local") {
-    //     this.lufsPromise = this.calculateLUFSWaveform();
-    // }
-
     async spawnFFmpeg(startSec: number, endSec: number) {
-        if (this.cancelled) return;
-
         console.log("NEW FFMPEG SPAWNED");
 
         this.ffmpegStartSec = startSec;
         this.ffmpegEndSec = endSec;
 
-        //let inputStream: Readable | null = null;
+        let inputStream: Readable | null = null;
         let inputArg = this.url;
 
-        /*if (this.sourceType === "remote") {
-            const res = await fetch(this.url);
+        if (this.sourceType === "remote") {
+            const infoReq = await fetch(this.url, {method: "HEAD"});
+            if (infoReq.headers.get("accept-ranges") !== "bytes") {
+                console.warn("Server does not support range requests. Seeking will be slow!");
+            }
+            const contentLength = Number(infoReq.headers.get("content-length"));
+
+            const bytesPerSecond = contentLength / this.duration;
+            const startByte = Math.floor(startSec * bytesPerSecond);
+            const endByte = Math.floor(endSec * bytesPerSecond) - 1;
+
+            const res = await fetch(this.url, {
+                headers: {
+                    "Range": `bytes=${startByte}-${endByte}`
+                }
+            });
+
+            console.log(startByte, endByte);
+
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             if (!res.body) throw new Error("No response body!");
 
             inputStream = Readable.fromWeb(res.body as ReadableStream<Uint8Array>);
             inputArg = "pipe:0";
-        }*/
+        }
 
-        this.ffmpegProcess = spawn(ffmpegPath!, [
-            "-re",
-            "-ss", `${startSec}`,
-            "-to", `${endSec}`,
+        const ffArgs: string[] = [];
+
+        if(this.sourceType === "local") {
+            ffArgs.push(
+                "-ss", `${startSec}`,
+                "-to", `${endSec}`,
+            );
+        }
+
+        ffArgs.push(
             "-i", inputArg,
             "-f", "f32le",
             "-acodec", "pcm_f32le",
             "-ac", `${this.channels}`,
             "-ar", `${this.sampleRate}`,
             "pipe:1"
-        ], {stdio: ["pipe", "pipe", "ignore"]});
+        );
+
+        this.ffmpegProcess = spawn(ffmpegPath!, ffArgs, {stdio: ["pipe", "pipe", "ignore"]});
 
         this.ffmpegExitPromise = new Promise<void>((resolve) => {
             this.ffmpegExitResolver = resolve;
         });
 
-        //if (inputStream) inputStream.pipe(ffmpegProcess.stdin!);
+        if (inputStream) inputStream.pipe(this.ffmpegProcess.stdin!);
 
         let writeOffsetLocal = Math.floor(startSec * this.sampleRate * this.channels);
 
         this.ffmpegProcess.stdout.on("data", (chunk: Buffer) => {
-            if (this.cancelled) {
-                this.ffmpegProcess!.kill("SIGTERM");
-                return;
-            }
+            if(!this.ffmpegProcess) return;
 
             const floatChunk = new Float32Array(chunk.buffer, chunk.byteOffset, chunk.byteLength / Float32Array.BYTES_PER_ELEMENT);
+            const numFrames = floatChunk.length / this.channels;
+            const startFrame = Math.floor(writeOffsetLocal / this.channels);
+            const endFrame = startFrame + numFrames;
+
+            this.markSegmentsInRange(startFrame, endFrame);
+
+            this.processChunkForWaveform(chunk);
 
             if (writeOffsetLocal + floatChunk.length > this.pcm.length) {
                 const remaining = this.pcm.length - writeOffsetLocal;
@@ -149,10 +175,6 @@ export class FLACStreamSource {
 
             this.pcm.set(floatChunk, writeOffsetLocal);
             writeOffsetLocal += floatChunk.length;
-
-            const startFrame = Math.floor(writeOffsetLocal / this.channels);
-            const endFrame = Math.floor((writeOffsetLocal + floatChunk.length) / this.channels);
-            this.markSegmentsInRange(startFrame, endFrame);
         });
 
         this.ffmpegProcess.on("exit", () => {
@@ -168,14 +190,16 @@ export class FLACStreamSource {
 
             console.log("FFMPEG EXITED");
 
-            if (this.cancelled || manual) return;
+            this.checkIfFullyLoaded();
+
+            if(this.cancelled || manual) return;
 
             const endSeg = Math.floor(endSec / SEGMENT_DURATION);
 
-            if (endSec >= this.duration - 0.001) {
-                console.log("Marking final segment as loaded");
+            if(endSec >= this.duration - 0.01) {
                 this.markLastSegmentLoaded();
                 this.sendProgress();
+                this.checkIfFullyLoaded();
                 return;
             }
 
@@ -193,7 +217,7 @@ export class FLACStreamSource {
     private markSegmentsInRange(startFrame: number, endFrame: number) {
         const samplesPerSegment = Math.floor(this.sampleRate * SEGMENT_DURATION);
         const startSeg = Math.floor(startFrame / samplesPerSegment);
-        const endSeg = Math.floor((endFrame - 1) / samplesPerSegment);
+        const endSeg = Math.floor(endFrame / samplesPerSegment);
 
         for (let i = startSeg; i < endSeg && i < this.segmentMap.length; i++) {
             Atomics.store(this.segmentMap, i, 1);
@@ -206,9 +230,28 @@ export class FLACStreamSource {
         }
     }
 
-    cancel() {
+    private async cleanup(reason: string) {
+        if(this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = null;
+        }
+        await this.stopFFmpeg();
+        console.log(`[FlacStreamSource] Cleaned up (${reason})`);
         this.cancelled = true;
-        this.stopFFmpeg();
+    }
+
+    cancel() {
+        if(this.cancelled) return;
+        this.cancelled = true;
+        void this.cleanup("cancelled");
+    }
+
+    private checkIfFullyLoaded() {
+        const allLoaded = Array.from(this.segmentMap).every((_, i) => Atomics.load(this.segmentMap, i) === 1);
+        if (allLoaded && !this.ffmpegProcess) {
+            console.log("[FLACStreamSource] All segments loaded - cleaning up.");
+            void this.cleanup("finished");
+        }
     }
 
     private async stopFFmpeg() {
@@ -248,13 +291,9 @@ export class FLACStreamSource {
         }
         const endTime = Math.min(endSeg * SEGMENT_DURATION, this.duration);
 
-        console.log("new times: " + startTime + " - " + endTime);
-        console.log("active process: " + this.ffmpegStartSec + " - " + this.ffmpegEndSec)
-
         if (this.ffmpegProcess) {
             if (startTime <= this.ffmpegStartSec || startTime >= this.ffmpegEndSec
                 || Atomics.load(this.segmentMap, startSeg) === 0) {
-                console.log("Stopping old FFmpeg to cover new range");
                 await this.stopFFmpeg();
                 await this.spawnFFmpeg(startTime, endTime);
                 return;
@@ -262,13 +301,6 @@ export class FLACStreamSource {
         } else {
             await this.spawnFFmpeg(startTime, endTime);
         }
-
-        // start new process ifs
-        //if 1 -> startTime is NOT IN RANGE (this.ffmpegStart/End)
-        // ||
-        //if 2 -> point of startTime is not loaded
-
-        console.log("Existing FFmpeg already covers start - returning");
     }
 
     public async seek(timeSec: number) {
@@ -321,6 +353,11 @@ export class FLACStreamSource {
                     normalized = Math.min(Math.max(normalized, 0), 1);
                     normalized = Math.pow(normalized, 2);
                     this.waveformBuckets[i] = normalized;
+                }
+
+                const peaksToSend = this.waveformBuckets;
+                if (this.mainWindow && !this.mainWindow.isDestroyed() && this.sourceType === "local") {
+                    this.mainWindow.webContents.send("waveform:data", peaksToSend);
                 }
 
                 resolve();
