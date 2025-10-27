@@ -271,7 +271,7 @@ export class PlayerProcess {
     seek(time: number) {
         if(!this.session || !this.deviceInfo) return;
 
-        this.session.readOffset = this.toFrames(this.deviceInfo.out.channels, this.deviceInfo.out.sampleRate, time);
+        this.session.readOffset = this.toSampleIndex(this.deviceInfo.out.channels, this.deviceInfo.out.sampleRate, time);
         const queuedLatencyFrames = this.getQueuedLatencyFrames();
         this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
         this.playheadAnchorWall = Date.now();
@@ -309,9 +309,9 @@ export class PlayerProcess {
         return framesPlayed / sampleRate;
     }
 
-    toFrames(channels: number, sampleRate: number, timeInSeconds: number) {
-        const framesPlayed = timeInSeconds * channels;
-        return framesPlayed * sampleRate;
+    toSampleIndex(channels: number, sampleRate: number, timeInSeconds: number) {
+        const frameIndex = Math.floor(timeInSeconds * sampleRate);
+        return frameIndex * channels;
     }
 
     private notifyState() {

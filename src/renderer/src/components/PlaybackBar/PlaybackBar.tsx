@@ -71,8 +71,8 @@ const PlaybackBar = () => {
 
     return (
         <div className={s.container}>
-            <div>
-                <p>{trackName}</p>
+            <div className={s.trackInfo}>
+                <p className={s.trackName}>{trackName}</p>
             </div>
             <div className={s.middleContainer}>
                 <div className={s.row}>

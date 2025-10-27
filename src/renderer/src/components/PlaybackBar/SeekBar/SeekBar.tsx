@@ -10,6 +10,7 @@ enum SeekBarDisplayStyle {
 }
 
 const wantedDisplayStyle = SeekBarDisplayStyle.WAVEFORM;
+const showLoadingProcess = false;
 
 const SeekBar = () => {
     // CUSTOMIZABLE
@@ -144,7 +145,7 @@ const SeekBar = () => {
             ctx.save();
             const segments = loadingProgressRef.current;
 
-            if (segments.length > 0) {
+            if (segments.length > 0 && showLoadingProcess) {
                 ctx.beginPath();
 
                 for (let i = 0; i < segments.length; i++) {

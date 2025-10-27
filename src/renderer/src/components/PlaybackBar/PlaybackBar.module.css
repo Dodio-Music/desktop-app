@@ -145,3 +145,14 @@
     white-space: nowrap;
     margin-bottom: 12px;
 }
+
+.trackInfo {
+    overflow: hidden;
+}
+
+.trackName {
+    padding: 5px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

@@ -101,7 +101,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     });
 
     ipcMain.handle("player:seek", (_, time: number) => {
-        if(source) source.seek(time);
+        if(source) void source.seek(time);
         playerProcess.postMessage({type: "seek", payload: time});
     });
 };
