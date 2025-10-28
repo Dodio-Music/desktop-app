@@ -1,15 +1,16 @@
 import axios, {AxiosError, AxiosInstance, AxiosResponse} from "axios";
-import {DodioApi, RequestMethods} from "../../shared/Api.js";
+import {ApiResult, DodioApi, DodioError, MayError, NoLoginError, RequestMethods} from "../../shared/Api.js";
 import {auth, updateAuth} from "../auth.js";
 
 const instance = axios.create({
     baseURL: "http://localhost:8085/dodio"
 });
 
-function logError(e: unknown) {
-    if(e instanceof AxiosError) {
-        console.error("Request Error:", e.message,"->", e.response?.data);
-    }else console.error("Request Error: ", e);
+function handleError(err: unknown): DodioError {
+    if(err instanceof AxiosError) {
+        if(err.response) return err.response.data as DodioError;
+    }else console.error("Request Error: ", err, typeof err);
+    return {error: "info", arg: {message: "An error occurred"}};
 }
 
 async function create_auth_instance() {
@@ -19,7 +20,7 @@ async function create_auth_instance() {
         || !auth.access_token_expiry
         || !auth.access_token
     || auth.access_token_expiry.getTime() < Date.now()) {
-        if(!await refresh()) {
+        if(!await refreshAuthToken()) {
             updateAuth({
                 access_token: undefined,
                 access_token_expiry: undefined,
@@ -37,14 +38,14 @@ async function create_auth_instance() {
     })
 }
 
-async function refresh() {
-    if(!auth?.refresh_token_expiry || !auth?.refresh_token_expiry) return false;
+export async function refreshAuthToken(): Promise<MayError> {
+    if(!auth?.refresh_token_expiry || !auth?.refresh_token_expiry) return NoLoginError;
     if(auth.refresh_token_expiry.getTime() < Date.now()) {
         updateAuth({
             refresh_token_expiry: undefined,
             refresh_token: undefined,
         });
-        return false;
+        return NoLoginError;
     }
 
     try {
@@ -56,10 +57,10 @@ async function refresh() {
             access_token: res.data.accessToken,
             access_token_expiry: new Date(res.data.accessTokenExpiration)
         });
-        return true;
+        return null;
     }catch (e) {
-        logError(e);
-        return false;
+        console.log("refresh failed: ", e)
+        return handleError(e);
     }
 }
 
@@ -84,10 +85,8 @@ interface RefreshTokenResponse {
     accessTokenExpiration: string,
 }
 
-
-
 export default {
-    async login(login: string, password: string) {
+    async login(login: string, password: string): Promise<MayError> {
         try {
             const res = await instance.post<SignInResponse>("/auth/signin", {
                 login,
@@ -100,13 +99,12 @@ export default {
                 access_token_expiry: new Date(res.data.accessTokenExpiration),
                 refresh_token_expiry: new Date(res.data.refreshTokenExpiration)
             })
-            return true;
+            return null;
         }catch (e) {
-            logError(e);
-            return false;
+            return handleError(e);
         }
     },
-    logout() {
+    async logout(): Promise<MayError> {
         updateAuth({
             refresh_token: undefined,
             refresh_token_expiry: undefined,
@@ -114,9 +112,8 @@ export default {
             access_token: undefined,
             hasAccount: true
         });
-        return true;
+        return null;
     },
-    refresh,
     async signup(username: string, email: string, password: string) {
         try {
             await instance.post("auth/signup", {
@@ -124,30 +121,28 @@ export default {
                 email,
                 password
             })
-            return true;
+            return null;
         }catch (e) {
-            logError(e);
-            return false;
+            return handleError(e);
         }
     },
-    defaultAccountPage() {
-        if(auth?.access_token || auth?.refresh_token) return "account";
-        if(auth?.hasAccount) return "login";
-        return "signup";
-    },
-    async authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>): Promise<AxiosResponse<T>|undefined> {
-        if (!auth_instance) return;
+    async authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>): Promise<ApiResult<AxiosResponse<T>>> {
+        if (!auth_instance) return {type: "error", error: NoLoginError};
 
         for(;;) {
             try {
                 //@ts-expect-error spread args are annoying
-                return auth_instance[method]<T>(...args) as unknown as Promise<AxiosResponse<T>>;
+                const result = (await auth_instance[method]<T>(...args)) as AxiosResponse<T>;
+                console.log("success", result);
+                return {type: "ok", value: result};
             } catch (e) {
                 if (e instanceof AxiosError
-                    && e.status === 401
-                    && await refresh()) continue
-                logError(e);
-                return;
+                    && e.status === 401) {
+                    const refreshError = await refreshAuthToken();
+                    if(!refreshError) continue;
+                    return {type: "error", error: refreshError};
+                }
+                return {type: "error", error: handleError(e)};
             }
         }
     }

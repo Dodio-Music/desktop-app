@@ -4,7 +4,7 @@ import fs from "fs/promises";
 import {IAuthData} from "./web/Typing.js";
 import {safeStorage} from "electron"
 import {AuthStatus} from "../shared/Api.js";
-import dodio_api from "./web/dodio_api.js";
+import {refreshAuthToken} from "./web/dodio_api.js";
 
 export const authPath = path.join(app.getPath("userData"), "auth.json");
 
@@ -49,5 +49,5 @@ export async function setupAuth(window: BrowserWindow) {
     console.log("Setup auth")
     mainWindow = window;
     updateAuth(await loadAuth());
-    await dodio_api.refresh();
+    await refreshAuthToken();
 }

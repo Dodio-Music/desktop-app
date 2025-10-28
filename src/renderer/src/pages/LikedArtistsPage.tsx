@@ -1,16 +1,14 @@
-import {Navigate} from "react-router-dom";
-import useAuthStatus from "@renderer/hooks/useAuthStatus";
+import useAuthPage from "@renderer/hooks/useAuthPage";
 
 const LikedArtistsPage = () => {
-    const authStatus = useAuthStatus();
-
-    if(authStatus === null) return <span>Loading...</span>
-    if(authStatus !== "account") return <Navigate to={"/login?url=/collection/artists"} />
+    const {data, ControlPage} = useAuthPage<string>("/api/test");
+    if(ControlPage) return <ControlPage/>
 
     return (
         <div>
             <h1>Musigg Leute denen du folgen tust</h1>
             <p>yuuuup</p>
+            <p>Data: {data}</p>
         </div>
     );
 };

@@ -4,7 +4,7 @@ import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerState} from "../shared/PlayerState.js";
 import {IPreferences} from "../main/preferences.js";
 import {TrackInfo} from "../shared/TrackInfo.js";
-import {AuthStatus, DodioApi, RequestMethods} from "../shared/Api.js";
+import {ApiResult, AuthStatus, DodioApi, MayError, RequestMethods} from "../shared/Api.js";
 import {AxiosInstance, AxiosResponse} from "axios";
 
 export interface CustomWindowControls {
@@ -66,18 +66,18 @@ const api = {
         ipcRenderer.on("player:track-change", handler);
         return () => ipcRenderer.removeListener("player:track-change", handler);
     },
-    authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>): Promise<AxiosResponse<T>|undefined> {
-        return ipcRenderer.invoke("api:authRequest", method, ...args);
+    authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>) {
+        return ipcRenderer.invoke("api:authRequest", method, ...args) as Promise<ApiResult<AxiosResponse<T>>>;
     },
-    login(login: string, password: string): Promise<boolean> { return ipcRenderer.invoke("api:login", login, password); },
-    signup: (username: string, email: string, password: string): Promise<boolean> => ipcRenderer.invoke("api:signup", username, email, password),
-    logout: (): Promise<boolean> => ipcRenderer.invoke("api:logout"),
+    login: (login: string, password: string) => ipcRenderer.invoke("api:login", login, password) as Promise<MayError>,
+    signup: (username: string, email: string, password: string) => ipcRenderer.invoke("api:signup", username, email, password) as Promise<MayError>,
+    logout: () => ipcRenderer.invoke("api:logout") as Promise<MayError>,
     onLoadingProgress: (callback: (progress: number[]) => void) => {
         const handler = (_: IpcRendererEvent, progress: number[]) => callback(progress);
         ipcRenderer.on("player:loading-progress", handler);
         return () => ipcRenderer.removeListener("player:loading-progress", handler);
     }
-};
+} satisfies DodioApi & Record<string, unknown>;
 
 let playerUpdateCallback: ((data: PlayerState) => void) | null = null;
 let authUpdateCallback: ((data: AuthStatus) => void) | null = null;
