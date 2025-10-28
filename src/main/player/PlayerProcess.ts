@@ -65,168 +65,9 @@ export class PlayerProcess {
     private playheadAnchorFrames = 0;
     private playheadAnchorWall = Date.now();
 
-    private async chunkerLoop() {
-        while (this.deviceInfo && this.io && !this.deviceInfo.inactive) {
-            let outputBuf: Buffer = this.deviceInfo.silentBuffer;
 
-            if (this.session && !this.isUserPaused() && !this.session.ended) {
-                const {readOffset, pcm, segmentIndex} = this.session;
-                const segmentSize = this.samplesPerSegment();
-                const startSegment = Math.floor(readOffset / segmentSize);
-                const endSegment = Math.floor((readOffset + this.deviceInfo.samplesPerBuffer - 1) / segmentSize);
-
-                let allSegmentsReady = true;
-                for (let seg = startSegment; seg <= endSegment && seg < segmentIndex.length; seg++) {
-                    if (Atomics.load(segmentIndex, seg) === 0) {
-                        allSegmentsReady = false;
-                        break;
-                    }
-                }
-
-                if (allSegmentsReady) {
-                    if (this.session.waitingForData) {
-                        const queuedLatencyFrames = this.getQueuedLatencyFrames();
-                        this.playheadAnchorFrames = readOffset - queuedLatencyFrames;
-                        this.playheadAnchorWall = Date.now();
-                    }
-
-                    const end = Math.min(readOffset + this.deviceInfo.samplesPerBuffer, pcm.length);
-
-                    if (readOffset >= pcm.length) {
-                        this.session.ended = true;
-                        this.session.readOffset = pcm.length;
-                        this.notifyState();
-                    }
-
-                    const chunk = pcm.subarray(readOffset, end);
-
-                    let volumeStart = 1;
-                    let volumeEnd = 1;
-
-                    if (this.fading) {
-                        const total = this.fadeTotalSamples;
-                        const progress = this.fadeProgressSamples;
-                        const nextProgress = progress + this.deviceInfo.samplesPerBuffer;
-
-                        const t0 = Math.min(1, progress / total);
-                        const t1 = Math.min(1, nextProgress / total);
-
-                        volumeStart = this.fadeFromVolume + t0 * (this.fadeToVolume - this.fadeFromVolume);
-                        volumeEnd = this.fadeFromVolume + t1 * (this.fadeToVolume - this.fadeFromVolume);
-
-                        this.fadeProgressSamples = nextProgress;
-
-                        if (t1 >= 1) {
-                            this.fading = false;
-                            this.volume = this.fadeToVolume;
-
-                            if (this.playbackState === "fading-out") {
-                                this.playbackState = "paused";
-                            } else if(this.playbackState === "fading-in") {
-                                this.playbackState = "playing";
-                            }
-                        }
-                    }
-
-                    outputBuf = this.applyVolumeWithFade(
-                        Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength),
-                        volumeStart,
-                        volumeEnd
-                    );
-
-                    this.session.readOffset += this.deviceInfo.samplesPerBuffer;
-                    this.session.waitingForData = false;
-                } else {
-                    this.session.waitingForData = true;
-                    this.playheadAnchorFrames = this.session.readOffset;
-                    this.playheadAnchorWall = Date.now();
-                }
-            }
-
-            if (!this.isUserPaused() || this.focused) {
-                this.lastActiveTime = Date.now();
-            }
-
-            if (Date.now() - this.lastActiveTime > IDLE_TIMEOUT_MS) {
-                console.log("Idle timeout reached. Shutting down audio device.");
-                void this.suspendAudioDevice();
-            }
-
-            if (!this.io.write(outputBuf)) {
-                await new Promise<void>((resolve) => {
-                    const onDrain = () => {
-                        this.io?.removeListener("drain", onDrain);
-                        resolve();
-                    };
-                    this.io!.once("drain", onDrain);
-                });
-            }
-        }
-
-        await new Promise<void>(resolve => {
-            this.io!.quit(() => {
-                resolve();
-            });
-        });
-    }
-
-    private startFade(target: number, duration = 0.15) {
-        if (!this.deviceInfo) return;
-
-        let currentVolume = this.volume;
-        if (this.fading) {
-            const t = this.fadeProgressSamples / this.fadeTotalSamples;
-            currentVolume = this.fadeFromVolume + t * (this.fadeToVolume - this.fadeFromVolume);
-        }
-
-        this.fading = true;
-        this.fadeProgressSamples = 0;
-        this.fadeFromVolume = currentVolume;
-        this.fadeToVolume = target;
-        this.fadeTotalSamples = duration * this.deviceInfo.out.sampleRate * this.deviceInfo.out.channels;
-    }
-
-    isUserPaused() {
-        return this.playbackState === "paused";
-    }
-
-    isPlaybackPaused() {
-        return this.playbackState === "paused" || this.playbackState === "fading-out";
-    }
-
-    applyVolumeWithFade(buf: Buffer, volumeStart: number, volumeEnd: number): Buffer {
-        const out = Buffer.allocUnsafe(buf.length);
-        const sampleCount = buf.length / 4;
-        const userVolume = this.userVolume;
-
-        for (let i = 0; i < sampleCount; i++) {
-            const t = i / (sampleCount - 1);
-            let volume = volumeStart + (1 - Math.cos(t * Math.PI)) / 2 * (volumeEnd - volumeStart);
-            volume *= userVolume;
-            let sample = buf.readFloatLE(i * 4);
-            sample = Math.max(-1, Math.min(1, sample * volume));
-            out.writeFloatLE(sample, i * 4);
-        }
-
-        return out;
-    }
-
-    private startStateLoop() {
-        this.stopStateLoop();
-
-        this.stateLoopInterval = setInterval(() => {
-            if (!this.isUserPaused()) this.notifyState();
-        }, IPC_UPDATE_INTERVAL);
-    }
-
-    private stopStateLoop() {
-        if (this.stateLoopInterval) {
-            clearInterval(this.stateLoopInterval);
-            this.stateLoopInterval = null;
-        }
-    }
-
-    registerAudioDevice(devInfo?: OutputDevice) {
+    // === Audio Device Management (naudiodon) ===
+    public registerAudioDevice(devInfo?: OutputDevice) {
         if (this.io && this.deviceInfo) return;
 
         if (!devInfo) {
@@ -286,7 +127,151 @@ export class PlayerProcess {
         this.io = null;
     }
 
-    load(path: string, duration: number, pcm: Float32Array, segmentIndex: Uint8Array, sourceType: SourceType) {
+    public async shutdown() {
+        this.stopStateLoop();
+        await this.suspendAudioDevice();
+        this.deviceInfo = null;
+        this.session = null;
+        this.playbackState = "paused";
+
+        parentPort?.close();
+    }
+
+    public setFocused(focused: boolean) {
+        this.focused = focused;
+        if (this.focused) {
+            this.registerAudioDevice();
+        }
+    }
+
+
+    // === Audio Processing ===
+    private async chunkerLoop() {
+        while (this.deviceInfo && this.io && !this.deviceInfo.inactive) {
+            let outputBuf: Buffer = this.deviceInfo.silentBuffer;
+
+            if (this.session && !this.isFullyPaused() && !this.session.ended) {
+                const {readOffset, pcm, segmentIndex} = this.session;
+                const segmentSize = this.samplesPerSegment();
+                const startSegment = Math.floor(readOffset / segmentSize);
+                const endSegment = Math.floor((readOffset + this.deviceInfo.samplesPerBuffer - 1) / segmentSize);
+
+                let allSegmentsReady = true;
+                for (let seg = startSegment; seg <= endSegment && seg < segmentIndex.length; seg++) {
+                    if (Atomics.load(segmentIndex, seg) === 0) {
+                        allSegmentsReady = false;
+                        break;
+                    }
+                }
+
+                if (allSegmentsReady) {
+                    if (this.session.waitingForData) {
+                        const queuedLatencyFrames = this.getQueuedLatencyFrames();
+                        this.playheadAnchorFrames = readOffset - queuedLatencyFrames;
+                        this.playheadAnchorWall = Date.now();
+                    }
+
+                    const end = Math.min(readOffset + this.deviceInfo.samplesPerBuffer, pcm.length);
+
+                    if (readOffset >= pcm.length) {
+                        this.session.ended = true;
+                        this.session.readOffset = pcm.length;
+                        this.notifyState();
+                    }
+
+                    const chunk = pcm.subarray(readOffset, end);
+
+                    let volumeStart = 1;
+                    let volumeEnd = 1;
+
+                    if (this.fading) {
+                        const total = this.fadeTotalSamples;
+                        const progress = this.fadeProgressSamples;
+                        const nextProgress = progress + this.deviceInfo.samplesPerBuffer;
+
+                        const t0 = Math.min(1, progress / total);
+                        const t1 = Math.min(1, nextProgress / total);
+
+                        volumeStart = this.fadeFromVolume + t0 * (this.fadeToVolume - this.fadeFromVolume);
+                        volumeEnd = this.fadeFromVolume + t1 * (this.fadeToVolume - this.fadeFromVolume);
+
+                        this.fadeProgressSamples = nextProgress;
+
+                        if (t1 >= 1) {
+                            this.fading = false;
+                            this.volume = this.fadeToVolume;
+
+                            if (this.playbackState === "fading-out") {
+                                this.playbackState = "paused";
+                                this.updateAnchorForPause();
+                            } else if(this.playbackState === "fading-in") {
+                                this.playbackState = "playing";
+                            }
+                        }
+                    }
+
+                    outputBuf = this.applyVolumeWithFade(
+                        Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength),
+                        volumeStart,
+                        volumeEnd
+                    );
+
+                    this.session.readOffset += this.deviceInfo.samplesPerBuffer;
+                    this.session.waitingForData = false;
+                } else {
+                    this.session.waitingForData = true;
+                    this.playheadAnchorFrames = this.session.readOffset;
+                    this.playheadAnchorWall = Date.now();
+                }
+            }
+
+            if (!this.isFullyPaused() || this.focused) {
+                this.lastActiveTime = Date.now();
+            }
+
+            if (Date.now() - this.lastActiveTime > IDLE_TIMEOUT_MS) {
+                console.log("Idle timeout reached. Shutting down audio device.");
+                void this.suspendAudioDevice();
+            }
+
+            if (!this.io.write(outputBuf)) {
+                await new Promise<void>((resolve) => {
+                    const onDrain = () => {
+                        this.io?.removeListener("drain", onDrain);
+                        resolve();
+                    };
+                    this.io!.once("drain", onDrain);
+                });
+            }
+        }
+
+        await new Promise<void>(resolve => {
+            this.io!.quit(() => {
+                resolve();
+            });
+        });
+    }
+
+    private applyVolumeWithFade(buf: Buffer, volumeStart: number, volumeEnd: number): Buffer {
+        const out = Buffer.allocUnsafe(buf.length);
+        const sampleCount = buf.length / 4;
+        const userVolume = this.userVolume;
+
+        for (let i = 0; i < sampleCount; i++) {
+            const t = i / (sampleCount - 1);
+            let volume = volumeStart + (1 - Math.cos(t * Math.PI)) / 2 * (volumeEnd - volumeStart);
+            volume *= userVolume;
+            let sample = buf.readFloatLE(i * 4);
+            sample = Math.max(-1, Math.min(1, sample * volume));
+            out.writeFloatLE(sample, i * 4);
+        }
+
+        return out;
+    }
+
+
+    // === Session Management ===
+    public load(path: string, duration: number, pcm: Float32Array, segmentIndex: Uint8Array, sourceType: SourceType) {
         if (!this.deviceInfo) return;
 
         this.playbackState = "playing";
@@ -311,53 +296,7 @@ export class PlayerProcess {
         this.startStateLoop();
     }
 
-    pause() {
-        if (!this.deviceInfo || !this.session) return;
-
-        if (this.playbackState === "playing" || this.playbackState === "fading-in") {
-            this.playbackState = "fading-out";
-            this.startFade(0);
-        }
-
-        if (!this.session.waitingForData) {
-            const {out} = this.deviceInfo;
-            const now = Date.now();
-            const elapsed = (now - this.playheadAnchorWall) / 1000;
-            const advancedFrames = elapsed * out.sampleRate * out.channels;
-            this.playheadAnchorFrames += advancedFrames;
-        }
-        this.playheadAnchorWall = Date.now();
-    }
-
-    resume() {
-        if (this.playbackState === "paused" || this.playbackState === "fading-out") {
-            this.playbackState = "fading-in";
-            this.startFade(1);
-
-
-            if (this.session && this.deviceInfo) {
-                const queuedLatencyFrames = this.getQueuedLatencyFrames();
-                this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
-                this.playheadAnchorWall = Date.now();
-            }
-
-            if (!this.io || !this.deviceInfo) {
-                this.registerAudioDevice();
-            }
-        }
-    }
-
-    pauseOrResume() {
-        if(this.playbackState === "paused" || this.playbackState === "fading-out") {
-            this.resume();
-        } else if(this.playbackState === "playing" || this.playbackState === "fading-in") {
-            this.pause();
-        }
-
-        this.notifyState();
-    }
-
-    seek(time: number) {
+    public seek(time: number) {
         if (!this.session || !this.deviceInfo) return;
 
         this.session.readOffset = this.toSampleIndex(this.deviceInfo.out.channels, this.deviceInfo.out.sampleRate, time);
@@ -373,34 +312,108 @@ export class PlayerProcess {
         return this.deviceInfo.samplesPerBuffer * (activePreset.maxQueue + 1);
     }
 
-    private sliderToAmplitude(slider: number): number {
-        slider = Math.max(0, Math.min(1, slider));
-        if (slider <= 0) return 0;
+    private updateAnchorForPause() {
+        if(!this.deviceInfo) return;
 
-        const minDb = -50;
-        const maxDb = 0;
-        const db = minDb + (maxDb - minDb) * slider;
-        return Math.pow(10, db / 20);
+        const {out} = this.deviceInfo;
+        const now = Date.now();
+        const elapsed = (now - this.playheadAnchorWall) / 1000;
+        const advancedFrames = elapsed * out.sampleRate * out.channels;
+        this.playheadAnchorFrames += advancedFrames;
+        this.playheadAnchorWall = now;
+
+        this.notifyState();
     }
 
-    async shutdown() {
+    private updateAnchorForResume() {
+        if(!this.session || !this.deviceInfo) return;
+        const queuedLatencyFrames = this.getQueuedLatencyFrames();
+        this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
+        this.playheadAnchorWall = Date.now();
+    }
+
+    private samplesPerSegment(): number {
+        if (!this.deviceInfo) return 0;
+        return Math.floor(this.deviceInfo.out.sampleRate * this.deviceInfo.out.channels * SEGMENT_DURATION);
+    }
+
+
+    // === Playback Control & State
+    public pauseOrResume() {
+        if(this.playbackState === "paused" || this.playbackState === "fading-out") {
+            this.resume();
+        } else if(this.playbackState === "playing" || this.playbackState === "fading-in") {
+            this.pause();
+        }
+
+        this.notifyState();
+    }
+
+    private pause() {
+        if (!this.deviceInfo || !this.session) return;
+
+        if (this.playbackState === "playing" || this.playbackState === "fading-in") {
+            this.playbackState = "fading-out";
+            this.startFade(0);
+        }
+    }
+
+    private resume() {
+        if (this.playbackState === "paused" || this.playbackState === "fading-out") {
+            this.playbackState = "fading-in";
+            this.startFade(1);
+
+            this.updateAnchorForResume();
+
+            if (!this.io || !this.deviceInfo) {
+                this.registerAudioDevice();
+            }
+        }
+    }
+
+    private startFade(target: number, duration = 0.15) {
+        if (!this.deviceInfo) return;
+
+        let currentVolume = this.volume;
+        if (this.fading) {
+            const t = this.fadeProgressSamples / this.fadeTotalSamples;
+            currentVolume = this.fadeFromVolume + t * (this.fadeToVolume - this.fadeFromVolume);
+        }
+
+        this.fading = true;
+        this.fadeProgressSamples = 0;
+        this.fadeFromVolume = currentVolume;
+        this.fadeToVolume = target;
+        this.fadeTotalSamples = duration * this.deviceInfo.out.sampleRate * this.deviceInfo.out.channels;
+    }
+
+    public setVolume(slider: number) {
+        this.userVolume = this.sliderToAmplitude(slider);
+    }
+
+    private isFullyPaused() {
+        return this.playbackState === "paused";
+    }
+
+    private isPausingOrPaused() {
+        return this.playbackState === "paused" || this.playbackState === "fading-out";
+    }
+
+
+    // === State Tracking & Communication ===
+    private startStateLoop() {
         this.stopStateLoop();
-        await this.suspendAudioDevice();
-        this.deviceInfo = null;
-        this.session = null;
-        this.playbackState = "paused";
 
-        parentPort?.close();
+        this.stateLoopInterval = setInterval(() => {
+            if (!this.isFullyPaused()) this.notifyState();
+        }, IPC_UPDATE_INTERVAL);
     }
 
-    toSeconds(channels: number, sampleRate: number, timeInFrames: number) {
-        const framesPlayed = timeInFrames / channels;
-        return framesPlayed / sampleRate;
-    }
-
-    toSampleIndex(channels: number, sampleRate: number, timeInSeconds: number) {
-        const frameIndex = Math.floor(timeInSeconds * sampleRate);
-        return frameIndex * channels;
+    private stopStateLoop() {
+        if (this.stateLoopInterval) {
+            clearInterval(this.stateLoopInterval);
+            this.stateLoopInterval = null;
+        }
     }
 
     private notifyState() {
@@ -414,7 +427,7 @@ export class PlayerProcess {
 
         if (this.session.ended) {
             playheadFrames = this.session.pcm.length;
-        } else if (!this.isUserPaused() && !this.session.waitingForData) {
+        } else if (!this.isFullyPaused() && !this.session.waitingForData) {
             const elapsed = (Date.now() - this.playheadAnchorWall) / 1000;
             playheadFrames = this.playheadAnchorFrames + elapsed * out.sampleRate * out.channels;
         } else {
@@ -428,8 +441,8 @@ export class PlayerProcess {
             currentTrack: this.session.path,
             currentTime: currentTimeSeconds,
             waitingForData: this.session.waitingForData,
-            userPaused: this.isPlaybackPaused(),
-            playbackRunning: !this.session.waitingForData && !this.isPlaybackPaused(),
+            userPaused: this.isPausingOrPaused(),
+            playbackRunning: !this.session.waitingForData && !this.isFullyPaused(),
             duration: this.session.duration,
             sourceType: this.session.sourceType,
             latency: latencySeconds
@@ -438,20 +451,26 @@ export class PlayerProcess {
         parentPort?.postMessage({type: "player-state", state});
     }
 
-    setVolume(slider: number) {
-        this.userVolume = this.sliderToAmplitude(slider);
+
+    // === Utility Methods ===
+    private sliderToAmplitude(slider: number): number {
+        slider = Math.max(0, Math.min(1, slider));
+        if (slider <= 0) return 0;
+
+        const minDb = -50;
+        const maxDb = 0;
+        const db = minDb + (maxDb - minDb) * slider;
+        return Math.pow(10, db / 20);
     }
 
-    setFocused(focused: boolean) {
-        this.focused = focused;
-        if (this.focused) {
-            this.registerAudioDevice();
-        }
+    private toSeconds(channels: number, sampleRate: number, timeInFrames: number) {
+        const framesPlayed = timeInFrames / channels;
+        return framesPlayed / sampleRate;
     }
 
-    samplesPerSegment(): number {
-        if (!this.deviceInfo) return 0;
-        return Math.floor(this.deviceInfo.out.sampleRate * this.deviceInfo.out.channels * SEGMENT_DURATION);
+    private toSampleIndex(channels: number, sampleRate: number, timeInSeconds: number) {
+        const frameIndex = Math.floor(timeInSeconds * sampleRate);
+        return frameIndex * channels;
     }
 }
 
