@@ -6,6 +6,7 @@ import PlaybackBar from "./components/PlaybackBar/PlaybackBar";
 import s from "./App.module.css";
 import {useZoom} from "./hooks/useZoom";
 import {useNavigationShortcuts} from "./hooks/useNavigationShortcuts";
+import {Toaster} from "react-hot-toast";
 import {useShortcuts} from "@renderer/hooks/useShortcuts";
 
 function App() {
@@ -15,6 +16,10 @@ function App() {
 
     return (
         <>
+            <Toaster
+                position="top-right"
+                reverseOrder={false}
+            />
             <div className={s.appContainer}>
                 <Titlebar zoomLevel={Math.round(zoomFactor * 100)}/>
                 <div className={s.displayContainer}>
