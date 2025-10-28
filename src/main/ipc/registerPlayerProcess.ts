@@ -87,7 +87,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
 
     ipcMain.handle("player:load-local", async (_, pathToFile: string) => {
         const metadata = await parseFile(pathToFile);
-        const duration = (metadata.format.duration ?? 0) + 0.1;
+        const duration = metadata.format.duration ?? 0;
 
         await loadTrackInWorker(pathToFile, duration, "local");
     });

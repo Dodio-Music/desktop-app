@@ -51,8 +51,14 @@ export class PlayerProcess {
     private lastActiveTime: number = Date.now();
     public focused = true;
 
-    private userPaused = true;
+    private userVolume: number = 1;
     private volume: number = 1;
+    private fadeToVolume = 1;
+    private fadeFromVolume = 1;
+    private fading: boolean = false;
+    private fadeTotalSamples = 0;
+    private fadeProgressSamples = 0;
+    private playbackState: "paused" | "playing" | "fading-in" | "fading-out" = "paused";
 
     private stateLoopInterval: NodeJS.Timeout | null = null;
 
@@ -63,21 +69,21 @@ export class PlayerProcess {
         while (this.deviceInfo && this.io && !this.deviceInfo.inactive) {
             let outputBuf: Buffer = this.deviceInfo.silentBuffer;
 
-            if (this.session && !this.userPaused && !this.session.ended) {
+            if (this.session && !this.isUserPaused() && !this.session.ended) {
                 const {readOffset, pcm, segmentIndex} = this.session;
                 const segmentSize = this.samplesPerSegment();
                 const startSegment = Math.floor(readOffset / segmentSize);
                 const endSegment = Math.floor((readOffset + this.deviceInfo.samplesPerBuffer - 1) / segmentSize);
 
                 let allSegmentsReady = true;
-                for(let seg = startSegment; seg <= endSegment && seg < segmentIndex.length; seg++) {
-                    if(Atomics.load(segmentIndex, seg) === 0) {
+                for (let seg = startSegment; seg <= endSegment && seg < segmentIndex.length; seg++) {
+                    if (Atomics.load(segmentIndex, seg) === 0) {
                         allSegmentsReady = false;
                         break;
                     }
                 }
 
-                if(allSegmentsReady) {
+                if (allSegmentsReady) {
                     if (this.session.waitingForData) {
                         const queuedLatencyFrames = this.getQueuedLatencyFrames();
                         this.playheadAnchorFrames = readOffset - queuedLatencyFrames;
@@ -86,16 +92,46 @@ export class PlayerProcess {
 
                     const end = Math.min(readOffset + this.deviceInfo.samplesPerBuffer, pcm.length);
 
-                    if(readOffset >= pcm.length) {
+                    if (readOffset >= pcm.length) {
                         this.session.ended = true;
                         this.session.readOffset = pcm.length;
                         this.notifyState();
                     }
 
                     const chunk = pcm.subarray(readOffset, end);
-                    outputBuf = this.applyVolume(
+
+                    let volumeStart = 1;
+                    let volumeEnd = 1;
+
+                    if (this.fading) {
+                        const total = this.fadeTotalSamples;
+                        const progress = this.fadeProgressSamples;
+                        const nextProgress = progress + this.deviceInfo.samplesPerBuffer;
+
+                        const t0 = Math.min(1, progress / total);
+                        const t1 = Math.min(1, nextProgress / total);
+
+                        volumeStart = this.fadeFromVolume + t0 * (this.fadeToVolume - this.fadeFromVolume);
+                        volumeEnd = this.fadeFromVolume + t1 * (this.fadeToVolume - this.fadeFromVolume);
+
+                        this.fadeProgressSamples = nextProgress;
+
+                        if (t1 >= 1) {
+                            this.fading = false;
+                            this.volume = this.fadeToVolume;
+
+                            if (this.playbackState === "fading-out") {
+                                this.playbackState = "paused";
+                            } else if(this.playbackState === "fading-in") {
+                                this.playbackState = "playing";
+                            }
+                        }
+                    }
+
+                    outputBuf = this.applyVolumeWithFade(
                         Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength),
-                        this.volume
+                        volumeStart,
+                        volumeEnd
                     );
 
                     this.session.readOffset += this.deviceInfo.samplesPerBuffer;
@@ -107,7 +143,7 @@ export class PlayerProcess {
                 }
             }
 
-            if (!this.userPaused || this.focused) {
+            if (!this.isUserPaused() || this.focused) {
                 this.lastActiveTime = Date.now();
             }
 
@@ -134,11 +170,52 @@ export class PlayerProcess {
         });
     }
 
+    private startFade(target: number, duration = 0.15) {
+        if (!this.deviceInfo) return;
+
+        let currentVolume = this.volume;
+        if (this.fading) {
+            const t = this.fadeProgressSamples / this.fadeTotalSamples;
+            currentVolume = this.fadeFromVolume + t * (this.fadeToVolume - this.fadeFromVolume);
+        }
+
+        this.fading = true;
+        this.fadeProgressSamples = 0;
+        this.fadeFromVolume = currentVolume;
+        this.fadeToVolume = target;
+        this.fadeTotalSamples = duration * this.deviceInfo.out.sampleRate * this.deviceInfo.out.channels;
+    }
+
+    isUserPaused() {
+        return this.playbackState === "paused";
+    }
+
+    isPlaybackPaused() {
+        return this.playbackState === "paused" || this.playbackState === "fading-out";
+    }
+
+    applyVolumeWithFade(buf: Buffer, volumeStart: number, volumeEnd: number): Buffer {
+        const out = Buffer.allocUnsafe(buf.length);
+        const sampleCount = buf.length / 4;
+        const userVolume = this.userVolume;
+
+        for (let i = 0; i < sampleCount; i++) {
+            const t = i / (sampleCount - 1);
+            let volume = volumeStart + (1 - Math.cos(t * Math.PI)) / 2 * (volumeEnd - volumeStart);
+            volume *= userVolume;
+            let sample = buf.readFloatLE(i * 4);
+            sample = Math.max(-1, Math.min(1, sample * volume));
+            out.writeFloatLE(sample, i * 4);
+        }
+
+        return out;
+    }
+
     private startStateLoop() {
         this.stopStateLoop();
 
         this.stateLoopInterval = setInterval(() => {
-            if (!this.userPaused) this.notifyState();
+            if (!this.isUserPaused()) this.notifyState();
         }, IPC_UPDATE_INTERVAL);
     }
 
@@ -152,7 +229,7 @@ export class PlayerProcess {
     registerAudioDevice(devInfo?: OutputDevice) {
         if (this.io && this.deviceInfo) return;
 
-        if(!devInfo) {
+        if (!devInfo) {
             const hostAPIs = getHostAPIs();
             const defaultId = hostAPIs.HostAPIs[hostAPIs.defaultHostAPI].defaultOutput;
             const devices = getDevices();
@@ -174,7 +251,7 @@ export class PlayerProcess {
             out: {
                 channels: devInfo.channels,
                 sampleRate: devInfo.sampleRate,
-                deviceId: devInfo.deviceId,
+                deviceId: devInfo.deviceId
             }
         };
 
@@ -185,7 +262,8 @@ export class PlayerProcess {
                 sampleRate: this.deviceInfo.out.sampleRate,
                 deviceId: this.deviceInfo.out.deviceId,
                 closeOnError: false,
-                maxQueue: activePreset.maxQueue
+                maxQueue: activePreset.maxQueue,
+                highwaterMark: 2048
             }
         });
         this.io.start();
@@ -199,8 +277,8 @@ export class PlayerProcess {
     }
 
     private async suspendAudioDevice() {
-        if(this.deviceInfo) this.deviceInfo.inactive = true;
-        this.userPaused = true;
+        if (this.deviceInfo) this.deviceInfo.inactive = true;
+        this.playbackState = "paused";
         if (this.chunkerLoopPromise) {
             await this.chunkerLoopPromise;
             this.chunkerLoopPromise = null;
@@ -209,9 +287,9 @@ export class PlayerProcess {
     }
 
     load(path: string, duration: number, pcm: Float32Array, segmentIndex: Uint8Array, sourceType: SourceType) {
-        if(!this.deviceInfo) return;
+        if (!this.deviceInfo) return;
 
-        this.userPaused = false;
+        this.playbackState = "playing";
 
         this.session = {
             readOffset: 0,
@@ -234,42 +312,53 @@ export class PlayerProcess {
     }
 
     pause() {
-        if (this.deviceInfo && this.session) {
-            if (!this.session.waitingForData) {
-                const {out} = this.deviceInfo;
-                const now = Date.now();
-                const elapsed = (now - this.playheadAnchorWall) / 1000;
-                const advancedFrames = elapsed * out.sampleRate * out.channels;
-                this.playheadAnchorFrames += advancedFrames;
-            }
-            this.playheadAnchorWall = Date.now();
+        if (!this.deviceInfo || !this.session) return;
+
+        if (this.playbackState === "playing" || this.playbackState === "fading-in") {
+            this.playbackState = "fading-out";
+            this.startFade(0);
         }
-        this.userPaused = true;
+
+        if (!this.session.waitingForData) {
+            const {out} = this.deviceInfo;
+            const now = Date.now();
+            const elapsed = (now - this.playheadAnchorWall) / 1000;
+            const advancedFrames = elapsed * out.sampleRate * out.channels;
+            this.playheadAnchorFrames += advancedFrames;
+        }
+        this.playheadAnchorWall = Date.now();
     }
 
     resume() {
-        this.userPaused = false;
+        if (this.playbackState === "paused" || this.playbackState === "fading-out") {
+            this.playbackState = "fading-in";
+            this.startFade(1);
 
-        if (this.session && this.deviceInfo) {
-            const queuedLatencyFrames = this.getQueuedLatencyFrames();
-            this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
-            this.playheadAnchorWall = Date.now();
-        }
 
-        if (!this.io || !this.deviceInfo) {
-            this.registerAudioDevice();
+            if (this.session && this.deviceInfo) {
+                const queuedLatencyFrames = this.getQueuedLatencyFrames();
+                this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
+                this.playheadAnchorWall = Date.now();
+            }
+
+            if (!this.io || !this.deviceInfo) {
+                this.registerAudioDevice();
+            }
         }
     }
 
     pauseOrResume() {
-        if(this.userPaused) this.resume();
-        else this.pause();
+        if(this.playbackState === "paused" || this.playbackState === "fading-out") {
+            this.resume();
+        } else if(this.playbackState === "playing" || this.playbackState === "fading-in") {
+            this.pause();
+        }
 
         this.notifyState();
     }
 
     seek(time: number) {
-        if(!this.session || !this.deviceInfo) return;
+        if (!this.session || !this.deviceInfo) return;
 
         this.session.readOffset = this.toSampleIndex(this.deviceInfo.out.channels, this.deviceInfo.out.sampleRate, time);
         const queuedLatencyFrames = this.getQueuedLatencyFrames();
@@ -299,7 +388,7 @@ export class PlayerProcess {
         await this.suspendAudioDevice();
         this.deviceInfo = null;
         this.session = null;
-        this.userPaused = true;
+        this.playbackState = "paused";
 
         parentPort?.close();
     }
@@ -325,7 +414,7 @@ export class PlayerProcess {
 
         if (this.session.ended) {
             playheadFrames = this.session.pcm.length;
-        } else if (!this.userPaused && !this.session.waitingForData) {
+        } else if (!this.isUserPaused() && !this.session.waitingForData) {
             const elapsed = (Date.now() - this.playheadAnchorWall) / 1000;
             playheadFrames = this.playheadAnchorFrames + elapsed * out.sampleRate * out.channels;
         } else {
@@ -334,12 +423,13 @@ export class PlayerProcess {
 
         const currentTimeSeconds = this.toSeconds(out.channels, out.sampleRate, playheadFrames);
 
+
         const state: StateMessage = {
             currentTrack: this.session.path,
             currentTime: currentTimeSeconds,
             waitingForData: this.session.waitingForData,
-            userPaused: this.userPaused,
-            playbackRunning: !this.session.waitingForData && !this.userPaused,
+            userPaused: this.isPlaybackPaused(),
+            playbackRunning: !this.session.waitingForData && !this.isPlaybackPaused(),
             duration: this.session.duration,
             sourceType: this.session.sourceType,
             latency: latencySeconds
@@ -349,24 +439,12 @@ export class PlayerProcess {
     }
 
     setVolume(slider: number) {
-        this.volume = this.sliderToAmplitude(slider);
-    }
-
-    applyVolume(buf: Buffer, volume: number): Buffer {
-        const out = Buffer.allocUnsafe(buf.length);
-
-        for (let i = 0; i < buf.length; i += 4) {
-            let sample = buf.readFloatLE(i);
-            sample = Math.max(-1, Math.min(1, sample * volume));
-            out.writeFloatLE(sample, i);
-        }
-
-        return out;
+        this.userVolume = this.sliderToAmplitude(slider);
     }
 
     setFocused(focused: boolean) {
         this.focused = focused;
-        if(this.focused) {
+        if (this.focused) {
             this.registerAudioDevice();
         }
     }
@@ -396,7 +474,7 @@ parentPort?.on("message", (msg: IMsg<unknown>) => {
     switch (msg.type) {
         case "get-init-device": {
             playerProcess.registerAudioDevice();
-            if(!playerProcess.deviceInfo) return;
+            if (!playerProcess.deviceInfo) return;
             parentPort?.postMessage({
                 type: "device-info",
                 payload: playerProcess.deviceInfo.out

@@ -211,7 +211,7 @@ export class FLACStreamSource {
 
             const endSeg = Math.floor(endSec / SEGMENT_DURATION);
 
-            if (endSec >= this.duration - 0.01) {
+            if (endSec >= this.duration - 0.05) {
                 this.markLastSegmentLoaded();
                 this.sendProgress();
                 this.checkIfFullyLoaded();
