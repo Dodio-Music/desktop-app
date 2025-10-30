@@ -203,3 +203,7 @@
     filter: brightness(0.7);
     transform: scale(0.97);
 }
+
+.playing {
+    color: #61cef6;
+}

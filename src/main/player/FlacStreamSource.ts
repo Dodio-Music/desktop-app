@@ -8,6 +8,7 @@ import {SourceType} from "../../shared/PlayerState.js";
 import {clearInterval} from "node:timers";
 import {SEGMENT_DURATION} from "../../shared/TrackInfo.js";
 import {extractSampleRate, extractSeekTable, findFlacAudioStart, getFlacStream, SeekPoint} from "./FlacHelper.js";
+import {EventEmitter} from "node:events";
 
 const ffmpegPath =
     process.env.NODE_ENV === "development"
@@ -20,7 +21,7 @@ export enum WaveformMode {
 
 const DEBUG_LOG = false;
 
-export class FLACStreamSource {
+export class FLACStreamSource extends EventEmitter {
     private ffmpegProcess: ChildProcessByStdio<Writable, Readable, Readable> | null = null;
     private cancelled = false;
     private pcm: Float32Array;
@@ -51,6 +52,7 @@ export class FLACStreamSource {
         private waveformMode: WaveformMode = WaveformMode.LUFS,
         segmentSab: SharedArrayBuffer
     ) {
+        super();
         this.pcm = new Float32Array(pcmSab);
         this.segmentMap = new Uint8Array(segmentSab);
     }
@@ -61,6 +63,8 @@ export class FLACStreamSource {
 
     async start() {
         if (this.cancelled) return;
+
+        this.mainWindow.webContents.send("player:event", {type: "loading-progress", progress: this.getSegmentMapProgress()});
 
         if(this.sourceType === "remote") {
             await this.prepareRemoteFlac();
@@ -328,15 +332,13 @@ export class FLACStreamSource {
         if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
 
         const segmentProgress = this.getSegmentMapProgress();
-        this.mainWindow.webContents.send("player:loading-progress", segmentProgress);
+        this.mainWindow.webContents.send("player:event", {type: "loading-progress", progress: segmentProgress});
     }
 
     private startProgressUpdates() {
         this.progressInterval = setInterval(() => {
-            if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
-            const progress = Array.from(this.segmentMap).map((_, i) => Atomics.load(this.segmentMap, i));
-            this.mainWindow.webContents.send("player:loading-progress", progress);
-        }, 100);
+            this.sendProgress();
+        }, 200);
     }
 
     /** LUFS-based waveform (background process) */
@@ -384,7 +386,7 @@ export class FLACStreamSource {
 
                 const peaksToSend = this.waveformBuckets;
                 if (this.mainWindow && !this.mainWindow.isDestroyed() && this.sourceType === "local") {
-                    this.mainWindow.webContents.send("waveform:data", peaksToSend);
+                    this.emit("waveform:data", {url: this.url, peaks: peaksToSend});
                 }
 
                 resolve();

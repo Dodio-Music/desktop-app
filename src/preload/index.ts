@@ -1,11 +1,12 @@
 import {contextBridge, ipcRenderer} from "electron";
 import {ElectronAPI, electronAPI} from "@electron-toolkit/preload";
 import IpcRendererEvent = Electron.IpcRendererEvent;
-import {PlayerState} from "../shared/PlayerState.js";
+import {PlayerEvent, PlayerState} from "../shared/PlayerState.js";
 import {IPreferences} from "../main/preferences.js";
 import {TrackInfo} from "../shared/TrackInfo.js";
 import {ApiResult, AuthStatus, DodioApi, MayError, RequestMethods} from "../shared/Api.js";
 import {AxiosInstance, AxiosResponse} from "axios";
+import {SongEntry} from "../main/songIndexer.js";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -26,7 +27,7 @@ const windowControls: CustomWindowControls = {
 
 const api = {
     listLocalSongs: async(folderPath: string) => await ipcRenderer.invoke("songs:list", folderPath),
-    loadTrack: (songPath: string) => ipcRenderer.invoke("player:load-local", songPath),
+    loadTrack: (track: SongEntry, contextTracks: SongEntry[]) => ipcRenderer.invoke("player:load-local", track, contextTracks),
     loadTrackRemote: (trackInfo: TrackInfo) => ipcRenderer.invoke("player:load-remote", trackInfo),
     pauseOrResume: () => ipcRenderer.invoke("player:pause-or-resume"),
     setVolume: (volume: number) => ipcRenderer.invoke("player:set-volume", volume),
@@ -49,11 +50,6 @@ const api = {
         return () => ipcRenderer.removeListener("preferences:update", handler);
     },
     showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory"),
-    onWaveformData: (cb: (peaks: number[]) => void) => {
-        const handler = (_ev: IpcRendererEvent, peaks: number[]) => cb(peaks);
-        ipcRenderer.on("waveform:data", handler);
-        return () => ipcRenderer.removeListener("waveform:data", handler);
-    },
     onPlayerUpdate: (cb: (data: PlayerState) => void) => {
         playerUpdateCallback = cb;
     },
@@ -61,21 +57,16 @@ const api = {
         authUpdateCallback = cb;
         if(authStatusCache !== null) cb(authStatusCache);
     },
-    onTrackChange: (cb: () => void) => {
-        const handler = () => cb();
-        ipcRenderer.on("player:track-change", handler);
-        return () => ipcRenderer.removeListener("player:track-change", handler);
-    },
     authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>) {
         return ipcRenderer.invoke("api:authRequest", method, ...args) as Promise<ApiResult<AxiosResponse<T>>>;
     },
     login: (login: string, password: string) => ipcRenderer.invoke("api:login", login, password) as Promise<MayError>,
     signup: (username: string, email: string, password: string) => ipcRenderer.invoke("api:signup", username, email, password) as Promise<MayError>,
     logout: () => ipcRenderer.invoke("api:logout") as Promise<MayError>,
-    onLoadingProgress: (callback: (progress: number[]) => void) => {
-        const handler = (_: IpcRendererEvent, progress: number[]) => callback(progress);
-        ipcRenderer.on("player:loading-progress", handler);
-        return () => ipcRenderer.removeListener("player:loading-progress", handler);
+    onPlayerEvent: (callback: (event: PlayerEvent) => void) => {
+        const listener = (_: IpcRendererEvent, event: PlayerEvent) => callback(event);
+        ipcRenderer.on("player:event", listener);
+        return () => ipcRenderer.removeListener("player:event", listener);
     }
 } satisfies DodioApi & Record<string, unknown>;
 

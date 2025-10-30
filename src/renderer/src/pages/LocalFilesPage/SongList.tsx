@@ -10,13 +10,13 @@ interface Props {
 }
 
 export const SongList = ({songs, selectedRow, setSelectedRow}: Props) => {
-    const {currentTrack, userPaused} = useSelector((root: RootState) => root.nativePlayer);
+    const {currentTrackUrl, userPaused} = useSelector((root: RootState) => root.nativePlayer);
 
     const pauseOrLoadSong = (song: SongEntry) => {
-        if (song.fullPath === currentTrack) {
+        if (song.fullPath === currentTrackUrl) {
             window.api.pauseOrResume();
         } else {
-            window.api.loadTrack(song.fullPath);
+            window.api.loadTrack(song, songs);
         }
     };
 
@@ -29,7 +29,7 @@ export const SongList = ({songs, selectedRow, setSelectedRow}: Props) => {
                     song={song}
                     selectedRow={selectedRow}
                     setSelectedRow={setSelectedRow}
-                    currentTrack={currentTrack}
+                    currentTrack={currentTrackUrl}
                     userPaused={userPaused}
                     pauseOrLoadSong={pauseOrLoadSong}
                 />

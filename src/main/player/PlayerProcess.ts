@@ -32,8 +32,8 @@ export interface OutputDevice {
     deviceId: number;
 }
 
-type StateMessage = {
-    currentTrack: string;
+export type StateMessage = {
+    currentTrackUrl: string;
     currentTime: number;
     waitingForData: boolean;
     userPaused: boolean;
@@ -59,6 +59,7 @@ export class PlayerProcess {
     private fadeTotalSamples = 0;
     private fadeProgressSamples = 0;
     private playbackState: "paused" | "playing" | "fading-in" | "fading-out" = "paused";
+    private nextTrack: LoadPayload | null = null;
 
     private stateLoopInterval: NodeJS.Timeout | null = null;
 
@@ -68,7 +69,7 @@ export class PlayerProcess {
 
     // === Audio Device Management (naudiodon) ===
     public registerAudioDevice(devInfo?: OutputDevice) {
-        if (this.io && this.deviceInfo) return;
+        if (this.io && this.deviceInfo && this.chunkerLoopPromise) return;
 
         if (!devInfo) {
             const hostAPIs = getHostAPIs();
@@ -115,6 +116,7 @@ export class PlayerProcess {
         }).format(activePreset.bufferSize / this.deviceInfo.out.sampleRate * (activePreset.maxQueue + 1) * 1000) + "ms.");
 
         this.chunkerLoopPromise = this.chunkerLoop();
+        this.startStateLoop();
     }
 
     private async suspendAudioDevice() {
@@ -174,9 +176,15 @@ export class PlayerProcess {
                     const end = Math.min(readOffset + this.deviceInfo.samplesPerBuffer, pcm.length);
 
                     if (readOffset >= pcm.length) {
-                        this.session.ended = true;
-                        this.session.readOffset = pcm.length;
-                        this.notifyState();
+                        const next = this.nextTrack;
+                        if(!next) {
+                            this.session.ended = true;
+                            this.session.readOffset = pcm.length;
+                            this.notifyState();
+                        } else {
+                            this.load(next.path, next.duration, new Float32Array(next.pcmSab), new Uint8Array(next.segmentSab), next.sourceType);
+                            continue;
+                        }
                     }
 
                     const chunk = pcm.subarray(readOffset, end);
@@ -286,14 +294,13 @@ export class PlayerProcess {
             sourceType,
             ended: false
         };
+        this.nextTrack = null;
 
         const queuedLatencyFrames = this.getQueuedLatencyFrames();
         this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
         this.playheadAnchorWall = Date.now();
 
-        this.notifyState();
-
-        this.startStateLoop();
+        this.notifyState("media-transition");
     }
 
     public seek(time: number) {
@@ -371,6 +378,10 @@ export class PlayerProcess {
         }
     }
 
+    public setNext(payload: LoadPayload | null) {
+        this.nextTrack = payload;
+    }
+
     private startFade(target: number, duration = 0.15) {
         if (!this.deviceInfo) return;
 
@@ -416,7 +427,7 @@ export class PlayerProcess {
         }
     }
 
-    private notifyState() {
+    private notifyState(type?: string) {
         if (!this.deviceInfo || !this.session) return;
 
         const {out} = this.deviceInfo;
@@ -438,7 +449,7 @@ export class PlayerProcess {
 
 
         const state: StateMessage = {
-            currentTrack: this.session.path,
+            currentTrackUrl: this.session.path,
             currentTime: currentTimeSeconds,
             waitingForData: this.session.waitingForData,
             userPaused: this.isPausingOrPaused(),
@@ -448,9 +459,8 @@ export class PlayerProcess {
             latency: latencySeconds
         };
 
-        parentPort?.postMessage({type: "player-state", state});
+        parentPort?.postMessage({type: type ?? "player-state", state});
     }
-
 
     // === Utility Methods ===
     private sliderToAmplitude(slider: number): number {
@@ -524,6 +534,10 @@ parentPort?.on("message", (msg: IMsg<unknown>) => {
         case "focus-update": {
             playerProcess.setFocused(msg.payload as boolean);
             break;
+        }
+        case "load-next": {
+            const info = msg.payload as LoadPayload;
+            playerProcess.setNext(info);
         }
     }
 });

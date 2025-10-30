@@ -37,7 +37,7 @@ export const SongRow = ({
         >
             <div className={s.trackColumn}>
                 <div className={s.trackNumberWrapper}>
-                    <p className={`${s.trackNumber}`}>{index + 1}</p>
+                    <p className={classNames(s.trackNumber, isActive && s.playing)}>{index + 1}</p>
                     <button className={s.playButton} onClick={() => pauseOrLoadSong(song)}>
                         {isActive && !userPaused ? <FaPause size={23}/> : <FaPlay size={19}/>}
                     </button>
@@ -47,7 +47,7 @@ export const SongRow = ({
                         <img className={s.img} src={song.picture} alt="cover"/>
                     </div>
                     <div className={s.trackInfo}>
-                        <p className={classNames(s.trackTitle, s.ellipsis)}>{song.title}</p>
+                        <p className={classNames(s.trackTitle, s.ellipsis, isActive && s.playing)}>{song.title}</p>
                         <p className={classNames(s.trackArtist, s.ellipsis)}>
                             {song.artists.map((a, i) => (
                                 <span key={a}>
