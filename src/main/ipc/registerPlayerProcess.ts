@@ -7,6 +7,7 @@ import {FLACStreamSource, WaveformMode} from "../player/FlacStreamSource.js";
 import {SourceType} from "../../shared/PlayerState.js";
 import {QueueManager} from "../player/QueueManager.js";
 import {SongEntry} from "../songIndexer.js";
+import {parseFlacStreamInfo, readFileRange} from "../player/FlacHelper.js";
 
 export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     const playerProcess = new Worker(playerProcessPath);
@@ -112,8 +113,20 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
 
     const createTrackBuffers = async(pathOrUrl: string, duration: number, sourceType: SourceType, mainWindow: BrowserWindow) => {
         const devInfo = await getDeviceInfoFromWorker();
-        const totalSamples = Math.ceil(duration * devInfo.sampleRate * devInfo.channels);
-        const pcmSab = new SharedArrayBuffer(totalSamples * Float32Array.BYTES_PER_ELEMENT);
+
+        let pcmSab: SharedArrayBuffer;
+
+        if(sourceType === "local") {
+            const headerBuf = await readFileRange(pathOrUrl, 0, 65535);
+            const {totalSamples, sampleRate} = parseFlacStreamInfo(headerBuf);
+            const sampleRateConversion = devInfo.sampleRate / sampleRate;
+            const totalFloatSamples = Math.ceil(Number(totalSamples) * devInfo.channels * sampleRateConversion);
+            pcmSab = new SharedArrayBuffer(totalFloatSamples * Float32Array.BYTES_PER_ELEMENT);
+        } else {
+            const totalSamples = Math.ceil(duration * devInfo.sampleRate * devInfo.channels);
+            pcmSab = new SharedArrayBuffer(totalSamples * Float32Array.BYTES_PER_ELEMENT);
+        }
+
         const totalSegments = Math.ceil(duration / SEGMENT_DURATION);
         const segmentSab = new SharedArrayBuffer(totalSegments);
 

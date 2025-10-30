@@ -184,11 +184,12 @@ export class FLACStreamSource extends EventEmitter {
 
             if (writeOffsetLocal + floatChunk.length > this.pcm.length) {
                 const remaining = this.pcm.length - writeOffsetLocal;
+                const overflow = (writeOffsetLocal + floatChunk.length) - this.pcm.length;
                 if (remaining > 0) {
                     this.pcm.set(floatChunk.subarray(0, remaining), writeOffsetLocal);
                     writeOffsetLocal += remaining;
                 }
-                console.warn(`[FlacStreamSource] Clamped final write at ${writeOffsetLocal}/${this.pcm.length} samples (overflow prevented)`);
+                if(DEBUG_LOG) console.warn(`[FlacStreamSource] Clamped final write at ${writeOffsetLocal - remaining}/${this.pcm.length} samples (overflow of ${overflow} samples prevented)`);
                 return;
             }
 

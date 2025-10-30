@@ -1,6 +1,7 @@
 import {parseBuffer} from "music-metadata";
 import {Readable} from "node:stream";
 import type {ReadableStream} from "node:stream/web";
+import {open} from "fs/promises";
 
 export interface SeekPoint {
     sampleNumber: bigint;
@@ -76,4 +77,55 @@ export async function getFlacStream(header: Buffer, res: Response): Promise<Read
         yield header;
         for await (const chunk of bodyStream) yield chunk;
     }());
+}
+
+export function parseFlacStreamInfo(buffer: Buffer): { totalSamples: number; sampleRate: number } {
+    const marker = buffer.toString('ascii', 0, 4);
+    if (marker !== 'fLaC') {
+        throw new Error("Not a valid FLAC file. 'fLaC' marker not found.");
+    }
+
+    const blockHeaderByte = buffer.readUInt8(4);
+    const blockType = blockHeaderByte & 0x7F; // Mask out the 'last block' bit
+    if (blockType !== 0) {
+        throw new Error('STREAMINFO block (type 0) not found at the expected position.');
+    }
+
+    const blockLength = buffer.readUIntBE(5, 3);
+    if (blockLength < 34) {
+        throw new Error(`Invalid STREAMINFO block length. Expected 34, got ${blockLength}.`);
+    }
+
+    if (buffer.length < 42) {
+        throw new Error('Buffer is too short to contain complete STREAMINFO block.');
+    }
+
+    const sampleRateBytes = buffer.readUIntBE(18, 3);
+    const sampleRate = sampleRateBytes >> 4;
+
+    const totalSamplesByte1 = buffer.readUInt8(21);
+    const totalSamplesHigh = totalSamplesByte1 & 0x0F;
+    const totalSamplesLow = buffer.readUIntBE(22, 4);
+    const totalSamples = (BigInt(totalSamplesHigh) << 32n) + BigInt(totalSamplesLow);
+
+    if (totalSamples > BigInt(Number.MAX_SAFE_INTEGER)) {
+        console.warn("Total samples exceeds Number.MAX_SAFE_INTEGER. Precision may be lost.");
+    }
+
+    return {
+        totalSamples: Number(totalSamples),
+        sampleRate: sampleRate,
+    };
+}
+
+export async function readFileRange(path: string, start: number, end: number): Promise<Buffer> {
+    const fd = await open(path, "r");
+    try {
+        const length = end - start + 1;
+        const buf = Buffer.alloc(length);
+        await fd.read(buf, 0, length, start);
+        return buf;
+    } finally {
+        await fd.close();
+    }
 }

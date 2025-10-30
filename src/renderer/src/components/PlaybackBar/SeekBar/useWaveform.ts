@@ -32,9 +32,9 @@ export function useWaveform (waveformData: WaveformData | undefined, width: numb
             const barWidth = width / peaks.length;
             const minHeightFraction = 0.08;
             for (let i = 0; i < peaks.length; i++) {
-                let value = peaks[i];
-                value = Math.max(value, minHeightFraction);
-                const barHeight = value * height;
+                const normalized = Math.min(Math.max(peaks[i], 0), 1);
+                const remapped = minHeightFraction + normalized * (1 - minHeightFraction);
+                const barHeight = remapped * height;
                 const x = i * barWidth;
                 ctx.fillRect(x, middle - barHeight / 2, barWidth, barHeight);
             }
