@@ -67,7 +67,9 @@ const api = {
         const listener = (_: IpcRendererEvent, event: PlayerEvent) => callback(event);
         ipcRenderer.on("player:event", listener);
         return () => ipcRenderer.removeListener("player:event", listener);
-    }
+    },
+    nextTrack: () => ipcRenderer.invoke("player:next"),
+    previousTrack: () => ipcRenderer.invoke("player:previous")
 } satisfies DodioApi & Record<string, unknown>;
 
 let playerUpdateCallback: ((data: PlayerState) => void) | null = null;

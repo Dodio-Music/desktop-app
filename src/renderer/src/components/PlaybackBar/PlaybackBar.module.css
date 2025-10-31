@@ -14,7 +14,7 @@
 .middleContainer {
     height: 100%;
     display: flex;
-    padding: 16px 0;
+    padding: 15px 0;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
@@ -31,7 +31,7 @@
     background: none;
     color: white;
     border: none;
-    font-size: 25px;
+    font-size: 29px;
 }
 
 .btnAnim {
@@ -155,4 +155,15 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.forward, .backward {
+    background: none;
+    color: #ffffff;
+    border: none;
+    font-size: 22px;
+}
+
+.controls {
+    gap: 35px;
 }

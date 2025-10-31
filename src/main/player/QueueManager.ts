@@ -60,7 +60,7 @@ export class QueueManager {
         this.notifyUpdate();
     }
 
-    skipToNext(): SongEntry | null {
+    next(): SongEntry | null {
         let next: SongEntry | null = null;
 
         if(this.userQueue.length > 0) {
@@ -81,6 +81,13 @@ export class QueueManager {
         this.current = next;
         this.notifyUpdate();
         return next;
+    }
+
+    previous(): SongEntry | null {
+        if(!this.context) return null;
+        const {tracks} = this.context;
+        this.context.startIndex--;
+        return tracks[this.context.startIndex];
     }
 
     clearUserQueue() {

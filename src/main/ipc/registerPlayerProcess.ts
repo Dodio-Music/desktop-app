@@ -17,6 +17,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     let preloadSource: FLACStreamSource | null = null;
     let waveformData: {url: string, peaks: number[]} | null = null;
     let currentUrl: string;
+    let currentStateSecond: number;
 
     playerProcess.on("message", async (msg) => {
         if(mainWindow.isDestroyed() || !mainWindow.webContents) return;
@@ -24,6 +25,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
         switch(msg.type) {
             case "media-transition": {
                 currentUrl = msg.state.currentTrackUrl;
+                currentStateSecond = msg.state.currentTime;
                 mainWindow.webContents.send("player:update", msg.state);
                 mainWindow.webContents.send("player:event", {
                     type: "media-transition",
@@ -34,13 +36,14 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
                 if(preloadSource) {
                     if(source) source.cancel();
                     source = preloadSource;
-                    queue.skipToNext();
+                    queue.next();
                 }
                 break;
             }
             case "player-state": {
                 mainWindow.webContents.send("player:update", msg.state);
 
+                currentStateSecond = msg.state.currentTime;
                 const remaining =  msg.state.duration - msg.state.currentTime;
                 if(remaining <= 5 && !nextPreload) {
                     const nextTrack = queue.getNext();
@@ -191,8 +194,18 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     });
 
     ipcMain.handle("player:next", async () => {
-        const next = queue.skipToNext();
+        const next = queue.next();
         if(next) await loadTrack(next.fullPath, next.duration ?? 0, "local");
+    });
+
+    ipcMain.handle("player:previous", async () => {
+        if(currentStateSecond < 3) {
+            const previous = queue.previous();
+            if(previous) await loadTrack(previous.fullPath, previous.duration ?? 0, "local");
+        } else {
+            if(source) void source.seek(0);
+            playerProcess.postMessage({type: "seek", payload: 0});
+        }
     });
 
     ipcMain.handle("player:set-volume", (_, volume: number) => {
