@@ -9,7 +9,7 @@ const tracks: TrackInfo[] = [
         cover: "https://i1.sndcdn.com/artworks-We7yFmQPygyIq1QH-cN5yCQ-t500x500.jpg",
         duration: 120,
         manifest: {
-            url: "https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/fNg7HtNCw38ivGJhMthL6bNKp5rUtc85_djSdpWqOwY_GirmtrQccCMIV0jlkzw2/n/frss1c2rzpgi/b/dodio-storage/o/085ae0af-6f1e-4866-bd63-13087de9f7d3"
+            url: "https://frss1c2rzpgi.objectstorage.eu-frankfurt-1.oci.customer-oci.com/p/DGol86u3XgFJNbpHNGmX9mLQzx-23qrCM4HL3TdhIYCl9F3c7qJ0NnZB_6AcdH7u/n/frss1c2rzpgi/b/dodio-storage/o/085ae0af-6f1e-4866-bd63-13087de9f7d3"
         }
     },
     {
