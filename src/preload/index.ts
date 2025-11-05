@@ -3,10 +3,9 @@ import {ElectronAPI, electronAPI} from "@electron-toolkit/preload";
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerEvent, PlayerState} from "../shared/PlayerState.js";
 import {IPreferences} from "../main/preferences.js";
-import {TrackInfo} from "../shared/TrackInfo.js";
+import {BaseSongEntry, LocalSongEntry, RemoteSongEntry} from "../shared/TrackInfo.js";
 import {ApiResult, AuthStatus, DodioApi, MayError, RequestMethods} from "../shared/Api.js";
 import {AxiosInstance, AxiosResponse} from "axios";
-import {SongEntry} from "../main/songIndexer.js";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -27,8 +26,8 @@ const windowControls: CustomWindowControls = {
 
 const api = {
     listLocalSongs: async(folderPath: string) => await ipcRenderer.invoke("songs:list", folderPath),
-    loadTrack: (track: SongEntry, contextTracks: SongEntry[]) => ipcRenderer.invoke("player:load-local", track, contextTracks),
-    loadTrackRemote: (trackInfo: TrackInfo) => ipcRenderer.invoke("player:load-remote", trackInfo),
+    loadTrack: (track: LocalSongEntry, contextTracks: BaseSongEntry[]) => ipcRenderer.invoke("player:load-local", track, contextTracks),
+    loadTrackRemote: (trackInfo: RemoteSongEntry) => ipcRenderer.invoke("player:load-remote", trackInfo),
     pauseOrResume: () => ipcRenderer.invoke("player:pause-or-resume"),
     setVolume: (volume: number) => ipcRenderer.invoke("player:set-volume", volume),
     seek: (time: number) => ipcRenderer.invoke("player:seek", time),

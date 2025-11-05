@@ -1,5 +1,6 @@
 export interface PlayerState {
-    currentTrackUrl: string | null;
+    id: string | null;
+    url: string | null;
     userPaused: boolean;
     currentTime: number;
     duration: number;
@@ -10,12 +11,12 @@ export interface PlayerState {
 }
 
 export interface WaveformData {
-    url: string;
+    id: string;
     peaks: number[];
 }
 
 export type PlayerEvent =
-    | { type: "media-transition"; url: string, waveformData?: WaveformData}
+    | { type: "media-transition"; id: string, waveformData?: WaveformData}
     | ({ type: "waveform-data"} & WaveformData)
     | { type: "loading-progress"; progress: number[] };
 

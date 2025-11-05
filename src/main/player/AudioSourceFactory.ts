@@ -21,6 +21,7 @@ export interface AudioMeta {
 
 export class AudioSourceFactory {
     static async create(
+        id: string,
         pathOrUrl: string,
         sourceType: SourceType,
         devInfo: OutputDevice,
@@ -28,6 +29,7 @@ export class AudioSourceFactory {
         source: BaseAudioSource;
         pcmSab: SharedArrayBuffer;
         segmentSab: SharedArrayBuffer;
+        duration: number;
     }> {
         const meta = await this.getMetadata(sourceType, pathOrUrl);
 
@@ -40,6 +42,7 @@ export class AudioSourceFactory {
         const segmentSab = new SharedArrayBuffer(totalSegments);
 
         const baseInit: BaseAudioSourceInit = {
+            id,
             url: pathOrUrl,
             outputChannels: devInfo.channels,
             outputSampleRate: devInfo.sampleRate,
@@ -63,7 +66,7 @@ export class AudioSourceFactory {
             });
         }
 
-        return {source, pcmSab, segmentSab};
+        return {source, pcmSab, segmentSab, duration: meta.totalSamples / sampleRate};
     }
 
     private static async getMetadata(sourceType: SourceType, pathOrUrl: string): Promise<AudioMeta> {

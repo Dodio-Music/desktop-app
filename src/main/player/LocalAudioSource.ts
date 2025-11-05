@@ -91,7 +91,7 @@ export class LocalAudioSource extends BaseAudioSource {
 
                 const peaksToSend = this.waveformBuckets;
                 if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-                    this.emit("waveform:data", {url: this.url, peaks: peaksToSend});
+                    this.emit("waveform:data", {id: this.id, peaks: peaksToSend});
                 }
 
                 resolve();

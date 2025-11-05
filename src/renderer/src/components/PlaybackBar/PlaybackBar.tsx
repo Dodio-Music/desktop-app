@@ -17,11 +17,11 @@ const PlaybackBar = () => {
     const displayVolume = round2Dec(!isMuted ? volume : 0);
     const debouncedVolume = useDebounce(displayVolume, 1000);
     const [songPath, setSongPath] = useState("");
-    const {currentTrackUrl, duration, currentTime, userPaused, sourceType} = useSelector(
+    const {url, duration, currentTime, userPaused, sourceType} = useSelector(
         (state: RootState) => state.nativePlayer
     );
 
-    const trackName = !currentTrackUrl ? "No info available." : sourceType === "local" ? currentTrackUrl.replace(songPath + "\\", "") : currentTrackUrl;
+    const trackName = !url ? "No info available." : sourceType === "local" ? url.replace(songPath + "\\", "") : url;
 
     useEffect(() => {
         window.api.setPreferences({volume, muted: isMuted});

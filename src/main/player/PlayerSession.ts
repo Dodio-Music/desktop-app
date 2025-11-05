@@ -3,15 +3,15 @@ import {BrowserWindow} from "electron";
 import {QueueManager} from "./QueueManager.js";
 import {Worker} from "node:worker_threads";
 import {IMsg, OutputDevice} from "./PlayerProcess.js";
-import {SourceType} from "../../shared/PlayerState.js";
 import {AudioSourceFactory} from "./AudioSourceFactory.js";
+import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../shared/TrackInfo.js";
 
 export class PlayerSession {
     private source: BaseAudioSource | null = null;
     private preloadSource: BaseAudioSource | null = null;
-    private waveformData: { url: string, peaks: number[] } | null = null;
+    private waveformData: { id: string, peaks: number[] } | null = null;
     private nextPreload = false;
-    private currentUrl = "";
+    private currentSong: BaseSongEntry | undefined;
     private currentStateSecond = 0;
 
     constructor(
@@ -21,8 +21,8 @@ export class PlayerSession {
     ) {
     }
 
-    get url() {
-        return this.currentUrl;
+    get id() {
+        return this.currentSong?.id ?? "";
     }
 
     get currentTime() {
@@ -33,9 +33,9 @@ export class PlayerSession {
         return this.nextPreload;
     }
 
-    setWaveformData(data: { url: string, peaks: number[] }) {
+    setWaveformData(data: { id: string, peaks: number[] }) {
         this.waveformData = data;
-        if (data.url === this.currentUrl) {
+        if (data.id === this.currentSong?.id) {
             this.mainWindow.webContents.send("player:event", {
                 type: "waveform-data",
                 ...data
@@ -43,9 +43,9 @@ export class PlayerSession {
         }
     }
 
-    updateState(state: { currentTime: number; duration: number; currentTrackUrl: string }) {
+    updateState(state: { currentTime: number; duration: number; id: string }) {
         this.currentStateSecond = state.currentTime;
-        this.currentUrl = state.currentTrackUrl;
+        if(this.currentSong) this.currentSong.id = state.id;
         this.mainWindow.webContents.send("player:update", state);
     }
 
@@ -75,12 +75,15 @@ export class PlayerSession {
         return this.waveformData;
     }
 
-    async createTrackBuffers(pathOrUrl: string, duration: number, sourceType: SourceType) {
+    async createTrackBuffers(track: BaseSongEntry) {
         const devInfo = await this.getDeviceInfoFromWorker();
 
-        const {source, pcmSab, segmentSab} = await AudioSourceFactory.create(
+        const pathOrUrl = isLocalSong(track) ? track.fullPath : isRemoteSong(track) ? track.sources[0].url : "";
+
+        const {source, pcmSab, segmentSab, duration} = await AudioSourceFactory.create(
+            track.id,
             pathOrUrl,
-            sourceType,
+            track.type,
             devInfo,
             this.mainWindow
         )
@@ -90,7 +93,7 @@ export class PlayerSession {
         source.once("waveform:data", (data) => this.setWaveformData(data));
         void source.start();
 
-        return {pcmSab, segmentSab, devInfo, source, trackInfo: {pathOrUrl, duration, sourceType}};
+        return {pcmSab, segmentSab, devInfo, source, duration, pathOrUrl};
     }
 
     private async getDeviceInfoFromWorker(): Promise<OutputDevice> {
@@ -110,16 +113,17 @@ export class PlayerSession {
         });
     }
 
-    async loadTrack(pathOrUrl: string, duration: number, sourceType: SourceType) {
+    async loadTrack(track: BaseSongEntry) {
         const {
             source,
             segmentSab,
             pcmSab,
             devInfo,
-            trackInfo
-        } = await this.createTrackBuffers(pathOrUrl, duration, sourceType);
+            duration,
+            pathOrUrl
+        } = await this.createTrackBuffers(track);
         this.setSources(source, null);
-        this.currentUrl = pathOrUrl;
+        this.currentSong = track;
         this.preloadSource?.cancel();
         this.preloadSource = null;
 
@@ -127,18 +131,19 @@ export class PlayerSession {
             type: "load",
             payload: {
                 pcmSab,
-                path: trackInfo.pathOrUrl,
-                duration: trackInfo.duration,
+                path: pathOrUrl,
+                id: track.id,
+                duration,
                 devInfo,
                 segmentSab,
-                sourceType: trackInfo.sourceType
+                sourceType: track.type
             }
         });
     };
 
-    async preloadNextTrack(pathOrUrl: string, duration: number, sourceType: SourceType) {
-        const {pcmSab, segmentSab, devInfo, source, trackInfo} =
-            await this.createTrackBuffers(pathOrUrl, duration, sourceType);
+    async preloadNextTrack(track: BaseSongEntry) {
+        const {pcmSab, segmentSab, devInfo, source, duration, pathOrUrl} =
+            await this.createTrackBuffers(track);
 
         this.preloadSource = source;
         this.markPreloadStarted();
@@ -147,11 +152,12 @@ export class PlayerSession {
             type: "load-next",
             payload: {
                 pcmSab,
-                path: trackInfo.pathOrUrl,
-                duration: trackInfo.duration,
+                path: pathOrUrl,
+                id: track.id,
+                duration,
                 devInfo,
                 segmentSab,
-                sourceType: trackInfo.sourceType
+                sourceType: track.type
             }
         });
     }
@@ -159,7 +165,7 @@ export class PlayerSession {
     async previous() {
         if (this.currentTime < 3) {
             const previous = this.queue.previous();
-            if (previous) await this.loadTrack(previous.fullPath, previous.duration ?? 0, "local");
+            if (previous) await this.loadTrack(previous);
         } else {
             this.source?.seek(0);
             this.playerProcess.postMessage({type: "seek", payload: 0});

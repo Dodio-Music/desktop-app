@@ -2,23 +2,12 @@ import {app, BrowserWindow, dialog, ipcMain} from "electron";
 import path from "path";
 import fsp from "fs/promises";
 import fs from "fs";
-import {parseFile} from "music-metadata";
+import {IAudioMetadata, parseFile} from "music-metadata";
 import {setPreferences} from "./preferences.js";
 import {createHash} from "node:crypto";
 import sharp from "sharp";
 import pLimit from "p-limit";
-
-export interface SongEntry {
-    name: string;
-    fullPath: string;
-    title: string;
-    artists: string[];
-    album: string;
-    track?: number;
-    duration?: number;
-    picture?: string;
-    createdAt: Date;
-}
+import {LocalSongEntry} from "../shared/TrackInfo.js";
 
 export const registerSongIndexer = (mainWindow: BrowserWindow) => {
     ipcMain.handle("songs:list", async (_, folderPath: string) => {
@@ -39,7 +28,7 @@ async function setSongDirectory(mainWindow: BrowserWindow) {
     mainWindow.webContents.send("preferences:update");
 }
 
-async function simpleScan(folderPath: string): Promise<SongEntry[] | null> {
+async function simpleScan(folderPath: string): Promise<LocalSongEntry[] | null> {
     const exists = fs.existsSync(folderPath);
     if (!exists) return null;
 
@@ -52,7 +41,7 @@ async function simpleScan(folderPath: string): Promise<SongEntry[] | null> {
             .map(async f => {
                 const fullPath = path.join(folderPath, f.name);
                 const stat = await fsp.stat(fullPath);
-                return {name: f.name, fullPath, createdAt: stat.birthtime};
+                return {name: f.name, fullPath, createdAt: stat.birthtime, size: stat.size};
             })
     );
 
@@ -72,17 +61,20 @@ async function simpleScan(folderPath: string): Promise<SongEntry[] | null> {
                     pictureBase64 = await getThumbnail(f.fullPath, pic.data);
                 }
 
-                return {
-                    name: f.name,
+                const id = computeFastId(f.size, f.createdAt.getTime(), metadata);
+                const entry: LocalSongEntry = {
+                    id,
+                    type: "local",
+                    fileName: f.name,
                     fullPath: f.fullPath,
                     title: common.title || f.name,
                     artists: common.artists || ["Unknown Artist"],
                     album: common.album || "Unknown Album",
-                    track: common.track.no || undefined,
                     duration: metadata.format.duration || undefined,
                     picture: pictureBase64,
                     createdAt: f.createdAt
-                } as SongEntry;
+                }
+                return entry;
             } catch (err) {
                 console.error(`Failed to read metadata for ${f.fullPath}: `, err);
                 return null;
@@ -90,7 +82,7 @@ async function simpleScan(folderPath: string): Promise<SongEntry[] | null> {
         }))
     );
 
-    return tracks.filter(Boolean) as SongEntry[];
+    return tracks.filter(Boolean) as LocalSongEntry[];
 }
 
 async function getThumbnail(fullPath: string, pictureBuffer: Uint8Array): Promise<string> {
@@ -113,4 +105,13 @@ async function getThumbnail(fullPath: string, pictureBuffer: Uint8Array): Promis
 
         return `data:image/png;base64,${buffer.toString("base64")}`;
     }
+}
+
+function computeFastId(size: number, createdAt: number, metadata: IAudioMetadata) {
+    const hash = createHash("sha256");
+    hash.update(`${metadata.common.title ?? ""}`);
+    hash.update(`${metadata.common.album ?? ""}`);
+    hash.update(`${metadata.common.artists?.join(",") ?? ""}`);
+    hash.update(`${size}-${createdAt}`);
+    return hash.digest("hex");
 }

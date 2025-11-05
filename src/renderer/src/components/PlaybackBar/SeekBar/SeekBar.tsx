@@ -22,7 +22,7 @@ const SeekBar = () => {
         currentTime,
         sourceType,
         playbackRunning,
-        currentTrackUrl
+        id
     } = useSelector((state: RootState) => state.nativePlayer);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -41,7 +41,7 @@ const SeekBar = () => {
         : wantedDisplayStyle;
     const seekbarHeight = displayStyle === SeekBarDisplayStyle.WAVEFORM ? 25 : 5;
 
-    const waveformRef = useWaveform(waveformData, seekbarWidth, seekbarHeight, currentTrackUrl);
+    const waveformRef = useWaveform(waveformData, seekbarWidth, seekbarHeight, id);
     const lastIpcTimeRef = useRef<number>(0);
     const lastIpcTimestampRef = useRef<number>(0);
     const rafRef = useRef<number | null>(null);

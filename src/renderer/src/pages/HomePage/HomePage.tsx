@@ -8,9 +8,9 @@ const HomePage = () => {
             <div className={s.releases}>
                 {tracks.map(t =>
                     <div key={t.title} className={s.track} onClick={() => window.api.loadTrackRemote(t)}>
-                        <div className={s.coverWrapper}><img alt={"cover"} className={s.cover} src={t.cover}/></div>
+                        <div className={s.coverWrapper}><img alt={"cover"} className={s.cover} src={t.picture}/></div>
                         <p className={`${s.title} ${s.link}`}>{t.album}</p>
-                        <p className={`${s.artist} ${s.link}`}>{t.artist}</p>
+                        <p className={`${s.artist} ${s.link}`}>{t.artists.join(", ")}</p>
                     </div>
                 )}
             </div>

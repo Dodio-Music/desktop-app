@@ -2,7 +2,8 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {PlayerState} from "../../../shared/PlayerState";
 
 const initialState: PlayerState = {
-    currentTrackUrl: null,
+    id: null,
+    url: null,
     userPaused: true,
     currentTime: 0,
     duration: 0,

@@ -2,17 +2,17 @@ import {FaPlay, FaPause} from "react-icons/fa6";
 import {format} from "timeago.js";
 import s from "./LocalFilesPage.module.css";
 import {secondsToTime} from "../../util/timeUtils";
-import {SongEntry} from "@renderer/pages/LocalFilesPage/LocalFilesPage";
 import classNames from "classnames";
+import {BaseSongEntry, isLocalSong} from "../../../../shared/TrackInfo";
 
 interface RowProps {
     index: number,
-    song: SongEntry,
+    song: BaseSongEntry,
     selectedRow?: string;
     setSelectedRow: (name?: string) => void;
-    currentTrack: string | null;
+    currentTrackId: string | null;
     userPaused: boolean;
-    pauseOrLoadSong: (song: SongEntry) => void;
+    pauseOrLoadSong: (song: BaseSongEntry) => void;
 }
 
 export const SongRow = ({
@@ -21,18 +21,18 @@ export const SongRow = ({
                             setSelectedRow,
                             selectedRow,
                             userPaused,
-                            currentTrack,
+                            currentTrackId,
                             pauseOrLoadSong
                         }: RowProps) => {
-    const isActive = song.fullPath === currentTrack;
+    const isActive = song.id === currentTrackId;
 
     return (
         <div
-            id={selectedRow === song.name ? s.activeRow : ""}
+            id={selectedRow === song.id ? s.activeRow : ""}
             className={`${s.songRow} ${s.grid}`}
             onClick={(e) => {
                 e.stopPropagation();
-                setSelectedRow(song.name);
+                setSelectedRow(song.id);
             }}
         >
             <div className={s.trackColumn}>
@@ -60,7 +60,7 @@ export const SongRow = ({
                 </div>
             </div>
             <a className={classNames(s.trackAlbum, s.ellipsis)}>{song.album}</a>
-            <p className={classNames(s.timestamp, s.ellipsis)}>{format(song.createdAt)}</p>
+            <p className={classNames(s.timestamp, s.ellipsis)}>{isLocalSong(song) ? format(song.createdAt) : ""}</p>
             <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
             <p></p>
         </div>

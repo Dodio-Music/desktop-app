@@ -1,40 +1,40 @@
-import { SongEntry } from "../songIndexer.js";
 import { BrowserWindow } from "electron";
+import {BaseSongEntry} from "../../shared/TrackInfo.js";
 
 export type QueueContextType = "local" | "remote";
 
 export interface QueueContext {
     type: QueueContextType;
-    tracks: SongEntry[];
+    tracks: BaseSongEntry[];
     startIndex: number;
 }
 
 export class QueueManager {
-    private userQueue: SongEntry[] = [];
+    private userQueue: BaseSongEntry[] = [];
     private context: QueueContext | null = null;
-    private current: SongEntry | null = null;
+    private current: BaseSongEntry | null = null;
     private window: BrowserWindow;
 
     constructor(mainWindow: BrowserWindow) {
         this.window = mainWindow;
     }
 
-    getCurrent(): SongEntry | null {
+    getCurrent(): BaseSongEntry | null {
         return this.current;
     }
 
-    getUserQueue(): SongEntry[] {
+    getUserQueue(): BaseSongEntry[] {
         return [...this.userQueue];
     }
 
-    getContextQueue(): SongEntry[] {
+    getContextQueue(): BaseSongEntry[] {
         if (!this.context) return [];
         const { tracks, startIndex } = this.context;
         // all tracks after the current index
         return tracks.slice(startIndex + 1);
     }
 
-    getNext(): SongEntry | null {
+    getNext(): BaseSongEntry | null {
         if(this.userQueue.length > 0) {
             return this.userQueue[0];
         }
@@ -49,19 +49,19 @@ export class QueueManager {
         return null;
     }
 
-    setContext(type: QueueContextType, tracks: SongEntry[], startIndex: number) {
+    setContext(type: QueueContextType, tracks: BaseSongEntry[], startIndex: number) {
         this.context = { type, tracks, startIndex };
         this.current = tracks[startIndex];
         this.notifyUpdate();
     }
 
-    addToUserQueue(song: SongEntry) {
+    addToUserQueue(song: BaseSongEntry) {
         this.userQueue.push(song);
         this.notifyUpdate();
     }
 
-    next(): SongEntry | null {
-        let next: SongEntry | null = null;
+    next(): BaseSongEntry | null {
+        let next: BaseSongEntry | null = null;
 
         if(this.userQueue.length > 0) {
             next = this.userQueue.shift()!;
@@ -83,7 +83,7 @@ export class QueueManager {
         return next;
     }
 
-    previous(): SongEntry | null {
+    previous(): BaseSongEntry | null {
         if(!this.context) return null;
         const {tracks} = this.context;
         this.context.startIndex--;

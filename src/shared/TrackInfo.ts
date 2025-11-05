@@ -1,15 +1,36 @@
-export interface TrackInfo {
+import {SourceType} from "./PlayerState.js";
+
+export interface BaseSongEntry {
     id: string;
     title: string;
+    artists: string[];
     album: string;
-    artist: string;
-    cover: string;
-    manifest: TrackManifest;
-    duration: number;
+    duration?: number;
+    picture?: string;
+    type: SourceType;
 }
 
-export interface TrackManifest {
+export interface LocalSongEntry extends BaseSongEntry {
+    createdAt: Date;
+    fileName: string;
+    fullPath: string;
+}
+
+export interface RemoteSongEntry extends BaseSongEntry {
+    sources: SongSource[];
+}
+
+export interface SongSource {
+    id: string;
     url: string;
+}
+
+export function isLocalSong(entry: BaseSongEntry): entry is LocalSongEntry {
+    return entry.type === "local";
+}
+
+export function isRemoteSong(entry: BaseSongEntry): entry is RemoteSongEntry {
+    return entry.type === "remote";
 }
 
 export const SEGMENT_DURATION = 1;

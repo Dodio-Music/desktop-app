@@ -1,9 +1,8 @@
 import {app, BrowserWindow, ipcMain} from "electron";
-import {TrackInfo} from "../../shared/TrackInfo.js";
+import {BaseSongEntry, LocalSongEntry, RemoteSongEntry} from "../../shared/TrackInfo.js";
 import playerProcessPath from "../player/PlayerProcess?modulePath";
 import {Worker} from "node:worker_threads";
 import {QueueManager} from "../player/QueueManager.js";
-import {SongEntry} from "../songIndexer.js";
 import {PlayerSession} from "../player/PlayerSession.js";
 
 export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
@@ -21,8 +20,8 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
 
                 mainWindow.webContents.send("player:event", {
                     type: "media-transition",
-                    url: session.url,
-                    ...(session.getWaveformData()?.url === session.url && { waveformData: session.getWaveformData() }),
+                    url: session.id,
+                    ...(session.getWaveformData()?.id === session.id && { waveformData: session.getWaveformData() }),
                 });
 
                 const {preload, source} = session.getSources();
@@ -41,7 +40,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
                     const nextTrack = queue.getNext();
                     if(nextTrack) {
                         session.markPreloadStarted();
-                        await session.preloadNextTrack(nextTrack.fullPath, nextTrack.duration ?? 0, "local");
+                        await session.preloadNextTrack(nextTrack);
                     }
                 }
                 break;
@@ -65,20 +64,20 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     mainWindow.on("blur", () => playerProcess.postMessage({type: "focus-update", payload: false}));
     mainWindow.on("focus", () => playerProcess.postMessage({type: "focus-update", payload: true}));
 
-    ipcMain.handle("player:load-remote", async (_, track: TrackInfo) => {
-        await session.loadTrack(track.manifest.url, track.duration, "remote");
+    ipcMain.handle("player:load-remote", async (_, track: RemoteSongEntry) => {
+        await session.loadTrack(track);
     });
 
-    ipcMain.handle("player:load-local", async (_, track: SongEntry, contextTracks: SongEntry[]) => {
-        const startIndex = contextTracks.findIndex(t => t.fullPath === track.fullPath);
+    ipcMain.handle("player:load-local", async (_, track: LocalSongEntry, contextTracks: BaseSongEntry[]) => {
+        const startIndex = contextTracks.findIndex(t => t.id === track.id);
         queue.setContext("local", contextTracks, startIndex);
 
-        await session.loadTrack(track.fullPath, track.duration ?? 0, "local");
+        await session.loadTrack(track);
     });
 
     ipcMain.handle("player:next", async () => {
         const next = queue.next();
-        if(next) await session.loadTrack(next.fullPath, next.duration ?? 0, "local");
+        if(next) await session.loadTrack(next);
     });
 
     ipcMain.handle("player:previous", async () => {

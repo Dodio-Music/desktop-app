@@ -1,14 +1,15 @@
 import {AudioIO, getDevices, getHostAPIs, IoStreamWrite, SampleFormatFloat32} from "@underswing/naudiodon";
 import {parentPort} from "node:worker_threads";
 import {clearInterval} from "node:timers";
-import {SourceType} from "../../shared/PlayerState.js";
 import {activePreset} from "../../shared/latencyPresets.js";
 import {SEGMENT_DURATION} from "../../shared/TrackInfo.js";
+import {SourceType} from "../../shared/PlayerState.js";
 
 const IPC_UPDATE_INTERVAL = 200;
 const IDLE_TIMEOUT_MS = 2 * 60 * 1000;
 
 type PlayerSession = {
+    id: string;
     path: string;
     readOffset: number;
     waitingForData: boolean;
@@ -33,7 +34,8 @@ export interface OutputDevice {
 }
 
 export type StateMessage = {
-    currentTrackUrl: string;
+    id: string;
+    url: string;
     currentTime: number;
     waitingForData: boolean;
     userPaused: boolean;
@@ -182,7 +184,7 @@ export class PlayerProcess {
                             this.session.readOffset = pcm.length;
                             this.notifyState();
                         } else {
-                            this.load(next.path, next.duration, new Float32Array(next.pcmSab), new Uint8Array(next.segmentSab), next.sourceType);
+                            this.load(next.path, next.id, next.duration, new Float32Array(next.pcmSab), new Uint8Array(next.segmentSab), next.sourceType);
                             continue;
                         }
                     }
@@ -279,7 +281,7 @@ export class PlayerProcess {
 
 
     // === Session Management ===
-    public load(path: string, duration: number, pcm: Float32Array, segmentIndex: Uint8Array, sourceType: SourceType) {
+    public load(path: string, id: string, duration: number, pcm: Float32Array, segmentIndex: Uint8Array, sourceType: SourceType) {
         if (!this.deviceInfo) return;
 
         this.playbackState = "playing";
@@ -289,6 +291,7 @@ export class PlayerProcess {
             waitingForData: true,
             duration,
             path,
+            id,
             pcm,
             segmentIndex,
             sourceType,
@@ -449,7 +452,8 @@ export class PlayerProcess {
 
 
         const state: StateMessage = {
-            currentTrackUrl: this.session.path,
+            id: this.session.id,
+            url: this.session.path,
             currentTime: currentTimeSeconds,
             waitingForData: this.session.waitingForData,
             userPaused: this.isPausingOrPaused(),
@@ -492,6 +496,7 @@ export interface IMsg<T> {
 }
 
 interface LoadPayload {
+    id: string;
     path: string;
     duration: number;
     pcmSab: SharedArrayBuffer;
@@ -512,7 +517,7 @@ parentPort?.on("message", (msg: IMsg<unknown>) => {
         }
         case "load": {
             const info = msg.payload as LoadPayload;
-            playerProcess.load(info.path, info.duration, new Float32Array(info.pcmSab), new Uint8Array(info.segmentSab), info.sourceType);
+            playerProcess.load(info.path, info.id, info.duration, new Float32Array(info.pcmSab), new Uint8Array(info.segmentSab), info.sourceType);
             break;
         }
         case "set-volume": {

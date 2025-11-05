@@ -8,6 +8,7 @@ import ffmpegStatic from "ffmpeg-static";
 import path from "path";
 
 export interface BaseAudioSourceInit {
+    id: string;
     url: string;
     outputChannels: number;
     outputSampleRate: number;
@@ -37,6 +38,7 @@ export abstract class BaseAudioSource extends EventEmitter {
     protected pcm: Float32Array;
     protected segmentMap: Uint8Array;
 
+    public readonly id: string;
     public readonly url: string;
     public readonly outputChannels: number;
     public readonly outputSampleRate: number;
@@ -45,6 +47,7 @@ export abstract class BaseAudioSource extends EventEmitter {
 
     constructor(init: BaseAudioSourceInit) {
         super();
+        this.id = init.id;
         this.url = init.url;
         this.outputChannels = init.outputChannels;
         this.outputSampleRate = init.outputSampleRate;

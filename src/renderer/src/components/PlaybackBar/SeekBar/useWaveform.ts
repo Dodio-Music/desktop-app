@@ -1,7 +1,7 @@
 import {useEffect, useRef} from "react";
 import {WaveformData} from "../../../../../shared/PlayerState";
 
-export function useWaveform (waveformData: WaveformData | undefined, width: number, height: number, currentTrackUrl: string | null) {
+export function useWaveform (waveformData: WaveformData | undefined, width: number, height: number, currentTrackId: string | null) {
     const offscreenCanvasRef = useRef<HTMLCanvasElement>(
         (() => {
             const canvas = document.createElement("canvas");
@@ -12,7 +12,7 @@ export function useWaveform (waveformData: WaveformData | undefined, width: numb
     );
 
     const peaks = waveformData?.peaks;
-    const url = waveformData?.url;
+    const id = waveformData?.id;
 
     useEffect(() => {
         const canvas = offscreenCanvasRef.current;
@@ -26,7 +26,7 @@ export function useWaveform (waveformData: WaveformData | undefined, width: numb
         ctx.clearRect(0, 0, width, height);
         const fallbackHeightFraction = 0.25;
         ctx.fillStyle = "rgb(255,255,255)";
-        if (!peaks || peaks.length === 0 || currentTrackUrl !== url) {
+        if (!peaks || peaks.length === 0 || currentTrackId !== id) {
             ctx.fillRect(0, middle - fallbackHeightFraction * height / 2, width, fallbackHeightFraction * height);
         } else {
             const barWidth = width / peaks.length;
@@ -41,7 +41,7 @@ export function useWaveform (waveformData: WaveformData | undefined, width: numb
         }
 
         offscreenCanvasRef.current = canvas;
-    }, [width, height, currentTrackUrl, url, peaks]);
+    }, [width, height, currentTrackId, id, peaks]);
 
     return offscreenCanvasRef;
 }

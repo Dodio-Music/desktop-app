@@ -3,21 +3,10 @@ import {useEffect, useState} from "react";
 import s from "./LocalFilesPage.module.css";
 import {WiTime3} from "react-icons/wi";
 import {SongList} from "@renderer/pages/LocalFilesPage/SongList";
-
-export interface SongEntry {
-    name: string;
-    fullPath: string;
-    title: string;
-    artists: string[];
-    album: string;
-    track?: number;
-    duration?: number;
-    picture?: string;
-    createdAt: Date;
-}
+import {LocalSongEntry} from "../../../../shared/TrackInfo";
 
 const LocalFilesPage = () => {
-        const [songs, setSongs] = useState<SongEntry[]>([]);
+        const [songs, setSongs] = useState<LocalSongEntry[]>([]);
         const [error, setError] = useState("");
         const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
 
