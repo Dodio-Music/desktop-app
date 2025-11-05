@@ -1,4 +1,3 @@
-import {parseBuffer} from "music-metadata";
 import {Readable} from "node:stream";
 import type {ReadableStream} from "node:stream/web";
 import {open} from "fs/promises";
@@ -7,16 +6,6 @@ export interface SeekPoint {
     sampleNumber: bigint;
     streamOffset: bigint;
     frameSamples: number;
-}
-
-export async function extractSampleRate(buf: Buffer) {
-    const metadata = await parseBuffer(buf, "audio/flac", { duration: false });
-
-    if (!metadata.format.sampleRate) {
-        throw new Error("Could not determine sample rate");
-    }
-
-    return metadata.format.sampleRate;
 }
 
 export async function extractSeekTable(buf: Buffer) {

@@ -5,7 +5,7 @@ export class LocalAudioSource extends BaseAudioSource {
     private numPeaks = 600;
     private waveformBuckets: Float32Array = new Float32Array(this.numPeaks);
 
-    async start() {
+    public async start() {
         if (this.cancelled) return;
 
         this.mainWindow.webContents.send("player:event", {type: "loading-progress", progress: this.getSegmentMapProgress()});

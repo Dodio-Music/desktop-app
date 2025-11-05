@@ -1,23 +1,38 @@
-import {BaseAudioSource} from "./BaseAudioSource.js";
-import {extractSampleRate, extractSeekTable, findFlacAudioStart, getFlacStream, SeekPoint} from "./FlacHelper.js";
+import {BaseAudioSource, BaseAudioSourceInit} from "./BaseAudioSource.js";
+import {extractSeekTable, findFlacAudioStart, getFlacStream, SeekPoint} from "./FlacHelper.js";
 import {spawn} from "child_process";
 
-export class RemoteFlacSource extends BaseAudioSource {
-    private totalBytes = 0n;
-    private seekTable: SeekPoint[] = [];
-    private originalSampleRate: number = 0;
-    private firstPCMByteOffset = 0;
-    private flacHeader: Buffer | null = null;
+export interface RemoteFlacSourceInit extends BaseAudioSourceInit {
+    totalBytes: bigint;
+    seekTable: SeekPoint[];
+    originalSampleRate: number;
+    firstPCMByteOffset: number;
+    flacHeader: Buffer;
+}
 
-    async start() {
+export class RemoteFlacSource extends BaseAudioSource {
+    private readonly totalBytes: bigint;
+    private readonly seekTable: SeekPoint[];
+    private readonly originalSampleRate: number;
+    private readonly firstPCMByteOffset: number;
+    private readonly flacHeader: Buffer;
+
+    constructor(init: RemoteFlacSourceInit) {
+        super(init);
+        this.totalBytes = init.totalBytes;
+        this.seekTable = init.seekTable;
+        this.originalSampleRate = init.originalSampleRate;
+        this.firstPCMByteOffset = init.firstPCMByteOffset;
+        this.flacHeader = init.flacHeader;
+    }
+
+    public async start() {
         if (this.cancelled) return;
 
         this.mainWindow.webContents.send("player:event", {
             type: "loading-progress",
             progress: this.getSegmentMapProgress()
         });
-
-        await this.prepareRemoteFlac();
 
         void this.fillMissingSegments();
         this.startProgressUpdates();
@@ -82,20 +97,19 @@ export class RemoteFlacSource extends BaseAudioSource {
         this.setupFfmpegLifecycle(endSec, writeOffset);
     }
 
-    async prepareRemoteFlac() {
-        const res = await fetch(this.url, {headers: {Range: "bytes=0-65535"}});
-
+    static async prepareRemoteFlac(url: string) {
+        const res = await fetch(url, {headers: {Range: "bytes=0-65535"}});
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
         const contentRange = res.headers.get("content-range");
         if (!contentRange) throw new Error("Missing Content-Range header");
 
-        this.totalBytes = BigInt(contentRange.split("/")[1]);
-
+        const totalBytes = BigInt(contentRange.split("/")[1]);
         const buf = Buffer.from(await res.arrayBuffer());
-        this.originalSampleRate = await extractSampleRate(buf);
-        this.seekTable = await extractSeekTable(buf);
+        const seekTable = await extractSeekTable(buf);
+        const firstPCMByteOffset = findFlacAudioStart(buf);
+        const flacHeader = buf.subarray(0, firstPCMByteOffset);
 
-        this.firstPCMByteOffset = findFlacAudioStart(buf);
-        this.flacHeader = buf.subarray(0, this.firstPCMByteOffset);
+        return {totalBytes, seekTable, firstPCMByteOffset, flacHeader};
     }
 }

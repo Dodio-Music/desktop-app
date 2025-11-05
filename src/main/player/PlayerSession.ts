@@ -2,12 +2,9 @@ import {BaseAudioSource} from "./BaseAudioSource.js";
 import {BrowserWindow} from "electron";
 import {QueueManager} from "./QueueManager.js";
 import {Worker} from "node:worker_threads";
-import {parseFlacStreamInfo, readFileRange} from "./FlacHelper.js";
 import {IMsg, OutputDevice} from "./PlayerProcess.js";
-import {SEGMENT_DURATION} from "../../shared/TrackInfo.js";
-import {LocalAudioSource} from "./LocalAudioSource.js";
-import {RemoteFlacSource} from "./RemoteFlacSource.js";
 import {SourceType} from "../../shared/PlayerState.js";
+import {AudioSourceFactory} from "./AudioSourceFactory.js";
 
 export class PlayerSession {
     private source: BaseAudioSource | null = null;
@@ -81,38 +78,19 @@ export class PlayerSession {
     async createTrackBuffers(pathOrUrl: string, duration: number, sourceType: SourceType) {
         const devInfo = await this.getDeviceInfoFromWorker();
 
-        let pcmSab: SharedArrayBuffer;
-        if (sourceType === "local") {
-            const headerBuf = await readFileRange(pathOrUrl, 0, 65535);
-            const {totalSamples, sampleRate} = parseFlacStreamInfo(headerBuf);
-            const sampleRateConversion = devInfo.sampleRate / sampleRate;
-            const totalFloatSamples = Math.ceil(Number(totalSamples) * devInfo.channels * sampleRateConversion);
-            pcmSab = new SharedArrayBuffer(totalFloatSamples * Float32Array.BYTES_PER_ELEMENT);
-        } else {
-            const totalSamples = Math.ceil(duration * devInfo.sampleRate * devInfo.channels);
-            pcmSab = new SharedArrayBuffer(totalSamples * Float32Array.BYTES_PER_ELEMENT);
-        }
-
-        const totalSegments = Math.ceil(duration / SEGMENT_DURATION);
-        const segmentSab = new SharedArrayBuffer(totalSegments);
+        const {source, pcmSab, segmentSab} = await AudioSourceFactory.create(
+            pathOrUrl,
+            sourceType,
+            devInfo,
+            this.mainWindow
+        )
 
         this.cancelSource();
 
-        const SourceClass = sourceType === "local" ? LocalAudioSource : RemoteFlacSource;
-        const flacSource = new SourceClass(
-            pathOrUrl,
-            devInfo.channels,
-            devInfo.sampleRate,
-            duration,
-            pcmSab,
-            this.mainWindow,
-            segmentSab
-        );
+        source.once("waveform:data", (data) => this.setWaveformData(data));
+        void source.start();
 
-        flacSource.once("waveform:data", (data) => this.setWaveformData(data));
-        void flacSource.start();
-
-        return {pcmSab, segmentSab, devInfo, flacSource, trackInfo: {pathOrUrl, duration, sourceType}};
+        return {pcmSab, segmentSab, devInfo, source, trackInfo: {pathOrUrl, duration, sourceType}};
     }
 
     private async getDeviceInfoFromWorker(): Promise<OutputDevice> {
@@ -134,13 +112,13 @@ export class PlayerSession {
 
     async loadTrack(pathOrUrl: string, duration: number, sourceType: SourceType) {
         const {
-            flacSource,
+            source,
             segmentSab,
             pcmSab,
             devInfo,
             trackInfo
         } = await this.createTrackBuffers(pathOrUrl, duration, sourceType);
-        this.setSources(flacSource, null);
+        this.setSources(source, null);
         this.currentUrl = pathOrUrl;
         this.preloadSource?.cancel();
         this.preloadSource = null;
@@ -159,10 +137,10 @@ export class PlayerSession {
     };
 
     async preloadNextTrack(pathOrUrl: string, duration: number, sourceType: SourceType) {
-        const {pcmSab, segmentSab, devInfo, flacSource, trackInfo} =
+        const {pcmSab, segmentSab, devInfo, source, trackInfo} =
             await this.createTrackBuffers(pathOrUrl, duration, sourceType);
 
-        this.preloadSource = flacSource;
+        this.preloadSource = source;
         this.markPreloadStarted();
 
         this.playerProcess.postMessage({

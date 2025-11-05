@@ -7,6 +7,16 @@ import {EventEmitter} from "node:events";
 import ffmpegStatic from "ffmpeg-static";
 import path from "path";
 
+export interface BaseAudioSourceInit {
+    url: string;
+    outputChannels: number;
+    outputSampleRate: number;
+    duration: number;
+    pcmSab: SharedArrayBuffer;
+    mainWindow: BrowserWindow;
+    segmentSab: SharedArrayBuffer;
+}
+
 export abstract class BaseAudioSource extends EventEmitter {
     public DEBUG_LOG = false;
     public ffmpegPath =
@@ -27,18 +37,22 @@ export abstract class BaseAudioSource extends EventEmitter {
     protected pcm: Float32Array;
     protected segmentMap: Uint8Array;
 
-    constructor(
-        public readonly url: string,
-        public readonly outputChannels: number,
-        public readonly outputSampleRate: number,
-        public readonly duration: number,
-        pcmSab: SharedArrayBuffer,
-        protected mainWindow: BrowserWindow,
-        segmentSab: SharedArrayBuffer
-    ) {
+    public readonly url: string;
+    public readonly outputChannels: number;
+    public readonly outputSampleRate: number;
+    public readonly duration: number;
+    protected mainWindow: BrowserWindow;
+
+    constructor(init: BaseAudioSourceInit) {
         super();
-        this.pcm = new Float32Array(pcmSab);
-        this.segmentMap = new Uint8Array(segmentSab);
+        this.url = init.url;
+        this.outputChannels = init.outputChannels;
+        this.outputSampleRate = init.outputSampleRate;
+        this.duration = init.duration;
+        this.mainWindow = init.mainWindow;
+
+        this.pcm = new Float32Array(init.pcmSab);
+        this.segmentMap = new Uint8Array(init.segmentSab);
     }
 
     protected getSegmentMapProgress(): number[] {
@@ -220,6 +234,6 @@ export abstract class BaseAudioSource extends EventEmitter {
         });
     }
 
-    protected abstract start(): Promise<void>;
+    abstract start(): Promise<void>;
     protected abstract spawnFFmpeg(startSec: number, endSec: number): Promise<void>;
 }
