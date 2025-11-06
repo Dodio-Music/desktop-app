@@ -9,9 +9,11 @@ import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../shared/TrackInfo.j
 export class PlayerSession {
     private source: BaseAudioSource | null = null;
     private preloadSource: BaseAudioSource | null = null;
+    private track: BaseSongEntry | null = null;
+    private preloadTrack: BaseSongEntry | null = null;
     private waveformData: { id: string, peaks: number[] } | null = null;
     private nextPreload = false;
-    private currentSong: BaseSongEntry | undefined;
+
     private currentStateSecond = 0;
 
     constructor(
@@ -22,7 +24,7 @@ export class PlayerSession {
     }
 
     get id() {
-        return this.currentSong?.id ?? "";
+        return this.track?.id ?? "";
     }
 
     get currentTime() {
@@ -35,7 +37,7 @@ export class PlayerSession {
 
     setWaveformData(data: { id: string, peaks: number[] }) {
         this.waveformData = data;
-        if (data.id === this.currentSong?.id) {
+        if (data.id === this.track?.id) {
             this.mainWindow.webContents.send("player:event", {
                 type: "waveform-data",
                 ...data
@@ -43,9 +45,8 @@ export class PlayerSession {
         }
     }
 
-    updateState(state: { currentTime: number; duration: number; id: string }) {
+    updateState(state: { currentTime: number }) {
         this.currentStateSecond = state.currentTime;
-        if(this.currentSong) this.currentSong.id = state.id;
         this.mainWindow.webContents.send("player:update", state);
     }
 
@@ -63,8 +64,17 @@ export class PlayerSession {
         this.preloadSource = preload;
     }
 
+    setTracks(main: BaseSongEntry | null, preload: BaseSongEntry | null) {
+        this.track = main;
+        this.preloadTrack = preload;
+    }
+
     getSources() {
-        return {source: this.source, preload: this.preloadSource};
+        return {currentSource: this.source, preloadSource: this.preloadSource};
+    }
+
+    getTracks() {
+        return {currentTrack: this.track, preloadTrack: this.preloadTrack};
     }
 
     cancelSource() {
@@ -123,7 +133,7 @@ export class PlayerSession {
             pathOrUrl
         } = await this.createTrackBuffers(track);
         this.setSources(source, null);
-        this.currentSong = track;
+        this.track = track;
         this.preloadSource?.cancel();
         this.preloadSource = null;
 
@@ -146,6 +156,7 @@ export class PlayerSession {
             await this.createTrackBuffers(track);
 
         this.preloadSource = source;
+        this.preloadTrack = track;
         this.markPreloadStarted();
 
         this.playerProcess.postMessage({
@@ -167,13 +178,13 @@ export class PlayerSession {
             const previous = this.queue.previous();
             if (previous) await this.loadTrack(previous);
         } else {
-            this.source?.seek(0);
+            void this.source?.seek(0);
             this.playerProcess.postMessage({type: "seek", payload: 0});
         }
     }
 
     seek(time: number) {
-        this.source?.seek(time);
+        void this.source?.seek(time);
         this.playerProcess.postMessage({ type: "seek", payload: time });
     }
 }

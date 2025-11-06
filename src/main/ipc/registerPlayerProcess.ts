@@ -18,18 +18,23 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
                 session.updateState(msg.state);
                 session.resetPreload();
 
+                const {preloadSource, currentSource} = session.getSources();
+                const {preloadTrack } = session.getTracks();
+                if(preloadTrack && preloadSource) {
+                    currentSource?.cancel();
+                    session.setSources(preloadSource, null);
+                    session.setTracks(preloadTrack, null);
+                    queue.next();
+                }
+
+                session.resetPreload();
+
                 mainWindow.webContents.send("player:event", {
                     type: "media-transition",
                     url: session.id,
                     ...(session.getWaveformData()?.id === session.id && { waveformData: session.getWaveformData() }),
                 });
 
-                const {preload, source} = session.getSources();
-                if(preload) {
-                    source?.cancel();
-                    session.setSources(preload, null);
-                    queue.next();
-                }
                 break;
             }
             case "player-state": {
