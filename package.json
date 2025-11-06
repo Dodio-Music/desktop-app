@@ -50,7 +50,8 @@
         "build:unpack": "npm run build && electron-builder --dir",
         "build:win": "npm run typecheck && npm run build && electron-builder --win",
         "build:mac": "npm run typecheck && electron-vite build && electron-builder --mac",
-        "build:linux": "npm run typecheck && electron-vite build && electron-builder --linux"
+        "build:linux": "npm run typecheck && electron-vite build && electron-builder --linux",
+        "test:unit": "vitest run --coverage"
     },
     "dependencies": {
         "@electron-toolkit/preload": "^3.0.2",
@@ -80,6 +81,7 @@
         "@types/react-dom": "^19.1.6",
         "@types/react-router-dom": "^5.3.3",
         "@vitejs/plugin-react": "^4.7.0",
+        "@vitest/coverage-v8": "^4.0.7",
         "electron": "^37.2.3",
         "electron-builder": "^25.1.8",
         "electron-vite": "^4.0.0",
