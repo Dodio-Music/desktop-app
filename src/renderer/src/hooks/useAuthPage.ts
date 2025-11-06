@@ -18,7 +18,6 @@ const useAuthPage = <T>(url: string): Result<T> => {
     const responseResult = useAwait(rq, null);
     const {setError}  = useErrorHandling();
     return useMemo(() => {
-        console.log("auth page response: ", responseResult);
         if(responseResult === null) return {ControlPage: LoadingPage, data: null};
         if(responseResult.type === "ok") return {data: responseResult.value.data, ControlPage: null};
         setError(responseResult.error);

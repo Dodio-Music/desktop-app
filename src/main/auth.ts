@@ -13,7 +13,6 @@ async function loadAuth(): Promise<IAuthData> {
         const data = await fs.readFile(authPath);
         const decrypted = safeStorage.decryptString(data);
         const parsed = JSON.parse(decrypted);
-        console.log("loaded auth:", parsed)
         return {
             hasAccount: parsed.hasAccount,
             access_token_expiry: new Date(Date.parse(parsed.access_token_expiry)),
@@ -35,18 +34,14 @@ export function updateAuth(new_auth: Partial<IAuthData>) {
         : auth.hasAccount
             ? "login"
             : "signup";
-    console.log("new auth status", authStatus);
     mainWindow.webContents.send("auth:statusChange",authStatus);
     const data = JSON.stringify(new_auth, null, 2);
-    console.log("writing auth:", data);
     const encrypted = safeStorage.encryptString(data);
     fs.writeFile(authPath, encrypted)
-        .then(() => console.log("Saved auth"))
         .catch(err => console.error("could not save auth data", err));
 }
 let mainWindow: BrowserWindow;
 export async function setupAuth(window: BrowserWindow) {
-    console.log("Setup auth")
     mainWindow = window;
     updateAuth(await loadAuth());
     await refreshAuthToken();

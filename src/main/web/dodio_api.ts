@@ -59,7 +59,6 @@ export async function refreshAuthToken(): Promise<MayError> {
         });
         return null;
     }catch (e) {
-        console.log("refresh failed: ", e)
         return handleError(e);
     }
 }
@@ -133,7 +132,6 @@ export default {
             try {
                 //@ts-expect-error spread args are annoying
                 const result = (await auth_instance[method]<T>(...args)) as AxiosResponse<T>;
-                console.log("success", result);
                 return {type: "ok", value: result};
             } catch (e) {
                 if (e instanceof AxiosError
