@@ -49,9 +49,6 @@ const api = {
         return () => ipcRenderer.removeListener("preferences:update", handler);
     },
     showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory"),
-    onPlayerUpdate: (cb: (data: PlayerState) => void) => {
-        playerUpdateCallback = cb;
-    },
     onAuthUpdate: (cb: (data: AuthStatus) => void) => {
         authUpdateCallback = cb;
         if(authStatusCache !== null) cb(authStatusCache);
@@ -67,16 +64,16 @@ const api = {
         ipcRenderer.on("player:event", listener);
         return () => ipcRenderer.removeListener("player:event", listener);
     },
+    onPlayerUpdate: (callback: (event: PlayerState) => void) => {
+        const listener = (_: IpcRendererEvent, event: PlayerState) => callback(event);
+        ipcRenderer.on("player:update", listener);
+        return () => ipcRenderer.removeListener("player:update", listener);
+    },
     nextTrack: () => ipcRenderer.invoke("player:next"),
     previousTrack: () => ipcRenderer.invoke("player:previous")
 } satisfies DodioApi & Record<string, unknown>;
 
-let playerUpdateCallback: ((data: PlayerState) => void) | null = null;
 let authUpdateCallback: ((data: AuthStatus) => void) | null = null;
-
-ipcRenderer.on("player:update", (_event, data) => {
-    if(playerUpdateCallback) playerUpdateCallback(data);
-});
 
 let authStatusCache: AuthStatus | null = null;
 ipcRenderer.on("auth:statusChange", (_event, newStatus: AuthStatus) => {

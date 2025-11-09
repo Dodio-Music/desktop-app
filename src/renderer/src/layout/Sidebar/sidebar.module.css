@@ -7,15 +7,15 @@
 }
 
 .main button {
-    font-size: 1.3rem;
+    font-size: 1.15rem;
     width: 100%;
+    font-weight: 500;
     background-color: transparent;
     border: none;
     border-radius: 8px;
-    color: white;
+    color: #ffffff;
     text-align: left;
     padding: 13px;
-    font-weight: 600;
     cursor: pointer;
     transition: 0.1s;
 }
@@ -40,7 +40,6 @@
 }
 
 .collection button {
-    font-size: 1.1rem;
     display: flex;
     justify-content: flex-start;
     align-items: center;

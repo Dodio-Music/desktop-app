@@ -1,7 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {PlayerState} from "../../../shared/PlayerState";
+import {BaseSongEntry} from "../../../shared/TrackInfo";
 
 const initialState: PlayerState = {
+    currentTrack: null,
     id: null,
     url: null,
     userPaused: true,
@@ -19,9 +21,12 @@ const nativePlayerSlice = createSlice({
     reducers: {
         updatePlayerState(state, action: PayloadAction<PlayerState>) {
             return { ...state, ...action.payload };
+        },
+        setCurrentTrack(state, action: PayloadAction<BaseSongEntry>) {
+            state.currentTrack = action.payload;
         }
     },
 });
 
-export const { updatePlayerState } = nativePlayerSlice.actions;
+export const { updatePlayerState, setCurrentTrack } = nativePlayerSlice.actions;
 export default nativePlayerSlice.reducer;

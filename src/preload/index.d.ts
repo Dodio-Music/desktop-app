@@ -4,8 +4,6 @@ import type {ApiType, CustomWindowControls, IAPI} from "./index";
 declare global {
     interface Window {
         electron: ElectronAPI & CustomWindowControls;
-        api: ApiType & {
-            onPlayerUpdate: (cb: (data: any) => void) => void;
-        };
+        api: ApiType
     }
 }

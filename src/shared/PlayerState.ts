@@ -1,4 +1,7 @@
+import {BaseSongEntry} from "./TrackInfo.js";
+
 export interface PlayerState {
+    currentTrack: BaseSongEntry | null;
     id: string | null;
     url: string | null;
     userPaused: boolean;
@@ -16,7 +19,7 @@ export interface WaveformData {
 }
 
 export type PlayerEvent =
-    | { type: "media-transition"; id: string, waveformData?: WaveformData}
+    | { type: "media-transition"; id: string, waveformData?: WaveformData, track: BaseSongEntry}
     | ({ type: "waveform-data"} & WaveformData)
     | { type: "loading-progress"; progress: number[] };
 

@@ -2,7 +2,7 @@ import s from "./PlaybackBar.module.css";
 import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch, RootState} from "../../redux/store";
 import {FaBackwardStep, FaForwardStep, FaPause} from "react-icons/fa6";
-import {useEffect, useState, WheelEvent} from "react";
+import {useEffect, WheelEvent} from "react";
 import {FiVolume1, FiVolume2, FiVolumeX} from "react-icons/fi";
 import SeekBar from "./SeekBar/SeekBar";
 import { useDebounce } from "@uidotdev/usehooks";
@@ -16,12 +16,9 @@ const PlaybackBar = () => {
     const {volume, isMuted} = useSelector((state: RootState) => state.rendererPlayer);
     const displayVolume = round2Dec(!isMuted ? volume : 0);
     const debouncedVolume = useDebounce(displayVolume, 1000);
-    const [songPath, setSongPath] = useState("");
-    const {url, duration, currentTime, userPaused, sourceType} = useSelector(
+    const {duration, currentTime, userPaused, currentTrack} = useSelector(
         (state: RootState) => state.nativePlayer
     );
-
-    const trackName = !url ? "No info available." : sourceType === "local" ? url.replace(songPath + "\\", "") : url;
 
     useEffect(() => {
         window.api.setPreferences({volume, muted: isMuted});
@@ -32,7 +29,6 @@ const PlaybackBar = () => {
             const prefs = await window.api.getPreferences();
             dispatch(setVolume(prefs.volume));
             dispatch(setIsMuted(prefs.muted));
-            setSongPath(prefs.localFilesDir ?? "");
         }
         void getSetPrefs();
     }, []);
@@ -82,7 +78,17 @@ const PlaybackBar = () => {
     return (
         <div className={s.container}>
             <div className={s.trackInfo}>
-                <p className={s.trackName}>{trackName}</p>
+                {currentTrack && (
+                    <>
+                        <div className={s.trackInfoCover}>
+                            <img src={currentTrack.picture} alt={"cover"}/>
+                        </div>
+                        <div className={s.trackInfoMeta}>
+                            <p className={s.trackName}>{currentTrack.title}</p>
+                            <p className={s.trackArtists}>{currentTrack.artists.join(", ")}</p>
+                        </div>
+                    </>
+                )}
             </div>
             <div className={s.middleContainer}>
                 <div className={classNames(s.row, s.controls)}>

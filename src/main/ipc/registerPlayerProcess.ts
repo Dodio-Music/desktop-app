@@ -11,11 +11,11 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     const session = new PlayerSession(mainWindow, playerProcess, queue);
 
     playerProcess.on("message", async (msg) => {
-        if(mainWindow.isDestroyed() || !mainWindow.webContents) return;
+        if(mainWindow.isDestroyed() || !mainWindow.webContents || msg.type === "device-info") return;
+        session.updateState(msg.state);
 
         switch(msg.type) {
             case "media-transition": {
-                session.updateState(msg.state);
                 session.resetPreload();
 
                 const {preloadSource, currentSource} = session.getSources();
@@ -33,13 +33,12 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
                     type: "media-transition",
                     url: session.id,
                     ...(session.getWaveformData()?.id === session.id && { waveformData: session.getWaveformData() }),
+                    track: session.getTracks().currentTrack
                 });
 
                 break;
             }
             case "player-state": {
-                session.updateState(msg.state);
-
                 const remaining =  msg.state.duration - msg.state.currentTime;
                 if(remaining <= 5 && !session.isPreloading) {
                     const nextTrack = queue.getNext();

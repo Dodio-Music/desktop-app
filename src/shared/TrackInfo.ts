@@ -11,7 +11,7 @@ export interface BaseSongEntry {
 }
 
 export interface LocalSongEntry extends BaseSongEntry {
-    createdAt: Date;
+    createdAt: Date | string;
     fileName: string;
     fullPath: string;
 }

@@ -147,14 +147,41 @@
 }
 
 .trackInfo {
+    padding: 15px;
+    overflow: hidden;
+    display: flex;
+    justify-content: flex-start;
+    gap: 15px;
+}
+
+.trackInfoMeta {
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
 }
 
-.trackName {
-    padding: 5px;
-    overflow: hidden;
+.trackInfoMeta p {
+    line-height: 1.5;
     white-space: nowrap;
     text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.trackInfoCover {
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.trackName {
+    font-size: 1rem;
+    color: white;
+    min-width: 0;
+}
+
+.trackArtists {
+    font-size: 0.9rem;
+    color: #bfbfbf;
 }
 
 .forward, .backward {

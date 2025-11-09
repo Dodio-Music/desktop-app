@@ -3,9 +3,10 @@ import {createRoot} from "react-dom/client";
 import App from "./App";
 import {HashRouter} from "react-router-dom";
 import {store} from "./redux/store";
-import {updatePlayerState} from "./redux/nativePlayerSlice";
+import {updatePlayerState, setCurrentTrack} from "./redux/nativePlayerSlice";
 import {Provider} from "react-redux";
 import {setAuthStatus} from "@renderer/redux/authSlice";
+import {isLocalSong} from "../../shared/TrackInfo";
 
 createRoot(document.getElementById("root")!).render(
     <Provider store={store}>
@@ -21,6 +22,23 @@ window.api.onPlayerUpdate((state) => {
     store.dispatch(updatePlayerState(state));
 });
 
+window.api.onPlayerEvent((event) => {
+    if(event.type === "media-transition") {
+        if(isLocalSong(event.track)) {
+            const localTrack = event.track;
+            const track = {
+                ...localTrack,
+                createdAt: typeof event.track.createdAt === "string"
+                    ? event.track.createdAt
+                    : event.track.createdAt?.toISOString()
+            }
+            store.dispatch(setCurrentTrack(track));
+            return;
+        }
+        store.dispatch(setCurrentTrack(event.track));
+    }
+});
+
 window.api.onAuthUpdate((status) => {
     store.dispatch(setAuthStatus(status));
-})
+});
