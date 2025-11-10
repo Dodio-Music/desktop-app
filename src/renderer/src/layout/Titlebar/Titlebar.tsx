@@ -11,8 +11,14 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
     const [isMaximized, setIsMaximized] = useState(false);
 
     useEffect(() => {
-        window.electron.isMaximized().then(setIsMaximized)
-        window.electron.onMaximizeChange(setIsMaximized)
+
+        window.electron.isMaximized().then(setIsMaximized);
+
+        const unsubscribe = window.electron.onMaximizeChange(setIsMaximized);
+
+        return () => {
+            unsubscribe?.();
+        };
     }, []);
 
     return (

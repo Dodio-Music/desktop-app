@@ -19,11 +19,14 @@ function createWindow() {
 
 app.whenReady().then(async () => {
     electronApp.setAppUserModelId("com.underswing");
+
+    //devtools init
     app.on("browser-window-created", (_, window) => {
         optimizer.watchWindowShortcuts(window);
     });
+
     createWindow();
-    registerWindowControlsIPC();
+    void registerWindowControlsIPC(mainWindow);
     registerSongIndexer(mainWindow);
     registerPreferencesIPC();
     registerPlayerProcessIPC(mainWindow);

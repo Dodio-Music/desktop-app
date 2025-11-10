@@ -6,12 +6,13 @@ import {IPreferences} from "../main/preferences.js";
 import {BaseSongEntry, LocalSongEntry, RemoteSongEntry} from "../shared/TrackInfo.js";
 import {ApiResult, AuthStatus, DodioApi, MayError, RequestMethods} from "../shared/Api.js";
 import {AxiosInstance, AxiosResponse} from "axios";
+import IpcRenderer = Electron.IpcRenderer;
 
 export interface CustomWindowControls {
     minimize: () => void;
     maximize: () => void;
     close: () => void;
-    onMaximizeChange: (callback: (isMaximized: boolean) => void) => void;
+    onMaximizeChange: (callback: (isMaximized: boolean) => void) => () => IpcRenderer;
     isMaximized: () => Promise<boolean>;
 }
 
@@ -19,8 +20,11 @@ const windowControls: CustomWindowControls = {
     minimize: () => ipcRenderer.send("window-minimize"),
     maximize: () => ipcRenderer.send("window-maximize"),
     close: () => ipcRenderer.send("window-close"),
-    onMaximizeChange: (callback: (isMaximized: boolean) => void) =>
-        ipcRenderer.on("window-is-maximized", (_, isMaximized) => callback(isMaximized)),
+    onMaximizeChange: (callback: (isMaximized: boolean) => void) => {
+        const listener = (_: unknown, isMaximized: boolean) => callback(isMaximized);
+        ipcRenderer.on("maximize-change", listener);
+        return () => ipcRenderer.removeListener("maximize-change", listener);
+    },
     isMaximized: () => ipcRenderer.invoke("window-is-maximized")
 };
 
