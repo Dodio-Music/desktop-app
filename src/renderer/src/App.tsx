@@ -17,7 +17,15 @@ function App() {
     return (
         <>
             <Toaster
-                position="top-right"
+                position="bottom-center"
+                containerStyle={{marginBottom: "100px"}}
+                toastOptions={{
+                    style: {
+                        backgroundColor: "rgb(50,50,50)",
+                        color: "white"
+                    }
+                }}
+                containerClassName={s.toast}
                 reverseOrder={false}
             />
             <div className={s.appContainer}>

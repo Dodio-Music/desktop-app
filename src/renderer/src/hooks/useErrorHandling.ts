@@ -9,10 +9,13 @@ const useErrorHandling = () => {
     useEffect(() => {
         if(!error) return;
         if(error?.error === "info") toast.error(error.arg.message)
-        else if(error.error === "no-connection") toast.error("No internet connection!")
+        else if(error.error === "no-connection") toast.error("Cannot reach Dodio server!");
     }, [error]);
 
-    return {setError, InvalidInputError:(p: {inputKey: InvalidInputKeys}) => InvalidInputError({error, inputKey: p.inputKey})};
+    const hasError = (key: InvalidInputKeys) =>
+        error?.error === "invalid-input" && error.arg.inputKey === key;
+
+    return {setError, hasError, InvalidInputError:(p: {inputKey: InvalidInputKeys}) => InvalidInputError({error, inputKey: p.inputKey})};
 };
 
 export default useErrorHandling;

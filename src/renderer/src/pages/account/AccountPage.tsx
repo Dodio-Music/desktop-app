@@ -1,9 +1,10 @@
 import {Navigate, useNavigate} from "react-router-dom";
-import useAuthStatus from "@renderer/hooks/useAuthStatus";
 import {MdOutlineLogout} from "react-icons/md";
+import {useSelector} from "react-redux";
+import {RootState} from "@renderer/redux/store";
 
 const AccountPage = () => {
-    const isLoggedIn = useAuthStatus() === "account";
+    const isLoggedIn = useSelector((state: RootState) => state.auth).status === "account";
     const navigate = useNavigate();
 
     if(isLoggedIn === null) return <p>Loading...</p>

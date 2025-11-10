@@ -1,51 +1,63 @@
-import {useEffect, useRef} from "react";
+import {FormEvent, useEffect, useRef, useState} from "react";
 import {Link, useNavigate, useSearchParams} from "react-router-dom";
 import toast from "react-hot-toast";
 import useErrorHandling from "@renderer/hooks/useErrorHandling";
+import s from "./account.module.css";
+import classNames from "classnames";
 
 const LoginPage = () => {
-    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const previousUrl = searchParams.getAll("url")[0] ?? "";
+    const navigate = useNavigate();
+    const [buttonClickable, setButtonClickable] = useState(true);
     const loginRef = useRef<HTMLInputElement>(null);
     const pwRef = useRef<HTMLInputElement>(null);
-    const {setError, InvalidInputError} = useErrorHandling();
+    const {setError, InvalidInputError, hasError} = useErrorHandling();
+    const toastShownRef = useRef(false);
+    const previousUrl = searchParams.getAll("url")[0] ?? "";
+
 
     useEffect(() => {
-        console.log(previousUrl);
-        if(previousUrl) {
-            toast.error("You need to login to access this page.")
+        if(previousUrl && !toastShownRef.current) {
+            toast.error("You need to log in to access this page.");
+            toastShownRef.current = true;
         }
     }, [previousUrl]);
 
-    function onLogin() {
+    async function onLogin(event?: FormEvent) {
+        event?.preventDefault();
+        if(!buttonClickable) return;
+
         const login_user = loginRef.current?.value ?? "";
         const password = pwRef.current?.value ?? "";
+        setButtonClickable(false);
 
-        window.api.login(login_user, password)
-            .then(err => {
-                console.log(err);
-                if(err) {
-                    setError(err)
-                    return;
-                }
-                navigate(previousUrl || "/");
-            })
+        const err = await window.api.login(login_user, password);
+        if(err) {
+            setError(err);
+            setButtonClickable(true);
+            return;
+        }
+
+        setButtonClickable(true);
+
+        navigate(previousUrl || "/", {replace: true});
     }
+
     return (
-        <div>
-            <h1>Login page</h1>
-            <div>
-                <label>username</label>
-                <input ref={loginRef}/>
-            </div>
-            <div>
-                <label>password</label>
-                <input ref={pwRef} type="password" />
-            </div>
-            <button onClick={onLogin}>Login</button>
-            <InvalidInputError inputKey="email"/>
-            <Link to="/signup">Create Account</Link>
+        <div className={s.page}>
+            <form className={s.container} onSubmit={onLogin}>
+                <h1 className={s.heading}>Log in to Dodio</h1>
+                <div className={classNames({[s.error]: hasError("login")})}>
+                    <input placeholder={"Email"} ref={loginRef}/>
+                    <InvalidInputError inputKey="login"/>
+                </div>
+                <div className={classNames({[s.error]: hasError("password")})}>
+                    <input placeholder={"Password"} ref={pwRef} type="password" />
+                    <InvalidInputError inputKey="password"/>
+                </div>
+                <button className={classNames(s.button, !buttonClickable ? s.buttonActive : "")} onClick={onLogin}>Log in</button>
+                <p className={s.createInfo}>Don&#39;t have an account? <Link className={s.create} to="/signup">Sign up</Link></p>
+            </form>
         </div>
     );
 };
