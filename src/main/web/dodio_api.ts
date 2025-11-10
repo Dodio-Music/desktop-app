@@ -8,9 +8,10 @@ const instance = axios.create({
 
 function handleError(err: unknown): DodioError {
     if(err instanceof AxiosError) {
+        if(err.code === "ECONNREFUSED") return {error: "no-connection"} as DodioError;
         if(err.response) return err.response.data as DodioError;
     }else console.error("Request Error: ", err, typeof err);
-    return {error: "info", arg: {message: "An error occurred"}};
+    return {error: "info", arg: {message: "An unknown error occured!"}};
 }
 
 async function create_auth_instance() {
