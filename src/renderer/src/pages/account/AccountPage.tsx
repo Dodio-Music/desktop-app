@@ -7,6 +7,8 @@ const AccountPage = () => {
     const isLoggedIn = useSelector((state: RootState) => state.auth).status === "account";
     const navigate = useNavigate();
 
+    console.log("asdfkadfsk")
+
     if(isLoggedIn === null) return <p>Loading...</p>
     if(!isLoggedIn) return <Navigate to={"/login?url=/account"}/>
 

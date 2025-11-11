@@ -49,6 +49,9 @@ export async function refreshAuthToken(): Promise<MayError> {
         return NoLoginError;
     }
 
+    // console.log("auth")
+    // console.log(auth);
+
     try {
         const res =
             await instance.post<RefreshTokenResponse>("/auth/refresh", {
@@ -56,7 +59,7 @@ export async function refreshAuthToken(): Promise<MayError> {
             });
         updateAuth({
             access_token: res.data.accessToken,
-            access_token_expiry: new Date(res.data.accessTokenExpiration)
+            access_token_expiry: new Date(res.data.accessTokenExpirationDate)
         });
         return null;
     }catch (e) {
@@ -75,14 +78,14 @@ interface SignInResponse {
     type: string,
     username: string,
     accessToken: string,
-    accessTokenExpiration: string,
+    accessTokenExpirationDate: string,
     refreshToken: string,
-    refreshTokenExpiration: string,
+    refreshTokenExpirationDate: string,
 }
 
 interface RefreshTokenResponse {
     accessToken: string,
-    accessTokenExpiration: string,
+    accessTokenExpirationDate: string,
 }
 
 export default {
@@ -96,8 +99,8 @@ export default {
                 hasAccount: true,
                 access_token: res.data.accessToken,
                 refresh_token: res.data.refreshToken,
-                access_token_expiry: new Date(res.data.accessTokenExpiration),
-                refresh_token_expiry: new Date(res.data.refreshTokenExpiration)
+                access_token_expiry: new Date(res.data.accessTokenExpirationDate),
+                refresh_token_expiry: new Date(res.data.refreshTokenExpirationDate)
             })
             return null;
         }catch (e) {
@@ -128,8 +131,12 @@ export default {
     },
     async authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>): Promise<ApiResult<AxiosResponse<T>>> {
         if (!auth_instance) return {type: "error", error: NoLoginError};
-
-        for(;;) {
+        if(!auth?.access_token) {
+            console.log("nop");
+            return {type: "error", error: NoLoginError};
+        }
+        const newArgs = [...args, ]
+        for(let i = 0; i < 5; i++) {
             try {
                 //@ts-expect-error spread args are annoying
                 const result = (await auth_instance[method]<T>(...args)) as AxiosResponse<T>;
@@ -144,5 +151,6 @@ export default {
                 return {type: "error", error: handleError(e)};
             }
         }
+        return {type: "error", error: NoLoginError};
     }
 } as const satisfies DodioApi;
