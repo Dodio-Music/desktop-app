@@ -1,5 +1,5 @@
 import {ipcMain, BrowserWindow, Tray, Menu, app} from "electron";
-import icon from "../../../resources/dodo_whiteondark.ico?asset";
+import icon from "../../../resources/dodo_transparent_white.ico?asset";
 import {loadPreferences} from "../preferences.js";
 
 let tray: Tray | null = null;
