@@ -89,12 +89,13 @@
     display: flex;
     font-size: 25px;
     align-items: center;
-    transition: color 0.4s;
+    transition: color 0.4s, transform 0.4s;
     line-height: 1;
 }
 
 .settingsContainer:hover {
     color: crimson;
+    transform: rotate(180deg);
 }
 
 .settings {
