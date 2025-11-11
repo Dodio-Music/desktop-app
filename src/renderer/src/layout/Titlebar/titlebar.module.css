@@ -86,6 +86,7 @@
 }
 
 .settingsContainer {
+    display: flex;
     font-size: 25px;
     align-items: center;
     transition: color 0.4s;
