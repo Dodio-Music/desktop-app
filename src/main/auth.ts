@@ -34,8 +34,16 @@ export function updateAuth(new_auth: Partial<IAuthData>) {
         : auth.hasAccount
             ? "login"
             : "signup";
-    mainWindow.webContents.send("auth:statusChange",authStatus);
-    const data = JSON.stringify(new_auth, null, 2);
+
+    if (mainWindow?.webContents?.isLoadingMainFrame() === false) {
+        mainWindow.webContents.send("auth:statusChange", authStatus);
+    } else {
+        mainWindow.webContents.once("did-finish-load", () => {
+            mainWindow.webContents.send("auth:statusChange", authStatus);
+        });
+    }
+
+    const data = JSON.stringify(auth, null, 2);
     const encrypted = safeStorage.encryptString(data);
     fs.writeFile(authPath, encrypted)
         .catch(err => console.error("could not save auth data", err));

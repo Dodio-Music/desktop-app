@@ -34,12 +34,10 @@ const LoginPage = () => {
 
         const err = await window.api.login(login_user, password);
         if(err) {
-            console.log(err)
             setError(err);
             setButtonClickable(true);
             return;
         }
-        console.log(err);
 
         setButtonClickable(true);
 
@@ -54,11 +52,11 @@ const LoginPage = () => {
     }
 
     return (
-        <div className={s.page} onClick={onExit}>
+        <div className={s.page} onMouseDown={onExit}>
             <form className={s.container} onSubmit={onLogin}>
                 <h1 className={s.heading}>Log in to Dodio</h1>
                 <div className={classNames({[s.error]: hasError("login")})}>
-                    <input placeholder={"Email"} ref={loginRef}/>
+                    <input placeholder={"Email"} ref={loginRef} autoFocus={true}/>
                     <InvalidInputError inputKey="login"/>
                 </div>
                 <div className={classNames({[s.error]: hasError("password")})}>

@@ -5,7 +5,7 @@ import {PlayerEvent, PlayerState} from "../shared/PlayerState.js";
 import {IPreferences} from "../main/preferences.js";
 import {BaseSongEntry, LocalSongEntry, RemoteSongEntry} from "../shared/TrackInfo.js";
 import {ApiResult, AuthStatus, DodioApi, MayError, RequestMethods} from "../shared/Api.js";
-import {AxiosInstance, AxiosResponse} from "axios";
+import {AxiosInstance} from "axios";
 import IpcRenderer = Electron.IpcRenderer;
 
 export interface CustomWindowControls {
@@ -58,7 +58,7 @@ const api = {
         if(authStatusCache !== null) cb(authStatusCache);
     },
     authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>) {
-        return ipcRenderer.invoke("api:authRequest", method, ...args) as Promise<ApiResult<AxiosResponse<T>>>;
+        return ipcRenderer.invoke("api:authRequest", method, ...args) as Promise<ApiResult<T>>;
     },
     login: (login: string, password: string) => ipcRenderer.invoke("api:login", login, password) as Promise<MayError>,
     signup: (username: string, email: string, password: string) => ipcRenderer.invoke("api:signup", username, email, password) as Promise<MayError>,

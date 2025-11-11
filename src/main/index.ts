@@ -25,13 +25,13 @@ app.whenReady().then(async () => {
     });
 
     createWindow();
-    void registerWindowControlsIPC(mainWindow);
+    await registerWindowControlsIPC(mainWindow);
     registerSongIndexer(mainWindow);
     registerPreferencesIPC();
     registerPlayerProcessIPC(mainWindow);
     registerDodioApiIPC();
-    await setupAuth(mainWindow);
-    void registerMagnifierIPC(mainWindow);
+    await registerMagnifierIPC(mainWindow);
+    void setupAuth(mainWindow);
 
     registerAppLifecycle(createWindow);
 });
