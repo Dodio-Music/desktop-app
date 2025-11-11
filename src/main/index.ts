@@ -8,7 +8,6 @@ import { registerSongIndexer } from "./songIndexer.js";
 import { createMainWindow, registerAppLifecycle } from "./window.js";
 import {registerDodioApiIPC} from "./ipc/registerDodioApi.js";
 import {setupAuth} from "./auth.js";
-import {setupApi} from "./web/dodio_api.js";
 
 let mainWindow: BrowserWindow;
 
@@ -33,7 +32,6 @@ app.whenReady().then(async () => {
     registerDodioApiIPC();
     await setupAuth(mainWindow);
     void registerMagnifierIPC(mainWindow);
-    void setupApi();
 
     registerAppLifecycle(createWindow);
 });

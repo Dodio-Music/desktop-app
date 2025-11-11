@@ -1,4 +1,4 @@
-import axios, {AxiosError, AxiosInstance, AxiosResponse} from "axios";
+import axios, {AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse} from "axios";
 import {ApiResult, DodioApi, DodioError, MayError, NoLoginError, RequestMethods} from "../../shared/Api.js";
 import {auth, updateAuth} from "../auth.js";
 
@@ -12,31 +12,6 @@ function handleError(err: unknown): DodioError {
         if(err.response) return err.response.data as DodioError;
     }else console.error("Request Error: ", err, typeof err);
     return {error: "info", arg: {message: "An unknown error occured!"}};
-}
-
-async function create_auth_instance() {
-    let token: string | undefined;
-    if(
-        !auth
-        || !auth.access_token_expiry
-        || !auth.access_token
-    || auth.access_token_expiry.getTime() < Date.now()) {
-        if(!await refreshAuthToken()) {
-            updateAuth({
-                access_token: undefined,
-                access_token_expiry: undefined,
-            });
-            return;
-        }
-        token = auth?.refresh_token
-    }else {
-        token = auth.refresh_token;
-    }
-
-    if(!token) return;
-    return instance.create({
-        params: {token: token}
-    })
 }
 
 export async function refreshAuthToken(): Promise<MayError> {
@@ -67,11 +42,6 @@ export async function refreshAuthToken(): Promise<MayError> {
     }
 }
 
-let auth_instance: AxiosInstance | undefined;
-
-export async function setupApi() {
-    auth_instance = await create_auth_instance();
-}
 
 interface SignInResponse {
     id: number,
@@ -130,16 +100,49 @@ export default {
         }
     },
     async authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>): Promise<ApiResult<AxiosResponse<T>>> {
-        if (!auth_instance) return {type: "error", error: NoLoginError};
+        if (!instance) return {type: "error", error: NoLoginError};
         if(!auth?.access_token) {
             console.log("nop");
             return {type: "error", error: NoLoginError};
         }
-        const newArgs = [...args, ]
+
+        let token: string | undefined;
+
+        if(
+            !auth
+            || !auth.access_token_expiry
+            || !auth.access_token
+            || auth.access_token_expiry.getTime() < Date.now()) {
+            if(!await refreshAuthToken()) {
+                updateAuth({
+                    access_token: undefined,
+                    access_token_expiry: undefined,
+                });
+                return {type :"error", error: NoLoginError}
+            }
+            token = auth?.refresh_token
+        }else {
+            token = auth.refresh_token;
+        }
+
+        if(!token) return {type :"error", error: NoLoginError};
+
+        if(method === "get" || method === "delete") {
+            const config = args[1] as AxiosRequestConfig<unknown> | undefined ?? {};
+            config.params ??= {};
+            config.params.token = auth.access_token;
+            args[1] = config;
+        }else {
+            const config = args[2] as AxiosRequestConfig<unknown> | undefined ?? {};
+            config.params ??= {};
+            config.params.token = auth.access_token;
+            args[2] = config;
+        }
+
         for(let i = 0; i < 5; i++) {
             try {
                 //@ts-expect-error spread args are annoying
-                const result = (await auth_instance[method]<T>(...args)) as AxiosResponse<T>;
+                const result = (await instance[method]<T>(...args)) as AxiosResponse<T>;
                 return {type: "ok", value: result};
             } catch (e) {
                 if (e instanceof AxiosError
