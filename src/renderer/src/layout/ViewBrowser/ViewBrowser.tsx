@@ -6,10 +6,9 @@ import LikedAlbumsPage from "../../pages/LikedAlbumsPage";
 import HomePage from "../../pages/HomePage/HomePage";
 import LikedTracksPage from "../../pages/LikedTracksPage";
 import LocalFilesPage from "../../pages/LocalFilesPage/LocalFilesPage";
-import LoginPage from "@renderer/pages/account/LoginPage";
 import SignupPage from "@renderer/pages/account/SignupPage";
 import AccountPage from "@renderer/pages/account/AccountPage";
-import SettingsPage from "@renderer/pages/Settings/SettingsPage";
+import LoginPage from "@renderer/pages/account/LoginPage";
 
 const ViewBrowser = () => {
     return (
@@ -17,7 +16,6 @@ const ViewBrowser = () => {
             <Routes>
                 <Route path={"/"} element={<Navigate to={"/collection/local"} replace/>}/>
                 <Route path={"/home"} element={<HomePage/>}/>
-                <Route path={"/settings"} element={<SettingsPage/>}/>
                 <Route path={"/collection/local"} element={<LocalFilesPage/>}/>
                 <Route path={"/collection/tracks"} element={<LikedTracksPage/>}/>
                 <Route path={"/collection/albums"} element={<LikedAlbumsPage/>}/>

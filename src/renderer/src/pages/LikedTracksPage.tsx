@@ -1,11 +1,15 @@
-import useAuthPage from "@renderer/hooks/useAuthPage";
+import useFetchData from "@renderer/hooks/useFetchData";
+import LoadingPage from "@renderer/pages/LoadingPage";
 
 const LikedTracksPage = () => {
-    const {data, ControlPage} = useAuthPage<string>("/api/test");
-    if(ControlPage) return <ControlPage/>
+    const {data, loading, error} = useFetchData<string>("/api/test");
+
+    if(loading) return <LoadingPage/>;
+
+    if(error) return <p>{error}</p>
 
     return (
-        <div>
+        <div className={"pageWrapper"}>
             <h1>Tu amal was liken</h1>
             <p>Data: {data}</p>
         </div>
