@@ -21,6 +21,7 @@ const useAuthPage = <T>(url: string): Result<T> => {
         if(responseResult === null) return {ControlPage: LoadingPage, data: null};
         if(responseResult.type === "ok") return {data: responseResult.value.data, ControlPage: null};
         setError(responseResult.error);
+        console.log(responseResult)
         if(responseResult.error?.error === "no-login") return {ControlPage: LoginPage, data: null};
         return {ControlPage: ErrorPage, data: null};
     }, [responseResult, setError]);
