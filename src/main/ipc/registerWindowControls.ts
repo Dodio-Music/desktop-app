@@ -33,12 +33,15 @@ function emitMaximizeChange() {
 
 export async function registerWindowControlsIPC(mainWindow: BrowserWindow) {
     window = mainWindow;
-    tray = new Tray(icon);
-    tray.setToolTip("Dodio");
-    updateTrayMenu();
+
+    if(process.platform !== "linux") {
+        tray = new Tray(icon);
+        tray.setToolTip("Dodio");
+        updateTrayMenu();
+    }
 
     const updateAndEmitMaximize = () => {
-        updateTrayMenu();
+        if(tray) updateTrayMenu();
         emitMaximizeChange();
     }
 
@@ -68,7 +71,7 @@ export async function registerWindowControlsIPC(mainWindow: BrowserWindow) {
     const prefs = await loadPreferences();
 
     mainWindow.on("close", (event) => {
-        if (prefs.closeBehavior === "tray") {
+        if (prefs.closeBehavior === "tray" && process.platform !== "linux") {
             event.preventDefault();
             mainWindow.hide();
             updateTrayMenu();
