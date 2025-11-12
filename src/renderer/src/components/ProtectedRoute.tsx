@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import LoadingPage from "@renderer/pages/LoadingPage";
+import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
 import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 

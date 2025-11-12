@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
-import {RootState} from "@renderer/redux/store";
+import {useAuth} from "@renderer/hooks/reduxHooks";
 
 type FetchState<T> = {
     data: T | null;
@@ -10,7 +9,7 @@ type FetchState<T> = {
 };
 
 export default function useFetchData<T>(url: string): FetchState<T> {
-    const authStatus = useSelector((s: RootState) => s.auth.status);
+    const {status: authStatus} = useAuth();
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -24,14 +23,18 @@ export default function useFetchData<T>(url: string): FetchState<T> {
                 setData(res.value);
             } else {
                 if (res.error?.error === "no-login") {
-                    setError("no-login");
+                    setError("Not logged in!");
+                } else if(res.error.error === "info") {
+                    setError(res.error.arg.message);
+                } else if(res.error.error === "no-connection") {
+                    setError("Request timed out, please try again later!");
                 } else {
-                    setError("error");
+                    setError("An Unknown error occurred!");
                 }
             }
         } catch (e) {
             console.error("Fetch failed:", e);
-            setError("error");
+            setError("An unknown error occurred!");
         } finally {
             setLoading(false);
         }

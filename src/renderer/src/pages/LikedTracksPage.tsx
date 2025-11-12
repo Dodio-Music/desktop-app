@@ -1,5 +1,5 @@
 import useFetchData from "@renderer/hooks/useFetchData";
-import LoadingPage from "@renderer/pages/LoadingPage";
+import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
 
 const LikedTracksPage = () => {
     const {data, loading, error} = useFetchData<string>("/api/test");
