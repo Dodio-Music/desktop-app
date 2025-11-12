@@ -1,12 +1,12 @@
 import {ipcMain, BrowserWindow, Tray, Menu, app} from "electron";
-import icon from "../../../resources/dodo_transparent_white.ico?asset";
+import icon from "../../../resources/dodo_transparent_white_256.png?asset";
 import {loadPreferences} from "../preferences.js";
 
 let tray: Tray | null = null;
 let window: BrowserWindow | null = null;
 
 function updateTrayMenu() {
-    if(!tray || !window) return;
+    if (!tray || !window) return;
 
     const isVisible = window.isVisible();
 
@@ -14,36 +14,44 @@ function updateTrayMenu() {
         {
             label: isVisible ? "Minimize to Tray" : "Show Dodio",
             click: () => {
-                if(isVisible) {
+                if (isVisible) {
                     window?.hide();
                 } else {
                     window?.show();
                 }
             }
         },
-        { label: "Exit", click: () => app.quit() },
+        {label: "Exit", click: () => app.quit()}
     ]);
     tray.setContextMenu(contextMenu);
 }
 
 function emitMaximizeChange() {
-    if(!window) return;
+    if (!window) return;
     window.webContents.send("maximize-change", window.isMaximized());
 }
 
 export async function registerWindowControlsIPC(mainWindow: BrowserWindow) {
     window = mainWindow;
 
-    if(process.platform !== "linux") {
-        tray = new Tray(icon);
-        tray.setToolTip("Dodio");
+    tray = new Tray(icon);
+    tray.setToolTip("Dodio");
+
+    tray.on("click", () => {
+        if (!window) return;
+
+        if (!window.isVisible()) {
+            window.show();
+        }
+
         updateTrayMenu();
-    }
+    });
+    updateTrayMenu();
 
     const updateAndEmitMaximize = () => {
-        if(tray) updateTrayMenu();
+        if (tray) updateTrayMenu();
         emitMaximizeChange();
-    }
+    };
 
     mainWindow.on("hide", () => updateAndEmitMaximize());
     mainWindow.on("show", () => updateAndEmitMaximize());
@@ -71,7 +79,7 @@ export async function registerWindowControlsIPC(mainWindow: BrowserWindow) {
     const prefs = await loadPreferences();
 
     mainWindow.on("close", (event) => {
-        if (prefs.closeBehavior === "tray" && process.platform !== "linux") {
+        if (prefs.closeBehavior === "tray") {
             event.preventDefault();
             mainWindow.hide();
             updateTrayMenu();
