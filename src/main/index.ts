@@ -1,5 +1,5 @@
 import { electronApp, optimizer } from "@electron-toolkit/utils";
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, protocol, net } from "electron";
 import { registerMagnifierIPC } from "./ipc/registerMagnifier.js";
 import { registerPlayerProcessIPC } from "./ipc/registerPlayerProcess.js";
 import { registerWindowControlsIPC } from "./ipc/registerWindowControls.js";
@@ -8,6 +8,7 @@ import { registerSongIndexer } from "./songIndexer.js";
 import { createMainWindow, registerAppLifecycle } from "./window.js";
 import {registerDodioApiIPC} from "./ipc/registerDodioApi.js";
 import {setupAuth} from "./auth.js";
+import path from "path";
 
 let mainWindow: BrowserWindow;
 
@@ -18,6 +19,12 @@ function createWindow() {
 
 app.whenReady().then(async () => {
     electronApp.setAppUserModelId("com.underswing");
+
+    protocol.handle("safe-file", (request) => {
+        const url = request.url.replace("safe-file://", "");
+        const filePath = path.normalize(`${app.getPath("userData")}/${url}`);
+        return net.fetch(filePath);
+    })
 
     //devtools init
     app.on("browser-window-created", (_, window) => {

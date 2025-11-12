@@ -55,13 +55,14 @@ async function simpleScan(folderPath: string): Promise<LocalSongEntry[] | null> 
                 const metadata = await parseFile(f.fullPath);
                 const common = metadata.common;
 
-                let pictureBase64: string | undefined;
+                const id = computeFastId(f.size, f.createdAt.getTime(), metadata);
+
+                let pictureUrl: string | undefined;
                 if (common.picture && common.picture.length > 0) {
                     const pic = common.picture[0];
-                    pictureBase64 = await getThumbnail(f.fullPath, pic.data);
+                    pictureUrl = await getThumbnail(id, pic.data);
                 }
 
-                const id = computeFastId(f.size, f.createdAt.getTime(), metadata);
                 const entry: LocalSongEntry = {
                     id,
                     type: "local",
@@ -71,7 +72,7 @@ async function simpleScan(folderPath: string): Promise<LocalSongEntry[] | null> 
                     artists: common.artists || ["Unknown Artist"],
                     album: common.album || "Unknown Album",
                     duration: metadata.format.duration || undefined,
-                    picture: pictureBase64,
+                    picture: pictureUrl,
                     createdAt: f.createdAt
                 }
                 return entry;
@@ -85,16 +86,14 @@ async function simpleScan(folderPath: string): Promise<LocalSongEntry[] | null> 
     return tracks.filter(Boolean) as LocalSongEntry[];
 }
 
-async function getThumbnail(fullPath: string, pictureBuffer: Uint8Array): Promise<string> {
-    const hash = createHash("sha256").update(fullPath).digest("hex");
+async function getThumbnail(id: string, pictureBuffer: Uint8Array): Promise<string> {
     const thumbDir = path.join(app.getPath("userData"), "thumbnails");
-    const thumbPath = path.join(thumbDir, hash + ".png");
+    const thumbPath = path.join(thumbDir, id + ".png");
 
     await fsp.mkdir(thumbDir, {recursive: true});
 
     try {
-        const existing = await fsp.readFile(thumbPath);
-        return `data:image/png;base64,${existing.toString("base64")}`;
+        await fsp.access(thumbPath);
     } catch {
         const buffer = await sharp(pictureBuffer)
             .resize({width: 150, height: 150, fit: "inside"})
@@ -102,9 +101,9 @@ async function getThumbnail(fullPath: string, pictureBuffer: Uint8Array): Promis
             .toBuffer();
 
         fsp.writeFile(thumbPath, buffer).catch(err => console.error("Failed to cache thumbnail", err));
-
-        return `data:image/png;base64,${buffer.toString("base64")}`;
     }
+
+    return `safe-file://thumbnails/${id}.png`;
 }
 
 function computeFastId(size: number, createdAt: number, metadata: IAudioMetadata) {
