@@ -22,7 +22,7 @@ app.whenReady().then(async () => {
 
     protocol.handle("safe-file", (request) => {
         const url = request.url.replace("safe-file://", "");
-        const filePath = path.normalize(`${app.getPath("userData")}/${url}`);
+        const filePath = "file://" + path.normalize(`${app.getPath("userData")}/${url}`);
         return net.fetch(filePath);
     })
 
