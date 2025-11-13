@@ -3,6 +3,7 @@ import style from "./SettingsPage.module.css"
 import {useEffect, useRef} from "react";
 import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
+import ModulatedVideo from "@renderer/components/Cat/ModulatedVideo";
 
 const SettingsPage = () => {
 
@@ -19,13 +20,12 @@ const SettingsPage = () => {
 
     return (
         <div className={style.cat}>
-            <video
+            <ModulatedVideo
                 src={car}
-                ref={catImg}
                 style={{width: 200}}
-                autoPlay
-                loop
-            />
+                loop={true}
+                speedMulti={2}
+            ></ModulatedVideo>
             <h3>Nothing to see here</h3>
         </div>
     );
