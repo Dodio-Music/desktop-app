@@ -15,7 +15,6 @@ const SettingsPage = () => {
         catImg.current.playbackRate =  Math.round(volume * 10) / 10.0 * 2;
         if (isMuted) catImg.current.pause();
         if (!isMuted && catImg.current.paused) catImg.current.play();
-        console.log("test")
     }, [catImg, volume, isMuted]);
 
     return (
