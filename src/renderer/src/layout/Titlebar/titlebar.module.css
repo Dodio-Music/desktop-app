@@ -5,7 +5,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #000000;
+    background: var(--color-bar);
     color: white;
     position: sticky;
     top: 0;
@@ -35,7 +35,7 @@
     border: none;
     height: 100%;
     border-radius: 0;
-    background-color: black;
+    background-color: var(--color-bar);
     color: white;
     -webkit-app-region: no-drag;
 }
@@ -94,7 +94,8 @@
 }
 
 .settingsContainer:hover {
-    color: crimson;
+    /*color: crimson;*/
+    color: var(--color-accent-hover);
     transform: rotate(180deg);
 }
 

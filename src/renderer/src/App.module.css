@@ -27,3 +27,25 @@
     display: flex;
     flex-direction: column;
 }
+
+/* themes */
+:root:has(.appContainer[data-theme="dark"]) {
+    --color-bg: #0F0F10;
+    --color-bar: #0c0c0c;
+    --color-panel: #18181B;
+    --color-text-primary: #E5E5E7;
+    --color-text-secondary: #9B9BA0;
+    --color-accent-primary: #DC143C ;
+    --color-accent-hover: #FF1E56 ;
+    --color-section-glow: #DC143C33 ;
+    --color-border: #2E2E32 ;
+}
+
+:root:has(.appContainer[data-theme="crimson"]) {
+    --color-accent-hover: crimson;
+}
+
+:root:has(.appContainer[data-theme="purple"]) {
+    --color-accent-hover: #a855f7;
+}
+
