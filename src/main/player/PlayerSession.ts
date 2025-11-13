@@ -87,8 +87,14 @@ export class PlayerSession {
 
     async createTrackBuffers(track: BaseSongEntry) {
         const devInfo = await this.getDeviceInfoFromWorker();
-
-        const pathOrUrl = isLocalSong(track) ? track.fullPath : isRemoteSong(track) ? track.sources[0].url : "";
+        let url = "";
+        if(isLocalSong(track)) {
+            url = track.fullPath;
+        } else if(isRemoteSong(track)) {
+            const audio = track.sources.find(s => s.quality === "LOSSLESS");
+            if(audio) url = audio.url;
+        }
+        const pathOrUrl = url;
 
         const {source, pcmSab, segmentSab, duration} = await AudioSourceFactory.create(
             track.id,

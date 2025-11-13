@@ -36,3 +36,48 @@ export type DodioError = {
 export type MayError = DodioError | null;
 
 export type ApiResult<T> = ({type:"error", error: DodioError }) | {type: "ok", value: T};
+
+export interface Track {
+    trackId: string;
+    views: number;
+    duration: number;
+
+    artists?: Artist[];
+    sources?: Source[];
+}
+
+export interface ReleaseTrack {
+    releaseTrackPK: ReleaseTrackPK;
+    coverArtUrl: string;
+    title: string;
+}
+
+export interface ReleaseTrackPK {
+    releaseId: number;
+    trackId: string;
+}
+
+export interface Artist {
+    artistId: number;
+    artistName: string;
+
+    releases?: Release[];
+    tracks?: Track[];
+}
+
+export interface Release {
+    releaseId: number;
+    releaseName: string;
+    coverArtUrl: string;
+    releaseDate: string;
+
+    artists?: Artist[];
+    releaseTracks?: ReleaseTrack[];
+}
+
+export interface Source {
+    sourceId: number;
+    sourceUrl: string;
+}
+
+export type SourceQuality = "LOSSLESS" | "HIGH" | "LOW";

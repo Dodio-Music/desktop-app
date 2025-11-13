@@ -1,4 +1,5 @@
 import {SourceType} from "./PlayerState.js";
+import {SourceQuality} from "./Api.js";
 
 export interface BaseSongEntry {
     id: string;
@@ -23,6 +24,7 @@ export interface RemoteSongEntry extends BaseSongEntry {
 export interface SongSource {
     id: string;
     url: string;
+    quality: SourceQuality;
 }
 
 export function isLocalSong(entry: BaseSongEntry): entry is LocalSongEntry {
