@@ -14,11 +14,13 @@
 }
 
 .container {
-    width: 400px;
+    width: 480px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 20px;
+    padding: 40px;
+    margin-bottom: 50px;
 }
 
 .container > div {
@@ -89,3 +91,44 @@
 .button:hover {
     background-color: #d9d9d9;
 }
+
+.passwordWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.passwordWrapper input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.eyeButton {
+    color: white;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0.5;
+    transition: opacity 0.15s ease;
+}
+
+.eyeButton:hover {
+    opacity: 1;
+}
+
+.eyeButton svg {
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
+}
+

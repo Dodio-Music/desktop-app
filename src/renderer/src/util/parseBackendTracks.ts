@@ -4,7 +4,7 @@ export function parseBackendTracks(data: any[]): RemoteSongEntry[] {
     return data.map((releaseTrack): RemoteSongEntry => {
 
         return {
-            id: releaseTrack.releaseTrackPK.trackId,
+            id: releaseTrack.releaseTrackId.releaseTrackId,
             title: releaseTrack.track.title ?? "Unknown Title",
             artists: releaseTrack.track.artists?.map((a: any) => a.artistName) ?? [],
             album: releaseTrack.release.releaseName ?? "Unknown Album",

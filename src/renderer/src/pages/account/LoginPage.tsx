@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import useErrorHandling from "@renderer/hooks/useErrorHandling";
 import s from "./account.module.css";
 import classNames from "classnames";
+import {IoEyeOffOutline, IoEyeOutline} from "react-icons/io5";
 
 const LoginPage = () => {
     const [searchParams] = useSearchParams();
@@ -12,6 +13,7 @@ const LoginPage = () => {
     const loginRef = useRef<HTMLInputElement>(null);
     const pwRef = useRef<HTMLInputElement>(null);
     const {setError, InvalidInputError, hasError} = useErrorHandling();
+    const [showPw, setShowPw] = useState<boolean>(false);
     const toastShownRef = useRef(false);
     const previousUrl = searchParams.getAll("url")[0] ?? "";
 
@@ -56,11 +58,16 @@ const LoginPage = () => {
             <form className={s.container} onSubmit={onLogin}>
                 <h1 className={s.heading}>Log in to Dodio</h1>
                 <div className={classNames({[s.error]: hasError("login")})}>
-                    <input placeholder={"Email"} ref={loginRef} autoFocus={true}/>
+                    <input placeholder={"Email / Username"} ref={loginRef} autoFocus={true}/>
                     <InvalidInputError inputKey="login"/>
                 </div>
                 <div className={classNames({[s.error]: hasError("password")})}>
-                    <input placeholder={"Password"} ref={pwRef} type="password" />
+                    <div className={s.passwordWrapper}>
+                        <input ref={pwRef} type={showPw ? "text" : "password"} placeholder={"Password"}/>
+                        <button type={"button"} className={s.eyeButton} onClick={() => setShowPw(v => !v)}>
+                            {showPw ? <IoEyeOffOutline /> : <IoEyeOutline /> }
+                        </button>
+                    </div>
                     <InvalidInputError inputKey="password"/>
                 </div>
                 <button className={classNames(s.button, !buttonClickable ? s.buttonActive : "")} type={"submit"}>Log in</button>

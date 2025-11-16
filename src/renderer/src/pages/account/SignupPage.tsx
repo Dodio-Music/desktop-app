@@ -4,6 +4,7 @@ import useErrorHandling from "@renderer/hooks/useErrorHandling";
 import s from "./account.module.css";
 import classNames from "classnames";
 import toast from "react-hot-toast";
+import {IoEyeOffOutline, IoEyeOutline} from "react-icons/io5";
 
 const SignupPage = () => {
     const navigate = useNavigate();
@@ -11,6 +12,7 @@ const SignupPage = () => {
     const usernameRef = useRef<HTMLInputElement>(null);
     const pwRef = useRef<HTMLInputElement>(null);
     const emailRef = useRef<HTMLInputElement>(null);
+    const [showPw, setShowPw] = useState<boolean>(false);
     const {InvalidInputError, setError, hasError} = useErrorHandling();
 
     async function onSignup(event?: FormEvent) {
@@ -32,7 +34,7 @@ const SignupPage = () => {
 
         setButtonClickable(true);
 
-        toast.success("Successfully created account! You can now log in.");
+        toast.success("Successfully created account!");
         navigate("/login", {replace: true});
     }
 
@@ -43,11 +45,11 @@ const SignupPage = () => {
     }
 
     return (
-        <div className={s.page} onClick={onExit}>
+        <div className={s.page} onMouseDown={onExit}>
             <form className={s.container} onSubmit={onSignup}>
                 <h1 className={s.heading}>Create Dodio Account</h1>
                 <div className={classNames({[s.error]: hasError("username")})}>
-                    <input ref={usernameRef} placeholder={"Username"}/>
+                    <input ref={usernameRef} placeholder={"Username"} autoFocus={true}/>
                     <InvalidInputError inputKey="username"/>
                 </div>
                 <div className={classNames({[s.error]: hasError("email")})}>
@@ -55,10 +57,15 @@ const SignupPage = () => {
                     <InvalidInputError inputKey="email"/>
                 </div>
                 <div className={classNames({[s.error]: hasError("password")})}>
-                    <input ref={pwRef} type="password" placeholder={"Password"}/>
+                    <div className={s.passwordWrapper}>
+                        <input ref={pwRef} type={showPw ? "text" : "password"} placeholder={"Password"}/>
+                        <button type={"button"} className={s.eyeButton} onClick={() => setShowPw(v => !v)}>
+                            {showPw ? <IoEyeOffOutline /> : <IoEyeOutline /> }
+                        </button>
+                    </div>
                     <InvalidInputError inputKey="password"/>
                 </div>
-                <button className={s.button} type={"submit"}>Sign Up</button>
+                <button className={classNames(s.button, !buttonClickable ? s.buttonActive : "")} type={"submit"}>Sign Up</button>
                 <p className={s.createInfo}>Already have an account? <Link className={s.create} to="/login" replace={true}>Log in</Link></p>
             </form>
         </div>
