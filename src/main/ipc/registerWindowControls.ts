@@ -1,5 +1,6 @@
 import {ipcMain, BrowserWindow, Tray, Menu, app} from "electron";
-import icon from "../../../resources/dodo_transparent_white_256.png?asset";
+import fallbackIcon from "../../../resources/dodo_transparent_white_256.png?asset";
+import windowsIcon from "../../../resources/dodo_transparent_white.ico?asset";
 import {loadPreferences} from "../preferences.js";
 
 let tray: Tray | null = null;
@@ -33,6 +34,9 @@ function emitMaximizeChange() {
 
 export async function registerWindowControlsIPC(mainWindow: BrowserWindow) {
     window = mainWindow;
+
+    let icon = fallbackIcon;
+    if(process.platform === "win32") icon = windowsIcon;
 
     tray = new Tray(icon);
     tray.setToolTip("Dodio");

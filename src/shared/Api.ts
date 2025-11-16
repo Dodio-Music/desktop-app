@@ -12,8 +12,10 @@ export interface DodioApi {
 export type InvalidInputKeys = "username" | "email" | "login" | "password";
 export const NoLoginError = {error: "no-login"} satisfies DodioError;
 export type DodioError = {
+    error: "Not Found"
+} | {
     error: "no-login",
-    arg?: undefined
+        arg?: undefined
 } | {
     error: "invalid-input",
     arg: {
@@ -37,47 +39,34 @@ export type MayError = DodioError | null;
 
 export type ApiResult<T> = ({type:"error", error: DodioError }) | {type: "ok", value: T};
 
-export interface Track {
+export type SourceQuality = "LOSSLESS" | "HIGH" | "LOW";
+
+export interface TrackDTO {
     trackId: string;
+    title: string;
     views: number;
     duration: number;
-
-    artists?: Artist[];
-    sources?: Source[];
+    artists: string[];
+    sources: SourceDTO[];
 }
 
-export interface ReleaseTrack {
-    releaseTrackPK: ReleaseTrackPK;
-    coverArtUrl: string;
-    title: string;
+export interface ReleaseTrackDTO {
+    releaseTrackId: string;
+    track: TrackDTO;
 }
 
-export interface ReleaseTrackPK {
-    releaseId: number;
-    trackId: string;
-}
-
-export interface Artist {
-    artistId: number;
-    artistName: string;
-
-    releases?: Release[];
-    tracks?: Track[];
-}
-
-export interface Release {
-    releaseId: number;
+export interface ReleaseDTO {
+    releaseId: string;
     releaseName: string;
     coverArtUrl: string;
     releaseDate: string;
-
-    artists?: Artist[];
-    releaseTracks?: ReleaseTrack[];
+    artists: string[];
+    releaseType: string;
+    releaseTracks: ReleaseTrackDTO[];
 }
 
-export interface Source {
-    sourceId: number;
-    sourceUrl: string;
+export interface SourceDTO {
+    sourceId: string;
+    url: string;
+    quality: SourceQuality
 }
-
-export type SourceQuality = "LOSSLESS" | "HIGH" | "LOW";

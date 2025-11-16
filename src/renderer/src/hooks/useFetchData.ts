@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {useAuth} from "@renderer/hooks/reduxHooks";
+import {DodioError} from "../../../shared/Api";
 
 type FetchState<T> = {
     data: T | null;
@@ -22,15 +23,7 @@ export default function useFetchData<T>(url: string): FetchState<T> {
             if (res.type === "ok") {
                 setData(res.value);
             } else {
-                if (res.error?.error === "no-login") {
-                    setError("Not logged in!");
-                } else if(res.error.error === "info") {
-                    setError(res.error.arg.message);
-                } else if(res.error.error === "no-connection") {
-                    setError("Request timed out, please try again later!");
-                } else {
-                    setError("An Unknown error occurred!");
-                }
+                setError(mapError(res.error));
             }
         } catch (e) {
             console.error("Fetch failed:", e);
@@ -41,9 +34,24 @@ export default function useFetchData<T>(url: string): FetchState<T> {
     }, [url]);
 
     useEffect(() => {
-        if (authStatus === "account") void fetchData();
-        else setLoading(false);
+        if (authStatus !== "account") {
+            setLoading(false);
+            return;
+        }
+
+        void fetchData();
+
     }, [authStatus, fetchData]);
 
     return { data, loading, error, refetch: fetchData };
 }
+
+const mapError = (err: DodioError) => {
+    switch (err.error) {
+        case "Not Found": return "Endpoint not found. (404)";
+        case "no-login": return "Not logged in!";
+        case "info": return err.arg.message ?? "Info error";
+        case "no-connection": return "Request timed out, please try again later!";
+        default: return "An unknown error occurred!";
+    }
+};

@@ -30,9 +30,9 @@
 
 /* themes */
 :root:has(.appContainer[data-theme="dark"]) {
-    --color-bg: #0F0F10;
-    --color-bar: #0c0c0c;
-    --color-panel: #18181B;
+    --color-bg: #111112;
+    --color-bar: #070707;
+    --color-panel: #171719;
     --color-text-primary: #E5E5E7;
     --color-text-secondary: #9B9BA0;
     --color-accent-primary: #DC143C ;

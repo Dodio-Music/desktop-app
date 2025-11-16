@@ -1,21 +1,23 @@
-import {RemoteSongEntry, SongSource} from "../../../shared/TrackInfo.js";
+import {RemoteSongEntry} from "../../../shared/TrackInfo.js";
+import {ReleaseDTO} from "../../../shared/Api";
 
-export function parseBackendTracks(data: any[]): RemoteSongEntry[] {
-    return data.map((releaseTrack): RemoteSongEntry => {
+export function releaseToSongEntries(rel: ReleaseDTO): RemoteSongEntry[] {
+    return rel.releaseTracks.map(rt => {
+        const t = rt.track;
 
         return {
-            id: releaseTrack.releaseTrackId.releaseTrackId,
-            title: releaseTrack.track.title ?? "Unknown Title",
-            artists: releaseTrack.track.artists?.map((a: any) => a.artistName) ?? [],
-            album: releaseTrack.release.releaseName ?? "Unknown Album",
-            duration: releaseTrack.track.duration,
-            picture: releaseTrack.release.coverArtUrl,
+            id: t.trackId,
+            title: t.title,
+            artists: t.artists,
+            album: rel.releaseName,
+            duration: t.duration,
+            picture: rel.coverArtUrl,
             type: "remote",
-            sources: (releaseTrack.track.sources ?? []).map((src: any): SongSource => ({
+            sources: t.sources.map(src => ({
                 id: src.sourceId,
                 url: src.url,
                 quality: src.quality
-            })),
+            }))
         };
     });
 }

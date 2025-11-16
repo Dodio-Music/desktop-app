@@ -2,16 +2,19 @@ import s from "./HomePage.module.css"
 import useFetchData from "@renderer/hooks/useFetchData";
 import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
 import {useAuth} from "@renderer/hooks/reduxHooks";
-import {RemoteSongEntry} from "../../../../shared/TrackInfo";
-import {parseBackendTracks} from "../../util/parseBackendTracks";
+import {ReleaseDTO} from "../../../../shared/Api";
+import {releaseToSongEntries} from "@renderer/util/parseBackendTracks";
 
 const HomePage = () => {
-    const {data, loading, error} = useFetchData<any>("/api/track/all");
+    const {data, loading, error} = useFetchData<ReleaseDTO[]>("/api/release/all");
     const {status} = useAuth();
 
     if(loading) return <LoadingPage/>;
 
-    const tracks: RemoteSongEntry[] = data ? parseBackendTracks(data) : [];
+    const onLoadFirstFromRelease = (release: ReleaseDTO) => {
+        const releaseTracks = releaseToSongEntries(release);
+        window.api.loadTrackRemote(releaseTracks[0]);
+    }
 
     return (
         <div className={`pageWrapper ${s.wrapper}`}>
@@ -20,14 +23,14 @@ const HomePage = () => {
                 status !== "account" ?
                     <p>Only registered Dodio users can listen to online tracks!</p>
                     :
-                    error ?
-                        <p>{error}</p>
+                    error || !data ?
+                        <p>{error ?? "An unknown error occurred!"}</p>
                         :
                         <div className={s.releases}>
-                            {tracks.map(t =>
-                                <div key={t.title} className={s.track} onClick={() => window.api.loadTrackRemote(t)}>
-                                    <div className={s.coverWrapper}><img alt={"cover"} className={s.cover} src={t.picture}/></div>
-                                    <p className={`${s.title} ${s.link}`}>{t.title}</p>
+                            {data.map(t =>
+                                <div key={t.releaseName} className={s.track} onClick={() => onLoadFirstFromRelease(t)}>
+                                    <div className={s.coverWrapper}><img alt={"cover"} className={s.cover} src={t.coverArtUrl}/></div>
+                                    <p className={`${s.title} ${s.link}`}>{t.releaseName}</p>
                                     <p className={`${s.artist} ${s.link}`}>{t.artists.join(", ")}</p>
                                 </div>
                             )}
