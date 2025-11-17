@@ -1,6 +1,8 @@
 import { ipcMain, app } from "electron";
 import path from "path";
 import fs from "fs/promises";
+import {clearTimeout} from "node:timers";
+import {registerCleanupTask} from "./ipc/shutdownManager.js";
 
 export interface IPreferences {
     zoomFactor: number;
@@ -12,6 +14,7 @@ export interface IPreferences {
 }
 
 const prefsPath = path.join(app.getPath("userData"), "preferences.json");
+const tmpPath = prefsPath + ".tmp";
 
 const defaultPrefs: IPreferences = {
     zoomFactor: 1,
@@ -22,33 +25,51 @@ const defaultPrefs: IPreferences = {
     closeBehavior: "quit"
 };
 
-export async function loadPreferences(): Promise<IPreferences> {
+let prefs: IPreferences = {...defaultPrefs};
+let initialized = false;
+let saveTimeout: NodeJS.Timeout | null = null;
+
+export async function loadPreferencesFromDisk(): Promise<IPreferences> {
     try {
-        const data = await fs.readFile(prefsPath, "utf-8");
-        return { ...defaultPrefs, ...JSON.parse(data) };
+        const raw = await fs.readFile(prefsPath, "utf-8");
+        prefs = {...defaultPrefs, ...JSON.parse(raw)};
     } catch {
-        return defaultPrefs;
+        prefs = {...defaultPrefs};
+        await savePreferencesDisk();
     }
+    initialized = true;
+    return prefs;
 }
 
-async function savePreferences(prefs: IPreferences): Promise<void> {
+async function savePreferencesDisk(): Promise<void> {
     const json = JSON.stringify(prefs, null, 2);
-    await fs.writeFile(prefsPath, json, "utf-8");
+    await fs.writeFile(tmpPath, json, "utf-8");
+    await fs.rename(tmpPath, prefsPath);
 }
 
-export async function setPreferences(prefs: Partial<IPreferences>) {
-    const existing = await loadPreferences();
-    const newPrefs = { ...existing, ...prefs };
-    await savePreferences(newPrefs);
-    return newPrefs;
+function scheduleSave() {
+    if(saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => savePreferencesDisk(), 500);
+}
+
+export function getPreferences() {
+    if (!initialized) throw new Error("Preferences not loaded yet");
+    return prefs;
+}
+
+export function setPreferences(update: Partial<IPreferences>) {
+    if(!initialized) throw new Error("Preferences not loaded yet");
+
+    prefs = {...prefs, ...update};
+    scheduleSave();
+    return prefs;
 }
 
 export function registerPreferencesIPC() {
-    ipcMain.handle("preferences:get", async () => {
-        return await loadPreferences();
-    });
-
-    ipcMain.handle("preferences:set", async (_event, prefs: Partial<IPreferences>) => {
-        return setPreferences(prefs);
-    });
+    ipcMain.handle("preferences:get", async () => getPreferences());
+    ipcMain.handle("preferences:set", (_event, prefs: Partial<IPreferences>) => setPreferences(prefs));
 }
+
+registerCleanupTask(async () => {
+    await savePreferencesDisk();
+});

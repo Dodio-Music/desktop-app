@@ -1,9 +1,10 @@
-import {app, BrowserWindow, ipcMain} from "electron";
+import {BrowserWindow, ipcMain} from "electron";
 import {BaseSongEntry, LocalSongEntry, RemoteSongEntry} from "../../shared/TrackInfo.js";
 import playerProcessPath from "../player/PlayerProcess?modulePath";
 import {Worker} from "node:worker_threads";
 import {QueueManager} from "../player/QueueManager.js";
 import {PlayerSession} from "../player/PlayerSession.js";
+import {registerCleanupTask} from "./shutdownManager.js";
 
 export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     const playerProcess = new Worker(playerProcessPath);
@@ -52,17 +53,13 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
         }
     });
 
-    app.on("before-quit", async (event) => {
-        event.preventDefault();
-
+    registerCleanupTask(async () => {
         playerProcess.postMessage({type: "shutdown"});
 
         await new Promise<void>((resolve) => {
             playerProcess.once("exit", resolve);
             setTimeout(() => playerProcess.terminate(), 5000);
         });
-
-        app.exit();
     });
 
     mainWindow.on("blur", () => playerProcess.postMessage({type: "focus-update", payload: false}));

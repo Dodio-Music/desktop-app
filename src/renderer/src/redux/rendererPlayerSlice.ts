@@ -1,12 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface PlayerState {
-    volume: number;  // 0 to 1
-    isMuted: boolean;
+    volume: number | null;  // 0 to 1
+    isMuted: boolean | null;
 }
 
 const initialState: PlayerState = {
-    volume: 1,
+    volume: null,
     isMuted: false,
 };
 
@@ -21,13 +21,14 @@ const rendererPlayerSlice = createSlice({
             state.isMuted = action.payload;
         },
         toggleMute(state) {
+            if(state.isMuted === null) return;
             state.isMuted = !state.isMuted;
         },
         increaseVolume(state) {
-            state.volume = Math.min(1, state.volume + 0.1);
+            state.volume = state.volume === null ? null : Math.min(1, state.volume + 0.1);
         },
         decreaseVolume(state) {
-            state.volume = Math.max(0, state.volume - 0.1);
+            state.volume = state.volume === null ? null : Math.max(0, state.volume - 0.1);
         },
     },
 });

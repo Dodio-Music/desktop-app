@@ -1,7 +1,7 @@
 import {ipcMain, BrowserWindow, Tray, Menu, app} from "electron";
 import fallbackIcon from "../../../resources/dodo_transparent_white_256.png?asset";
 import windowsIcon from "../../../resources/dodo_transparent_white.ico?asset";
-import {loadPreferences} from "../preferences.js";
+import {IPreferences} from "../preferences.js";
 
 let tray: Tray | null = null;
 let window: BrowserWindow | null = null;
@@ -32,7 +32,7 @@ function emitMaximizeChange() {
     window.webContents.send("maximize-change", window.isMaximized());
 }
 
-export async function registerWindowControlsIPC(mainWindow: BrowserWindow) {
+export async function registerWindowControlsIPC(mainWindow: BrowserWindow, prefs: IPreferences) {
     window = mainWindow;
 
     let icon = fallbackIcon;
@@ -80,7 +80,7 @@ export async function registerWindowControlsIPC(mainWindow: BrowserWindow) {
         mainWindow.close();
     });
 
-    const prefs = await loadPreferences();
+    // const prefs = await loadPreferencesFromDisk();
 
     mainWindow.on("close", (event) => {
         if (prefs.closeBehavior === "tray") {

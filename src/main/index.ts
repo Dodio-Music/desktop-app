@@ -3,12 +3,13 @@ import { app, BrowserWindow, protocol, net } from "electron";
 import { registerMagnifierIPC } from "./ipc/registerMagnifier.js";
 import { registerPlayerProcessIPC } from "./ipc/registerPlayerProcess.js";
 import { registerWindowControlsIPC } from "./ipc/registerWindowControls.js";
-import { registerPreferencesIPC } from "./preferences.js";
+import {loadPreferencesFromDisk, registerPreferencesIPC} from "./preferences.js";
 import { registerSongIndexer } from "./songIndexer.js";
 import { createMainWindow, registerAppLifecycle } from "./window.js";
 import {registerDodioApiIPC} from "./ipc/registerDodioApi.js";
 import {setupAuth} from "./auth.js";
 import path from "path";
+import {runCleanupTasks} from "./ipc/shutdownManager.js";
 
 let mainWindow: BrowserWindow;
 
@@ -16,6 +17,12 @@ function createWindow() {
     mainWindow = createMainWindow();
     return mainWindow;
 }
+
+app.on("before-quit", async (event) => {
+    event.preventDefault();
+    await runCleanupTasks();
+    app.exit();
+});
 
 app.whenReady().then(async () => {
     electronApp.setAppUserModelId("com.underswing");
@@ -31,13 +38,15 @@ app.whenReady().then(async () => {
         optimizer.watchWindowShortcuts(window);
     });
 
+    const prefs = await loadPreferencesFromDisk();
+
     createWindow();
-    await registerWindowControlsIPC(mainWindow);
     registerSongIndexer(mainWindow);
+    await registerWindowControlsIPC(mainWindow, prefs);
+    await registerMagnifierIPC(mainWindow, prefs);
     registerPreferencesIPC();
     registerPlayerProcessIPC(mainWindow);
     registerDodioApiIPC();
-    await registerMagnifierIPC(mainWindow);
     void setupAuth(mainWindow);
 
     registerAppLifecycle(createWindow);

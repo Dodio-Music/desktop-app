@@ -17,7 +17,7 @@ const ModulatedVideo: React.FC<ModulatedVideoProps> = ({src, style, autoplay = f
     const {volume, isMuted} = useSelector((state: RootState) => state.rendererPlayer);
 
     useEffect(() => {
-        if (!catImg.current) return;
+        if (!catImg.current || volume === null) return;
         catImg.current.playbackRate =  Math.round(volume * 10) / 10.0 * speedMulti;
         if (isMuted) catImg.current.pause();
         if (!isMuted && catImg.current.paused) catImg.current.play();

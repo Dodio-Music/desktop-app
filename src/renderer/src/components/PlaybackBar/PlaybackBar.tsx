@@ -14,28 +14,35 @@ import {HiPlay} from "react-icons/hi2";
 const PlaybackBar = () => {
     const dispatch = useDispatch<AppDispatch>();
     const {volume, isMuted} = useSelector((state: RootState) => state.rendererPlayer);
-    const displayVolume = round2Dec(!isMuted ? volume : 0);
-    const debouncedVolume = useDebounce(displayVolume, 1000);
+    const prefsReady = volume !== null && isMuted !== null;
+    const displayVolume = prefsReady ? round2Dec(!isMuted ? volume : 0) : 1;
+    const debouncedVolume = useDebounce(displayVolume, 250);
     const {duration, currentTime, userPaused, currentTrack} = useSelector(
         (state: RootState) => state.nativePlayer
     );
 
     useEffect(() => {
-        window.api.setPreferences({volume, muted: isMuted});
-    }, [debouncedVolume]);
+        if (!prefsReady) return;
+
+        window.api.setPreferences({
+            volume,
+            muted: isMuted
+        });
+    }, [debouncedVolume, isMuted]);
 
     useEffect(() => {
-        const getSetPrefs = async () => {
+        const load = async () => {
             const prefs = await window.api.getPreferences();
             dispatch(setVolume(prefs.volume));
             dispatch(setIsMuted(prefs.muted));
         }
-        void getSetPrefs();
+        void load();
     }, []);
 
     useEffect(() => {
-        const v = !isMuted ? volume : 0;
-        window.api.setVolume(round2Dec(v));
+        if(!prefsReady) return;
+
+        window.api.setVolume(round2Dec(!isMuted ? volume : 0));
     }, [isMuted, volume]);
 
     const handleDrag = (v: number) => {
@@ -44,6 +51,8 @@ const PlaybackBar = () => {
     }
 
     const handleWheel = (e: WheelEvent<HTMLInputElement>) => {
+        if(!prefsReady) return;
+
         // direction of the scroll wheel
         const delta = e.deltaY < 0 ? 0.1 : -0.1;
 
