@@ -80,8 +80,6 @@ export async function registerWindowControlsIPC(mainWindow: BrowserWindow, prefs
         mainWindow.close();
     });
 
-    // const prefs = await loadPreferencesFromDisk();
-
     mainWindow.on("close", (event) => {
         if (prefs.closeBehavior === "tray") {
             event.preventDefault();

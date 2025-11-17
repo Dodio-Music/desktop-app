@@ -3,7 +3,7 @@ import {ElectronAPI, electronAPI} from "@electron-toolkit/preload";
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerEvent, PlayerState} from "../shared/PlayerState.js";
 import {IPreferences} from "../main/preferences.js";
-import {BaseSongEntry, LocalSongEntry, RemoteSongEntry} from "../shared/TrackInfo.js";
+import {BaseSongEntry, LocalSongEntry, RemoteSongEntry, SongDirectoryResponse} from "../shared/TrackInfo.js";
 import {ApiResult, AuthStatus, DodioApi, MayError, RequestMethods} from "../shared/Api.js";
 import {AxiosInstance} from "axios";
 import IpcRenderer = Electron.IpcRenderer;
@@ -29,7 +29,22 @@ const windowControls: CustomWindowControls = {
 };
 
 const api = {
-    listLocalSongs: async(folderPath: string) => await ipcRenderer.invoke("songs:list", folderPath),
+    startSongScan: () => ipcRenderer.invoke("songs:start-scan"),
+    onSongBasic: (cb: (song: SongDirectoryResponse) => void) => {
+        const handler = (_ev: Electron.IpcRendererEvent, res: SongDirectoryResponse) => cb(res);
+        ipcRenderer.on("songs:basic", handler);
+        return () => ipcRenderer.removeListener("songs:basic", handler);
+    },
+    onSongMetadata: (cb: (song: SongDirectoryResponse) => void) => {
+        const handler = (_ev: Electron.IpcRendererEvent, res: SongDirectoryResponse) => cb(res);
+        ipcRenderer.on("songs:metadata", handler);
+        return () => ipcRenderer.removeListener("songs:metadata", handler);
+    },
+    onSongScanDone: (cb: () => void) => {
+        const handler = () => cb();
+        ipcRenderer.on("songs:scan-done", handler);
+        return () => ipcRenderer.removeListener("songs:scan-done", handler);
+    },
     loadTrack: (track: LocalSongEntry, contextTracks: BaseSongEntry[]) => ipcRenderer.invoke("player:load-local", track, contextTracks),
     loadTrackRemote: (trackInfo: RemoteSongEntry) => ipcRenderer.invoke("player:load-remote", trackInfo),
     pauseOrResume: () => ipcRenderer.invoke("player:pause-or-resume"),
@@ -47,8 +62,8 @@ const api = {
     },
     getPreferences: (): Promise<IPreferences> => ipcRenderer.invoke("preferences:get"),
     setPreferences: (pref: Partial<IPreferences>) => ipcRenderer.invoke("preferences:set", pref),
-    onPreferencesUpdated: (callback: () => void) => {
-        const handler = () => callback();
+    onPreferencesUpdated: (callback: (prefs?: IPreferences) => void) => {
+        const handler = (_ev: IpcRendererEvent, prefs?: IPreferences) => callback(prefs);
         ipcRenderer.on("preferences:update", handler);
         return () => ipcRenderer.removeListener("preferences:update", handler);
     },

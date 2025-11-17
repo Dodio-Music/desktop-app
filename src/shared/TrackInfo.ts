@@ -35,4 +35,8 @@ export function isRemoteSong(entry: BaseSongEntry): entry is RemoteSongEntry {
     return entry.type === "remote";
 }
 
+export type SongDirectoryResponse =
+    | { success: true, song: LocalSongEntry; }
+    | { success: false, error: string };
+
 export const SEGMENT_DURATION = 1;

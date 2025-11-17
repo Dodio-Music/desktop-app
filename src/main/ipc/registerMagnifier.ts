@@ -5,7 +5,7 @@ export const registerMagnifierIPC = async (mainWindow: BrowserWindow, prefs: IPr
      let zoomFactor = prefs.zoomFactor;
 
     const updateZoomFactor = async () => {
-        void setPreferences({zoomFactor: zoomFactor});
+        void setPreferences({zoomFactor: Math.round(zoomFactor)});
         mainWindow.webContents.setZoomFactor(zoomFactor);
         mainWindow.webContents.send("zoom-factor-changed", zoomFactor);
     }
