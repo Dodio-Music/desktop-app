@@ -3,7 +3,7 @@ import {ApiResult, DodioApi, DodioError, MayError, NoLoginError, RequestMethods}
 import {auth, updateAuth} from "../auth.js";
 
 const instance = axios.create({
-    baseURL: "http://localhost:8085/dodio",
+    baseURL: "https://api.dodio.at/",
     timeout: 10000
 });
 
