@@ -29,7 +29,7 @@ const HomePage = () => {
                         <div className={s.releases}>
                             {data.map(t =>
                                 <div key={t.releaseName} className={s.track} onClick={() => onLoadFirstFromRelease(t)}>
-                                    <div className={s.coverWrapper}><img alt={"cover"} className={s.cover} src={t.coverArtUrl}/></div>
+                                    <div className={s.coverWrapper}><img alt={"cover"} className={s.cover} src={`${t.coverArtUrl}?size=low`}/></div>
                                     <p className={`${s.title} ${s.link}`}>{t.releaseName}</p>
                                     <p className={`${s.artist} ${s.link}`}>{t.artists.join(", ")}</p>
                                 </div>
