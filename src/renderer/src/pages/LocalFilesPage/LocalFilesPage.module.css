@@ -44,7 +44,7 @@
 }
 
 #activeRow {
-    transition: 0s;
+    transition: 0s background-color;
     background-color: rgba(255, 255, 255, 0.2);
 }
 
@@ -83,6 +83,7 @@
 }
 
 .cover img {
+    object-fit: cover;
     -webkit-user-drag: none;
 }
 

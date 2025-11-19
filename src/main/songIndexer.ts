@@ -174,7 +174,7 @@ async function scanFolder() {
                         type: "local",
                         fileName: f.name,
                         fullPath: f.fullPath,
-                        title: common.title || f.name,
+                        title: common.title || f.name.substring(0, f.name.lastIndexOf(".")) || f.name,
                         artists: common.artists || ["Unknown Artist"],
                         album: common.album || "Unknown Album",
                         duration: metadata.format.duration || undefined,

@@ -4,6 +4,8 @@ import s from "./LocalFilesPage.module.css";
 import {secondsToTime} from "../../util/timeUtils";
 import classNames from "classnames";
 import {BaseSongEntry, isLocalSong} from "../../../../shared/TrackInfo";
+import React, {useCallback, useMemo} from "react";
+import placeholder from "../../../../../resources/img-placeholder-128x128.svg";
 
 interface RowProps {
     index: number,
@@ -15,7 +17,7 @@ interface RowProps {
     pauseOrLoadSong: (song: BaseSongEntry) => void;
 }
 
-export const SongRow = ({
+export const SongRow = React.memo(function SongRow({
                             index,
                             song,
                             setSelectedRow,
@@ -23,13 +25,18 @@ export const SongRow = ({
                             userPaused,
                             currentTrackId,
                             pauseOrLoadSong
-                        }: RowProps) => {
+                        }: RowProps) {
     const isActive = song.id === currentTrackId;
 
+    const handlePlay = useCallback((song: BaseSongEntry) => pauseOrLoadSong(song), [pauseOrLoadSong]);
+
+    const timestamp = useMemo(() => isLocalSong(song) ? format(song.createdAt) : "", [song]);
+
+    const rowClass = `${s.songRow} ${s.grid}`;
     return (
         <div
             id={selectedRow === song.id ? s.activeRow : ""}
-            className={`${s.songRow} ${s.grid}`}
+            className={rowClass}
             onClick={(e) => {
                 e.stopPropagation();
                 setSelectedRow(song.id);
@@ -38,13 +45,13 @@ export const SongRow = ({
             <div className={s.trackColumn}>
                 <div className={s.trackNumberWrapper}>
                     <p className={classNames(s.trackNumber, isActive && s.playing)}>{index + 1}</p>
-                    <button className={s.playButton} onClick={() => pauseOrLoadSong(song)}>
+                    <button className={s.playButton} onClick={() => handlePlay(song)}>
                         {isActive && !userPaused ? <FaPause size={23}/> : <FaPlay size={19}/>}
                     </button>
                 </div>
                 <div className={s.trackElement}>
                     <div className={s.cover}>
-                        <img className={s.img} src={song.picture} alt="cover"/>
+                        <img className={s.img} src={song.picture ?? placeholder} alt="cover" loading={"lazy"}/>
                     </div>
                     <div className={s.trackInfo}>
                         <p className={classNames(s.trackTitle, s.ellipsis, isActive && s.playing)}>{song.title}</p>
@@ -60,9 +67,9 @@ export const SongRow = ({
                 </div>
             </div>
             <a className={classNames(s.trackAlbum, s.ellipsis)}>{song.album}</a>
-            <p className={classNames(s.timestamp, s.ellipsis)}>{isLocalSong(song) ? format(song.createdAt) : ""}</p>
+            <p className={classNames(s.timestamp, s.ellipsis)}>{timestamp}</p>
             <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
             <p></p>
         </div>
     );
-};
+});

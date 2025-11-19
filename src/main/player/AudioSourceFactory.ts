@@ -9,15 +9,34 @@ import {
 } from "./FlacHelper.js";
 import {LocalAudioSource} from "./LocalAudioSource.js";
 import {RemoteFlacSource} from "./RemoteFlacSource.js";
+import path from "path";
+import {parseFile} from "music-metadata";
 
-export interface AudioMeta {
+export interface FlacAudioMeta {
+    type: "flac";
+    totalSamples: number;
+    sampleRate: number;
+    flacHeader: Buffer;
+    duration: number;
+}
+
+export interface RemoteFlacAudioMeta {
+    type: "remote-flac";
     totalSamples: number;
     sampleRate: number;
     flacHeader: Buffer;
     totalBytes?: bigint;
     seekTable?: SeekPoint[];
     firstPCMByteOffset?: number;
+    duration: number;
 }
+
+export interface GenericAudioMeta {
+    type: "generic";
+    duration: number;
+}
+
+export type AudioMeta = FlacAudioMeta | GenericAudioMeta | RemoteFlacAudioMeta;
 
 export class AudioSourceFactory {
     static async create(
@@ -25,7 +44,8 @@ export class AudioSourceFactory {
         pathOrUrl: string,
         sourceType: SourceType,
         devInfo: OutputDevice,
-        mainWindow: BrowserWindow): Promise<{
+        mainWindow: BrowserWindow
+    ): Promise<{
         source: BaseAudioSource;
         pcmSab: SharedArrayBuffer;
         segmentSab: SharedArrayBuffer;
@@ -33,12 +53,35 @@ export class AudioSourceFactory {
     }> {
         const meta = await this.getMetadata(sourceType, pathOrUrl);
 
-        const sampleRate = meta.sampleRate;
-        const sampleRateConversion = devInfo.sampleRate / sampleRate;
-        const totalFloatSamples = Math.ceil(meta.totalSamples * devInfo.channels * sampleRateConversion);
+        let totalFloatSamples: number;
 
-        const pcmSab = new SharedArrayBuffer(totalFloatSamples * Float32Array.BYTES_PER_ELEMENT);
-        const totalSegments = Math.ceil(meta.totalSamples / (sampleRate * SEGMENT_DURATION));
+        // LOCAL GENERIC AUDIO
+        if(meta.type === "generic") {
+            totalFloatSamples = Math.ceil(meta.duration * devInfo.sampleRate) * devInfo.channels;
+        }
+
+        // LOCAL FLAC
+        else if(meta.type === "flac") {
+            const sampleRateConversion = devInfo.sampleRate / meta.sampleRate;
+            totalFloatSamples = Math.ceil(
+                meta.totalSamples * devInfo.channels * sampleRateConversion
+            );
+        }
+
+        // REMOTE FLAC
+
+        else {
+            const sampleRateConversion = devInfo.sampleRate / meta.sampleRate;
+            totalFloatSamples = Math.ceil(
+                meta.totalSamples * devInfo.channels * sampleRateConversion
+            );
+        }
+
+        const pcmSab = new SharedArrayBuffer(
+            totalFloatSamples * Float32Array.BYTES_PER_ELEMENT
+        );
+
+        const totalSegments = Math.ceil(meta.duration / SEGMENT_DURATION);
         const segmentSab = new SharedArrayBuffer(totalSegments);
 
         const baseInit: BaseAudioSourceInit = {
@@ -46,7 +89,7 @@ export class AudioSourceFactory {
             url: pathOrUrl,
             outputChannels: devInfo.channels,
             outputSampleRate: devInfo.sampleRate,
-            duration: meta.totalSamples / sampleRate,
+            duration: meta.duration,
             pcmSab,
             mainWindow,
             segmentSab
@@ -56,35 +99,58 @@ export class AudioSourceFactory {
         if (sourceType === "local") {
             source = new LocalAudioSource(baseInit);
         } else {
+            const flacMeta = meta as RemoteFlacAudioMeta;
             source = new RemoteFlacSource({
                 ...baseInit,
-                totalBytes: meta.totalBytes!,
-                seekTable: meta.seekTable!,
-                originalSampleRate: sampleRate!,
-                firstPCMByteOffset: meta.firstPCMByteOffset!,
-                flacHeader: meta.flacHeader
+                totalBytes: flacMeta.totalBytes!,
+                seekTable: flacMeta.seekTable!,
+                originalSampleRate: flacMeta.sampleRate!,
+                firstPCMByteOffset: flacMeta.firstPCMByteOffset!,
+                flacHeader: flacMeta.flacHeader
             });
         }
 
-        return {source, pcmSab, segmentSab, duration: meta.totalSamples / sampleRate};
+        return {source, pcmSab, segmentSab, duration: meta.duration};
     }
 
     private static async getMetadata(sourceType: SourceType, pathOrUrl: string): Promise<AudioMeta> {
         if (sourceType === "local") {
-            const headerBuf = await readFileRange(pathOrUrl, 0, 65535);
-            const {totalSamples, sampleRate} = parseFlacStreamInfo(headerBuf);
-            return {totalSamples: Number(totalSamples), sampleRate, flacHeader: headerBuf};
+            const ext = path.extname(pathOrUrl).toLowerCase();
+
+            if(ext === ".flac") {
+                const headerBuf = await readFileRange(pathOrUrl, 0, 65535);
+                const {totalSamples, sampleRate} = parseFlacStreamInfo(headerBuf);
+                const duration = totalSamples / sampleRate;
+
+                return {
+                    type: "flac",
+                    totalSamples: Number(totalSamples),
+                    sampleRate,
+                    flacHeader: headerBuf,
+                    duration
+                };
+            }
+
+            const meta = await parseFile(pathOrUrl);
+            const duration = meta.format.duration;
+            if(!duration) throw new Error("Unable to read duration from file!");
+
+            return {type: "generic", duration};
         }
 
         const meta = await RemoteFlacSource.prepareRemoteFlac(pathOrUrl);
         const {totalSamples, sampleRate} = parseFlacStreamInfo(meta.flacHeader);
+        const duration = totalSamples / sampleRate;
+
         return {
+            type: "remote-flac",
             totalSamples,
             sampleRate,
             flacHeader: meta.flacHeader,
             totalBytes: meta.totalBytes,
             seekTable: meta.seekTable,
-            firstPCMByteOffset: meta.firstPCMByteOffset
+            firstPCMByteOffset: meta.firstPCMByteOffset,
+            duration
         };
     }
 }

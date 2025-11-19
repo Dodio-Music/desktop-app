@@ -16,6 +16,41 @@ export interface CustomWindowControls {
     isMaximized: () => Promise<boolean>;
 }
 
+const LOG_ALL_IPC_EVENTS = false;
+
+if(LOG_ALL_IPC_EVENTS) {
+    const _send = ipcRenderer.send.bind(ipcRenderer);
+    const _invoke = ipcRenderer.invoke.bind(ipcRenderer);
+    const _on = ipcRenderer.on.bind(ipcRenderer);
+    const _once = ipcRenderer.once.bind(ipcRenderer);
+
+    ipcRenderer.send = (channel, ...args) => {
+        console.log("[ipcRenderer.send]", channel, args);
+        return _send(channel, ...args);
+    };
+
+    ipcRenderer.invoke = (channel, ...args) => {
+        console.log("[ipcRenderer.invoke]", channel, args);
+        return _invoke(channel, ...args);
+    };
+
+    ipcRenderer.on = (channel, listener) => {
+        console.log("[ipcRenderer.on]", channel);
+        return _on(channel, (event, ...args) => {
+            console.log("[ipcRenderer received]", channel, args);
+            listener(event, ...args);
+        });
+    };
+
+    ipcRenderer.once = (channel, listener) => {
+        console.log("[ipcRenderer.once]", channel);
+        return _once(channel, (event, ...args) => {
+            console.log("[ipcRenderer received once]", channel, args);
+            listener(event, ...args);
+        });
+    };
+}
+
 const windowControls: CustomWindowControls = {
     minimize: () => ipcRenderer.send("window-minimize"),
     maximize: () => ipcRenderer.send("window-maximize"),

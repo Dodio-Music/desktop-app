@@ -171,6 +171,12 @@
     border-radius: 4px;
     overflow: hidden;
     flex-shrink: 0;
+    aspect-ratio: 1;
+}
+
+.trackInfoCover img {
+    object-fit: cover;
+    -webkit-user-drag: none;
 }
 
 .trackName {

@@ -10,6 +10,7 @@ import {formatTime} from "../../util/timeUtils";
 import {setVolume, setIsMuted} from "@renderer/redux/rendererPlayerSlice";
 import classNames from "classnames";
 import {HiPlay} from "react-icons/hi2";
+import placeholder from "../../../../../resources/img-placeholder-128x128.svg";
 
 const PlaybackBar = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -90,7 +91,7 @@ const PlaybackBar = () => {
                 {currentTrack && (
                     <>
                         <div className={s.trackInfoCover}>
-                            <img src={currentTrack.picture} alt={"cover"}/>
+                            <img src={currentTrack.picture ?? placeholder} alt={"cover"}/>
                         </div>
                         <div className={s.trackInfoMeta}>
                             <p className={s.trackName}>{currentTrack.title}</p>

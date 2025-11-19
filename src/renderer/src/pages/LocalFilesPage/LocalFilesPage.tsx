@@ -32,6 +32,9 @@ const LocalFilesPage = () => {
             setError("");
             songMapRef.current.set(res.song.id, res.song);
             setSongs([...songMapRef.current.values()]);
+            setSongs(prev =>
+                prev.map(s => s.id === res.song.id ? {...s, ...res.song} : s)
+            );
         };
 
         const handleMeta = (res: SongDirectoryResponse) => {
@@ -44,7 +47,9 @@ const LocalFilesPage = () => {
             if (existing) {
                 setError("");
                 Object.assign(existing, res.song);
-                setSongs([...songMapRef.current.values()]);
+                setSongs(prev =>
+                    prev.map(s => s.id === res.song.id ? {...s, ...res.song} : s)
+                );
             }
         };
 
