@@ -11,6 +11,8 @@ import {LocalAudioSource} from "./LocalAudioSource.js";
 import {RemoteFlacSource} from "./RemoteFlacSource.js";
 import path from "path";
 import {parseFile} from "music-metadata";
+import {readFile} from "node:fs/promises";
+import {detectOggCodec, getOggDuration} from "./OpusHelper.js";
 
 export interface FlacAudioMeta {
     type: "flac";
@@ -129,6 +131,14 @@ export class AudioSourceFactory {
                     flacHeader: headerBuf,
                     duration
                 };
+            }
+
+            if(ext === ".ogg" || ext === ".opus") {
+                const buffer = await readFile(pathOrUrl);
+                const codec = detectOggCodec(buffer);
+                const duration = await getOggDuration(buffer, codec);
+
+                return {type: "generic", duration};
             }
 
             const meta = await parseFile(pathOrUrl);

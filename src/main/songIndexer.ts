@@ -78,7 +78,7 @@ async function scanFolder() {
     }
     const timestamp = performance.now();
 
-    const supportedExts = [".mp3", ".flac", ".wav", ".ogg"];
+    const supportedExts = [".mp3", ".flac", ".wav", ".ogg", ".opus"];
     const files = await fsp.readdir(folderPath, {withFileTypes: true});
 
     const list = await Promise.all(
