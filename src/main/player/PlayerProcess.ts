@@ -4,9 +4,11 @@ import {clearInterval} from "node:timers";
 import {activePreset} from "../../shared/latencyPresets.js";
 import {SEGMENT_DURATION} from "../../shared/TrackInfo.js";
 import {SourceType} from "../../shared/PlayerState.js";
+import os from "node:os";
 
 const IPC_UPDATE_INTERVAL = 200;
 const IDLE_TIMEOUT_MS = 2 * 60 * 1000;
+os.setPriority(-20);
 
 type PlayerSession = {
     id: string;
@@ -52,6 +54,7 @@ export class PlayerProcess {
     private session: PlayerSession | null = null;
     private lastActiveTime: number = Date.now();
     public focused = true;
+    private fadeScratch: Buffer | null = null;
 
     private userVolume: number = 1;
     private volume: number = 1;
@@ -221,7 +224,7 @@ export class PlayerProcess {
                     }
 
                     outputBuf = this.applyVolumeWithFade(
-                        Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength),
+                        chunk,
                         volumeStart,
                         volumeEnd
                     );
@@ -262,17 +265,26 @@ export class PlayerProcess {
         });
     }
 
-    private applyVolumeWithFade(buf: Buffer, volumeStart: number, volumeEnd: number): Buffer {
-        const out = Buffer.allocUnsafe(buf.length);
-        const sampleCount = buf.length / 4;
+    private applyVolumeWithFade(chunk: Float32Array, volumeStart: number, volumeEnd: number): Buffer {
+        const byteLen = chunk.length * 4;
+
+        if(!this.fadeScratch ||this.fadeScratch.length !== byteLen) {
+            this.fadeScratch = Buffer.allocUnsafe(byteLen);
+        }
+
+        const out = this.fadeScratch;
+        const sampleCount = chunk.length;
         const userVolume = this.userVolume;
 
         for (let i = 0; i < sampleCount; i++) {
             const t = i / (sampleCount - 1);
-            let volume = volumeStart + (1 - Math.cos(t * Math.PI)) / 2 * (volumeEnd - volumeStart);
-            volume *= userVolume;
-            let sample = buf.readFloatLE(i * 4);
-            sample = Math.max(-1, Math.min(1, sample * volume));
+            const fade = volumeStart + (1 - Math.cos(t * Math.PI)) / 2 * (volumeEnd - volumeStart);
+            const vol = fade * userVolume;
+
+            let sample = chunk[i];
+            sample *= vol;
+            if(sample > 1) sample = 1;
+            else if(sample < -1) sample = -1;
             out.writeFloatLE(sample, i * 4);
         }
 

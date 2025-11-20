@@ -5,9 +5,9 @@ export type LatencyPreset = {
     approxLatencyMs: number;
 };
 
-const sampleRate = 44100;
+const referenceSampleRate = 44100;
 const calculateLatency = (sampleRate: number, queue: number, bufferSize: number) => {
-    return bufferSize * queue / sampleRate * 1000;
+    return bufferSize * (queue + 1) / sampleRate * 1000;
 }
 
 export const latencyPresets: Record<string, LatencyPreset> = {
@@ -15,34 +15,34 @@ export const latencyPresets: Record<string, LatencyPreset> = {
         label: "Compatibility (Very High Latency)",
         bufferSize: 1024,
         maxQueue: 8,
-        approxLatencyMs: calculateLatency(sampleRate, 8, 1024)
+        approxLatencyMs: calculateLatency(referenceSampleRate, 8, 1024)
     },
     "ultra-safe": {
         label: "Ultra Safe (High Latency)",
-        bufferSize: 1024,
+        bufferSize: 512,
         maxQueue: 4,
-        approxLatencyMs: calculateLatency(sampleRate, 4, 1024)
+        approxLatencyMs: calculateLatency(referenceSampleRate, 4, 1024)
     },
     "safe": {
         label: "Safe (Default)",
-        bufferSize: 512,
+        bufferSize: 256,
         maxQueue: 4,
-        approxLatencyMs: calculateLatency(sampleRate, 4, 512)
+        approxLatencyMs: calculateLatency(referenceSampleRate, 4, 256)
     },
     "low": {
         label: "Low Latency",
         bufferSize: 256,
-        maxQueue: 3,
-        approxLatencyMs: calculateLatency(sampleRate, 3, 256),
+        maxQueue: 2,
+        approxLatencyMs: calculateLatency(referenceSampleRate, 2, 256),
     },
     "ultra-low": {
         label: "Ultra Low",
         bufferSize: 128,
-        maxQueue: 2,
-        approxLatencyMs: calculateLatency(sampleRate, 2, 128),
-    }
+        maxQueue: 1,
+        approxLatencyMs: calculateLatency(referenceSampleRate, 1, 128),
+    },
 }
 
 const fallback = latencyPresets.safe;
-const preset = "low";
+const preset = "safe";
 export const activePreset = latencyPresets[preset] || fallback;
