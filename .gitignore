@@ -16,3 +16,4 @@ coverage
 /playwright/.auth/
 
 test-results
+.env

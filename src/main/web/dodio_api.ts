@@ -2,10 +2,44 @@ import axios, {AxiosError, AxiosInstance, AxiosResponse} from "axios";
 import {ApiResult, DodioApi, DodioError, MayError, NoLoginError, RequestMethods} from "../../shared/Api.js";
 import {auth, updateAuth} from "../auth.js";
 
-const instance = axios.create({
-    baseURL: "https://api.dodio.at/",
-    timeout: 10000
-});
+let instance: AxiosInstance = null!;
+
+export function setupApi() {
+    console.log("Creating axios connection to backend: ", process.env.BACKEND_URL);
+
+    instance = axios.create({
+        baseURL: process.env.BACKEND_URL,
+        timeout: 10000
+    });
+
+    instance.interceptors.request.use(async (config) => {
+        if (config.url?.includes("/auth/refresh")) return config;
+        if (!auth?.access_token) return config;
+
+        if (auth.access_token_expiry && auth.access_token_expiry.getTime() < Date.now()) {
+            if (!isRefreshing) {
+                isRefreshing = true;
+                const refreshErr = await refreshAuthToken();
+                isRefreshing = false;
+                refreshQueue.forEach((cb) => cb());
+                refreshQueue = [];
+
+                if (refreshErr) {
+                    updateAuth({
+                        access_token: undefined,
+                        access_token_expiry: undefined
+                    });
+                    return Promise.reject(refreshErr);
+                }
+            } else {
+                await new Promise<void>((resolve) => refreshQueue.push(resolve));
+            }
+        }
+
+        config.headers.Authorization = `Bearer ${auth.access_token}`;
+        return config;
+    });
+}
 
 function handleError(err: unknown): DodioError {
     if (err instanceof AxiosError) {
@@ -75,33 +109,6 @@ interface RefreshTokenResponse {
 let isRefreshing = false;
 let refreshQueue: (() => void)[] = [];
 
-instance.interceptors.request.use(async (config) => {
-    if (config.url?.includes("/auth/refresh")) return config;
-    if (!auth?.access_token) return config;
-
-    if (auth.access_token_expiry && auth.access_token_expiry.getTime() < Date.now()) {
-        if (!isRefreshing) {
-            isRefreshing = true;
-            const refreshErr = await refreshAuthToken();
-            isRefreshing = false;
-            refreshQueue.forEach((cb) => cb());
-            refreshQueue = [];
-
-            if (refreshErr) {
-                updateAuth({
-                    access_token: undefined,
-                    access_token_expiry: undefined
-                });
-                return Promise.reject(refreshErr);
-            }
-        } else {
-            await new Promise<void>((resolve) => refreshQueue.push(resolve));
-        }
-    }
-
-    config.headers.Authorization = `Bearer ${auth.access_token}`;
-    return config;
-});
 
 export default {
     async login(login: string, password: string): Promise<MayError> {
