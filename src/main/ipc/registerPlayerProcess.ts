@@ -65,7 +65,10 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     mainWindow.on("blur", () => playerProcess.postMessage({type: "focus-update", payload: false}));
     mainWindow.on("focus", () => playerProcess.postMessage({type: "focus-update", payload: true}));
 
-    ipcMain.handle("player:load-remote", async (_, track: RemoteSongEntry) => {
+    ipcMain.handle("player:load-remote", async (_, track: RemoteSongEntry, contextTracks: RemoteSongEntry[]) => {
+        const startIndex = contextTracks.findIndex(t => t.id === track.id);
+        queue.setContext("remote", contextTracks, startIndex);
+
         await session.loadTrack(track);
     });
 

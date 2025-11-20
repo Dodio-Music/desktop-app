@@ -13,7 +13,7 @@ const HomePage = () => {
 
     const onLoadFirstFromRelease = (release: ReleaseDTO) => {
         const releaseTracks = releaseToSongEntries(release);
-        window.api.loadTrackRemote(releaseTracks[0]);
+        window.api.loadTrackRemote(releaseTracks[0], releaseTracks);
     }
 
     return (

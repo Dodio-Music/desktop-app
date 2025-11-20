@@ -2,6 +2,11 @@ import { BrowserWindow } from "electron";
 import {BaseSongEntry} from "../../shared/TrackInfo.js";
 
 export type QueueContextType = "local" | "remote";
+export enum RepeatMode {
+    Off = "off",
+    One = "one",
+    All = "all",
+}
 
 export interface QueueContext {
     type: QueueContextType;
@@ -14,6 +19,7 @@ export class QueueManager {
     private context: QueueContext | null = null;
     private current: BaseSongEntry | null = null;
     private window: BrowserWindow;
+    private repeatMode: RepeatMode = RepeatMode.All;
 
     constructor(mainWindow: BrowserWindow) {
         this.window = mainWindow;
@@ -35,14 +41,23 @@ export class QueueManager {
     }
 
     getNext(): BaseSongEntry | null {
+        if (this.repeatMode === RepeatMode.One && this.current) {
+            return this.current;
+        }
+
         if(this.userQueue.length > 0) {
             return this.userQueue[0];
         }
 
         if(this.context) {
             const {tracks, startIndex} = this.context;
+
             if(startIndex + 1 < tracks.length) {
                 return tracks[startIndex + 1];
+            }
+
+            if (this.repeatMode === RepeatMode.All) {
+                return tracks[0];
             }
         }
 
@@ -61,15 +76,24 @@ export class QueueManager {
     }
 
     next(): BaseSongEntry | null {
+        if (this.repeatMode === RepeatMode.One && this.current) {
+            this.notifyUpdate();
+            return this.current;
+        }
+
         let next: BaseSongEntry | null = null;
 
         if(this.userQueue.length > 0) {
             next = this.userQueue.shift()!;
         } else if(this.context) {
             const {startIndex, tracks} = this.context;
+
             if(startIndex + 1 < tracks.length) {
                 this.context.startIndex++;
                 next = tracks[this.context.startIndex];
+            } else if(this.repeatMode === RepeatMode.All) {
+                this.context.startIndex = 0;
+                next = tracks[0];
             }
         }
         if (!next) {
@@ -104,5 +128,14 @@ export class QueueManager {
                 sourceType: this.context?.type ?? null
             });
         }
+    }
+
+    setRepeatMode(mode: RepeatMode) {
+        this.repeatMode = mode;
+        this.notifyUpdate();
+    }
+
+    getRepeatMode(): RepeatMode {
+        return this.repeatMode;
     }
 }
