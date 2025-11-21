@@ -42,3 +42,8 @@ window.api.onPlayerEvent((event) => {
 window.api.onAuthUpdate((status) => {
     store.dispatch(setAuthStatus(status));
 });
+
+(async () => {
+    const status = await window.api.getAuthStatus();
+    store.dispatch(setAuthStatus(status));
+})();

@@ -79,14 +79,19 @@ export async function refreshAuthToken(): Promise<MayError> {
             access_token_expiry: new Date(res.data.accessTokenExpirationDate)
         });
         return null;
-    } catch (e) {
-        updateAuth({
-            access_token: undefined,
-            access_token_expiry: undefined,
-            refresh_token: undefined,
-            refresh_token_expiry: undefined
-        });
-        return handleError(e);
+    } catch (err) {
+        const dodioErr = handleError(err);
+        if(dodioErr.error === "no-login") {
+            updateAuth({
+                access_token: undefined,
+                access_token_expiry: undefined,
+                refresh_token: undefined,
+                refresh_token_expiry: undefined
+            });
+        } else {
+            updateAuth({});
+        }
+        return dodioErr;
     }
 }
 

@@ -107,6 +107,7 @@ const api = {
         authUpdateCallback = cb;
         if(authStatusCache !== null) cb(authStatusCache);
     },
+    getAuthStatus: () => ipcRenderer.invoke("auth:getStatus"),
     authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>) {
         return ipcRenderer.invoke("api:authRequest", method, ...args) as Promise<ApiResult<T>>;
     },

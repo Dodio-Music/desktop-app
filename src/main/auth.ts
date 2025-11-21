@@ -1,4 +1,4 @@
-import {app, BrowserWindow} from "electron";
+import {app, BrowserWindow, ipcMain} from "electron";
 import path from "path";
 import fs from "fs/promises";
 import {IAuthData} from "./web/Typing.js";
@@ -54,3 +54,10 @@ export async function setupAuth(window: BrowserWindow) {
     updateAuth(await loadAuth());
     await refreshAuthToken();
 }
+
+ipcMain.handle("auth:getStatus", () => {
+    if (!auth) return "signup";
+    if (auth.access_token) return "account";
+    if (auth.hasAccount) return "login";
+    return "signup";
+});
