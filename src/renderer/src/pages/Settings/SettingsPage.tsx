@@ -1,33 +1,36 @@
-import car from "./car.webm"
-import style from "./SettingsPage.module.css"
-import {useEffect, useRef} from "react";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
-import ModulatedVideo from "@renderer/components/Cat/ModulatedVideo";
+import s from "./SettingsPage.module.css";
+import {latencyPresets} from "../../../../shared/latencyPresets.js";
 
 const SettingsPage = () => {
 
-    const catImg = useRef<HTMLVideoElement>(null);
-    const {volume, isMuted} = useSelector((state: RootState) => state.rendererPlayer);
-
-    useEffect(() => {
-        if (!catImg.current || volume === null) return;
-        catImg.current.playbackRate =  Math.round(volume * 10) / 10.0 * 2;
-        if (isMuted) catImg.current.pause();
-        if (!isMuted && catImg.current.paused) catImg.current.play();
-    }, [catImg, volume, isMuted]);
-
     return (
-        <div className={style.cat}>
-            <ModulatedVideo
-                src={car}
-                style={{width: 200}}
-                loop={true}
-                speedMulti={2}
-            ></ModulatedVideo>
-            <h3>Nothing to see here</h3>
+        <div className={`pageWrapper pageWrapperFullHeight ${s.wrapper}`}>
+            <h1>Settings</h1>
+            <h2>Playback</h2>
+            <div className={s.setting}>
+                <div>
+                    <p className={s.label}>Audio Latency Preset</p>
+                    <p className={s.info}>Determines how quickly audio reacts when you press play, seek, or change the volume.<br/>
+                        Lower latency feels more responsive but may cause crackles on weak systems.</p>
+                </div>
+                <div>
+                    <select className={s.latencyDropdown}>
+                        {Object.entries(latencyPresets).map(([key, preset]) => (
+                            <option key={key} value={key}>
+                                {preset.label} [{preset.approxLatencyMs.toFixed(0)}ms]
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+            <div className={s.setting}>
+                <div>
+                    <p className={s.label}>Fade Duration</p>
+                    <p className={s.info}>Controls how long fade-ins and fade-outs take when pausing or resuming.</p>
+                </div>
+            </div>
         </div>
-    );
-};
+    )
+}
 
 export default SettingsPage;

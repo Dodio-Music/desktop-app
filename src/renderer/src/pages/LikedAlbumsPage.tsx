@@ -1,7 +1,10 @@
+import NothingFound from "@renderer/components/NothingFound/NothingFound";
+
 const LikedAlbumsPage = () => {
     return (
-        <div className={"pageWrapper"}>
-            <h1>Your liked albums idk</h1>
+        <div className={"pageWrapper pageWrapperFullHeight"}>
+            <h1>Your Liked Albums</h1>
+            <NothingFound text={"You didn't like any albums yet."}/>
         </div>
     );
 };

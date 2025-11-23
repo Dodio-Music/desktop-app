@@ -105,13 +105,17 @@ img {
 }
 
 .pageWrapper {
-    padding: 25px;
+    padding: 30px;
 }
 
 .pageWrapper > h1 {
     color: #ffffff;
     font-size: 2.4rem;
     font-weight: 600;
+}
+
+.pageWrapperFullHeight {
+    height: 100%;
 }
 
 button:focus {
