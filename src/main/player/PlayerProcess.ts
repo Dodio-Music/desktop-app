@@ -8,7 +8,11 @@ import os from "node:os";
 
 const IPC_UPDATE_INTERVAL = 200;
 const IDLE_TIMEOUT_MS = 2 * 60 * 1000;
-os.setPriority(-20);
+try {
+    os.setPriority(-20);
+} catch(err) {
+    console.error("Could not set process priority! ", err);
+}
 
 type PlayerSession = {
     id: string;
