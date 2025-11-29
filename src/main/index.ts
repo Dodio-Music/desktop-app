@@ -14,9 +14,7 @@ import {configDotenv} from "dotenv";
 import {setupApi} from "./web/dodio_api.js";
 
 const env_arg = process.argv.find(v => v.startsWith("env="));
-const env_name = env_arg?.substring("env=".length);
-
-if(!env_name) throw new Error("env argument required!");
+const env_name = env_arg?.substring("env=".length) ?? "";
 
 const env_path = path.join(".env", env_name+".env");
 
