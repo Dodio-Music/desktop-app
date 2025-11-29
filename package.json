@@ -50,7 +50,7 @@
         "build": "npm run typecheck && electron-vite build --mode prod && electron-builder",
         "postinstall": "electron-builder install-app-deps",
         "build:unpack": "npm run build && electron-builder --dir",
-        "build:win": "npm run typecheck && npm run build --mode prod && electron-builder --win",
+        "build:win": "npm run typecheck && electron-vite build --mode prod && electron-builder --win",
         "build:mac": "npm run typecheck && electron-vite build --mode prod && electron-builder --mac",
         "build:linux": "npm run typecheck && electron-vite build --mode prod && electron-builder --linux",
         "test:unit": "vitest run --coverage",
