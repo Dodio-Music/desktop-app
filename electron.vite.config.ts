@@ -1,15 +1,24 @@
-import {resolve} from "path";
 import {defineConfig, externalizeDepsPlugin} from "electron-vite";
 import react from "@vitejs/plugin-react";
+import {resolve} from 'node:path'
+import {loadEnv} from "vite";
+
 
 export default defineConfig({
-    main: {
-        plugins: [externalizeDepsPlugin()],
-        build: {
-            rollupOptions: {
-                output: {
-                    format: "es"
+    main: ({mode}) => {
+        const defined_envs = loadEnv(mode, process.cwd(), 'DODIO_');
+
+        return {
+            plugins: [externalizeDepsPlugin()],
+            build: {
+                rollupOptions: {
+                    output: {
+                        format: "es"
+                    }
                 }
+            },
+            define: {
+                "process.env": defined_envs
             }
         }
     },

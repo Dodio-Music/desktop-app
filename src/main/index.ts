@@ -10,23 +10,7 @@ import {registerDodioApiIPC} from "./ipc/registerDodioApi.js";
 import {setupAuth} from "./auth.js";
 import path from "path";
 import {runCleanupTasks} from "./ipc/shutdownManager.js";
-import {configDotenv} from "dotenv";
 import {setupApi} from "./web/dodio_api.js";
-
-const env_arg = process.argv.find(v => v.startsWith("env="));
-const env_name = env_arg?.substring("env=".length) ?? "";
-
-const env_path = path.join(".env", env_name+".env");
-
-console.log("Loading env:", env_path);
-const configResult = configDotenv({
-    path: env_path
-});
-
-if(configResult.error) {
-    console.error(configResult.error);
-    throw new Error("Could not load env file");
-}
 
 let mainWindow: BrowserWindow;
 

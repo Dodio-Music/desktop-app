@@ -5,10 +5,10 @@ import {auth, updateAuth} from "../auth.js";
 let instance: AxiosInstance = null!;
 
 export function setupApi() {
-    console.log("Creating axios connection to backend: ", process.env.BACKEND_URL);
+    console.log("Creating axios connection to backend: ", process.env.DODIO_BACKEND_URL);
 
     instance = axios.create({
-        baseURL: process.env.BACKEND_URL,
+        baseURL: process.env.DODIO_BACKEND_URL,
         timeout: 10000
     });
 
