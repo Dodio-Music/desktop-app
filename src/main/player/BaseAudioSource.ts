@@ -1,11 +1,13 @@
 import {ChildProcessByStdio} from "node:child_process";
 import {Readable, Writable} from "node:stream";
-import {BrowserWindow} from "electron";
+import {app, BrowserWindow} from "electron";
 import {clearInterval} from "node:timers";
 import {SEGMENT_DURATION} from "../../shared/TrackInfo.js";
 import {EventEmitter} from "node:events";
-import ffmpegStatic from "ffmpeg-static";
+import _ffmpegPath from "ffmpeg-static";
 import path from "path";
+
+const ffmpegRawPath = (typeof _ffmpegPath === "string") ? _ffmpegPath : _ffmpegPath.default ?? "";
 
 export interface BaseAudioSourceInit {
     id: string;
@@ -18,12 +20,28 @@ export interface BaseAudioSourceInit {
     segmentSab: SharedArrayBuffer;
 }
 
+function resolveFfmpegPath() {
+    if (!app.isPackaged) {
+        return ffmpegRawPath;
+    }
+
+    const appPath = app.getAppPath();
+    const unpackedPath = appPath.replace("app.asar", "app.asar.unpacked");
+    const binaryRel = path.basename(ffmpegRawPath);
+    const moduleRoot = path.dirname(require.resolve("ffmpeg-static"));
+    const moduleRel = moduleRoot.split("node_modules").pop() ?? "";
+
+    return path.join(
+        unpackedPath,
+        "node_modules",
+        moduleRel,
+        binaryRel
+    );
+}
+
 export abstract class BaseAudioSource extends EventEmitter {
     public DEBUG_LOG = false;
-    public ffmpegPath =
-        process.env.NODE_ENV === "development"
-            ? (typeof ffmpegStatic === "string" ? ffmpegStatic : ffmpegStatic.default)
-            : path.join(process.resourcesPath, "ffmpeg", process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg");
+    public ffmpegPath = resolveFfmpegPath();
 
     protected ffmpegProcess: ChildProcessByStdio<Writable, Readable, Readable> | null = null;
     protected cancelled = false;
@@ -53,6 +71,7 @@ export abstract class BaseAudioSource extends EventEmitter {
         this.outputSampleRate = init.outputSampleRate;
         this.duration = init.duration;
         this.mainWindow = init.mainWindow;
+        console.log(this.ffmpegPath);
 
         this.pcm = new Float32Array(init.pcmSab);
         this.segmentMap = new Uint8Array(init.segmentSab);

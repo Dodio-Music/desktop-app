@@ -14,17 +14,7 @@
         "files": [
             "out/**/*",
             "package.json",
-            "node_modules/ffmpeg-static/**/*",
             "resources/**/*"
-        ],
-        "extraResources": [
-            {
-                "from": "node_modules/ffmpeg-static",
-                "to": "ffmpeg",
-                "filter": [
-                    "**/*"
-                ]
-            }
         ],
         "win": {
             "target": "nsis",
