@@ -81,7 +81,7 @@ const api = {
         return () => ipcRenderer.removeListener("songs:scan-done", handler);
     },
     loadTrack: (track: LocalSongEntry, contextTracks: BaseSongEntry[]) => ipcRenderer.invoke("player:load-local", track, contextTracks),
-    loadTrackRemote: (track: RemoteSongEntry, contextTracks: RemoteSongEntry[]) => ipcRenderer.invoke("player:load-remote", track, contextTracks),
+    loadTrackRemote: (track: RemoteSongEntry, contextTracks: BaseSongEntry[]) => ipcRenderer.invoke("player:load-remote", track, contextTracks),
     pauseOrResume: () => ipcRenderer.invoke("player:pause-or-resume"),
     setVolume: (volume: number) => ipcRenderer.invoke("player:set-volume", volume),
     seek: (time: number) => ipcRenderer.invoke("player:seek", time),

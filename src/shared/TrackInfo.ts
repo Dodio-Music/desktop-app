@@ -19,6 +19,8 @@ export interface LocalSongEntry extends BaseSongEntry {
 
 export interface RemoteSongEntry extends BaseSongEntry {
     sources: SongSource[];
+    releaseDate: string;
+    releaseId: string;
 }
 
 export interface SongSource {

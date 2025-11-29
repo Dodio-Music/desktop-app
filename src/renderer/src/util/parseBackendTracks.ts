@@ -12,6 +12,8 @@ export function releaseToSongEntries(rel: ReleaseDTO): RemoteSongEntry[] {
             album: rel.releaseName,
             duration: t.duration,
             picture: rel.coverArtUrl,
+            releaseId: rel.releaseId,
+            releaseDate: rel.releaseDate,
             type: "remote",
             sources: t.sources.map(src => ({
                 id: src.sourceId,

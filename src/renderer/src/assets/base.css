@@ -80,6 +80,7 @@ img {
     width: 100%;
     height: 100%;
     display: block;
+    -webkit-user-drag: none;
 }
 
 ::-webkit-scrollbar {
@@ -104,8 +105,12 @@ img {
     background: rgba(255, 255, 255, 0.36);
 }
 
-.pageWrapper {
+.pageWrapper, .errorPage {
     padding: 30px;
+}
+
+.errorPage {
+    color: #ff9898;
 }
 
 .pageWrapper > h1 {

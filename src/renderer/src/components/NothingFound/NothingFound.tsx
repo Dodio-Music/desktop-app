@@ -26,7 +26,7 @@ const NothingFound: FC<props> = ({text}) => {
                 src={car}
                 style={{width: 200}}
                 loop={true}
-                speedMulti={2}
+                speedMulti={1}
             ></ModulatedVideo>
             <h3>{text}</h3>
         </div>

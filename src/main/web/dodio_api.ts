@@ -12,6 +12,7 @@ export function setupApi() {
         timeout: 10000
     });
 
+    // get refresh token if access token expired
     instance.interceptors.request.use(async (config) => {
         if (config.url?.includes("/auth/refresh")) return config;
         if (!auth?.access_token) return config;
@@ -39,6 +40,26 @@ export function setupApi() {
         config.headers.Authorization = `Bearer ${auth.access_token}`;
         return config;
     });
+
+    // retry request if failed (server-side fail)
+    instance.interceptors.response.use(
+        res => res,
+        async (err) => {
+            const originalRequest = err.config;
+
+            if (err.response?.status === 401 && !originalRequest._retry) {
+                originalRequest._retry = true;
+
+                const refreshErr = await refreshAuthToken();
+                if (refreshErr) return Promise.reject(err);
+
+                originalRequest.headers.Authorization = `Bearer ${auth?.access_token}`;
+                return instance(originalRequest);
+            }
+
+            return Promise.reject(err);
+        }
+    );
 }
 
 function handleError(err: unknown): DodioError {

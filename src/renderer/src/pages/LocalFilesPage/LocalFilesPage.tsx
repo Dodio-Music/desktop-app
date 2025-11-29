@@ -1,18 +1,13 @@
 import {useEffect, useRef, useState} from "react";
 import s from "./LocalFilesPage.module.css";
-import {WiTime3} from "react-icons/wi";
-import {SongList} from "@renderer/pages/LocalFilesPage/SongList";
+import {SongList} from "@renderer/components/SongList/SongList";
 import {LocalSongEntry, SongDirectoryResponse} from "../../../../shared/TrackInfo";
+import {localSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
 
 const LocalFilesPage = () => {
     const [songs, setSongs] = useState<LocalSongEntry[]>([]);
     const [error, setError] = useState("");
-    const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const songMapRef = useRef<Map<string, LocalSongEntry>>(new Map());
-
-    const handleWrapperClick = () => {
-        setSelectedRow(undefined);
-    };
 
     const handleDialog = async () => {
         await window.api.showLocalFilesDialog();
@@ -68,7 +63,7 @@ const LocalFilesPage = () => {
     }, []);
 
     return (
-        <div className={"pageWrapper"} onClick={handleWrapperClick}>
+        <div className={"pageWrapper"}>
             <h1>Local Files</h1>
             {error ?
                 <>
@@ -76,27 +71,10 @@ const LocalFilesPage = () => {
                     <button onClick={() => handleDialog()} className={s.dirButton}>Set Song Directory</button>
                 </>
                 :
-
-                <div className={s.songList}>
-                    <div className={`${s.headRow} ${s.grid}`}>
-                        <div className={s.trackColumn}>
-                            <div className={s.numberHeaderWrapper}>
-                                <p className={`${s.textRight}`}>#</p>
-                            </div>
-                            <p>Title</p>
-                        </div>
-                        <p>Album</p>
-                        <p>Date added</p>
-                        <p className={s.durationHeader}><WiTime3/></p>
-                        <p></p>
-                    </div>
-                    <div className={s.divider}/>
-                    <SongList
-                        songs={songs}
-                        selectedRow={selectedRow}
-                        setSelectedRow={setSelectedRow}
-                    />
-                </div>
+                <SongList
+                    songs={songs}
+                    slots={localSongRowSlots}
+                />
             }
         </div>
     );

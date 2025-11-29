@@ -176,7 +176,6 @@
 
 .trackInfoCover img {
     object-fit: cover;
-    -webkit-user-drag: none;
 }
 
 .trackName {
@@ -199,4 +198,13 @@
 
 .controls {
     gap: 35px;
+}
+
+.link {
+    cursor: pointer;
+}
+
+.link:hover {
+    color: white;
+    text-decoration: underline;
 }

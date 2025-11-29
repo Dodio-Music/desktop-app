@@ -10,8 +10,12 @@ import {formatTime} from "../../util/timeUtils";
 import {setVolume, setIsMuted} from "@renderer/redux/rendererPlayerSlice";
 import classNames from "classnames";
 import {HiPlay} from "react-icons/hi2";
+import {useLocation, useNavigate} from "react-router-dom";
+import {isRemoteSong} from "../../../../shared/TrackInfo";
 
 const PlaybackBar = () => {
+    const loc = useLocation();
+    const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
     const {volume, isMuted} = useSelector((state: RootState) => state.rendererPlayer);
     const prefsReady = volume !== null && isMuted !== null;
@@ -81,6 +85,13 @@ const PlaybackBar = () => {
         window.api.previousTrack();
     }
 
+    const handleTitleClick = () => {
+        if(currentTrack === null || !isRemoteSong(currentTrack)) return;
+        const path = `/release/${currentTrack.releaseId}`;
+        if(loc.pathname === path) return;
+        navigate(path);
+    }
+
     const percent = round2Dec(displayVolume * 100);
     const sliderBackground = `linear-gradient(to right, white 0%, white ${percent}%, #4c4c4c ${percent}%, #4c4c4c 100%)`;
 
@@ -93,8 +104,15 @@ const PlaybackBar = () => {
                             <img src={`${currentTrack.picture}?size=low`} alt={"cover"}/>
                         </div>
                         <div className={s.trackInfoMeta}>
-                            <p className={s.trackName}>{currentTrack.title}</p>
-                            <p className={s.trackArtists}>{currentTrack.artists.join(", ")}</p>
+                            <p className={classNames(s.trackName, isRemoteSong(currentTrack) ? s.link : "")} onClick={handleTitleClick}>{currentTrack.title}</p>
+                            <p className={s.trackArtists}>
+                                {currentTrack.artists.map((a, i) => (
+                                    <span key={a}>
+                                    <span className={isRemoteSong(currentTrack) ? s.link : ""}>{a}</span>
+                                        {i < currentTrack.artists.length - 1 ? ", " : ""}
+                                </span>
+                                ))}
+                            </p>
                         </div>
                     </>
                 )}

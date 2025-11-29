@@ -6,15 +6,22 @@ import {RootState} from "@renderer/redux/store";
 
 interface ProtectedRouteProps {
     children: ReactNode;
+    redirect?: boolean
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children, redirect = true }: ProtectedRouteProps) => {
     const location = useLocation();
     const authStatus = useSelector((state: RootState) => state.auth.status);
 
     if(!authStatus) return <LoadingPage/>;
 
-    if(authStatus === "account") return <>{children}</>
+    if(authStatus === "account") return <>{children}</>;
+
+    if(!redirect) return (
+        <div className={"pageWrapper"}>
+            <p>Only registered Dodio users can access this page!</p>
+        </div>
+    );
 
     return <Navigate to={`/login?url=${encodeURIComponent(location.pathname)}`} replace={true}/>;
 };
