@@ -5,13 +5,14 @@ import {FaBackwardStep, FaForwardStep, FaPause} from "react-icons/fa6";
 import {useEffect, WheelEvent} from "react";
 import {FiVolume1, FiVolume2, FiVolumeX} from "react-icons/fi";
 import SeekBar from "./SeekBar/SeekBar";
-import { useDebounce } from "@uidotdev/usehooks";
+import {useDebounce} from "@uidotdev/usehooks";
 import {formatTime} from "../../util/timeUtils";
 import {setVolume, setIsMuted} from "@renderer/redux/rendererPlayerSlice";
 import classNames from "classnames";
 import {HiPlay} from "react-icons/hi2";
 import {useLocation, useNavigate} from "react-router-dom";
 import {isRemoteSong} from "../../../../shared/TrackInfo";
+import {MoonLoader} from "react-spinners";
 
 const PlaybackBar = () => {
     const loc = useLocation();
@@ -21,9 +22,10 @@ const PlaybackBar = () => {
     const prefsReady = volume !== null && isMuted !== null;
     const displayVolume = prefsReady ? round2Dec(!isMuted ? volume : 0) : 1;
     const debouncedVolume = useDebounce(displayVolume, 250);
-    const {duration, currentTime, userPaused, currentTrack} = useSelector(
+    const {duration, currentTime, userPaused, currentTrack: currentTrack, pendingTrack, waitingForData} = useSelector(
         (state: RootState) => state.nativePlayer
     );
+    const track = pendingTrack ?? currentTrack;
 
     useEffect(() => {
         if (!prefsReady) return;
@@ -39,12 +41,12 @@ const PlaybackBar = () => {
             const prefs = await window.api.getPreferences();
             dispatch(setVolume(prefs.volume));
             dispatch(setIsMuted(prefs.muted));
-        }
+        };
         void load();
     }, []);
 
     useEffect(() => {
-        if(!prefsReady) return;
+        if (!prefsReady) return;
 
         window.api.setVolume(round2Dec(!isMuted ? volume : 0));
     }, [isMuted, volume]);
@@ -52,10 +54,10 @@ const PlaybackBar = () => {
     const handleDrag = (v: number) => {
         dispatch(setIsMuted(false));
         dispatch(setVolume(v));
-    }
+    };
 
     const handleWheel = (e: WheelEvent<HTMLInputElement>) => {
-        if(!prefsReady) return;
+        if (!prefsReady) return;
 
         // direction of the scroll wheel
         const delta = e.deltaY < 0 ? 0.1 : -0.1;
@@ -79,18 +81,18 @@ const PlaybackBar = () => {
 
     const nextTrack = () => {
         window.api.nextTrack();
-    }
+    };
 
     const previousTrack = () => {
         window.api.previousTrack();
-    }
+    };
 
     const handleTitleClick = () => {
-        if(currentTrack === null || !isRemoteSong(currentTrack)) return;
-        const path = `/release/${currentTrack.releaseId}`;
-        if(loc.pathname === path) return;
+        if (track === null || !isRemoteSong(track)) return;
+        const path = `/release/${track.releaseId}`;
+        if (loc.pathname === path) return;
         navigate(path);
-    }
+    };
 
     const percent = round2Dec(displayVolume * 100);
     const sliderBackground = `linear-gradient(to right, white 0%, white ${percent}%, #4c4c4c ${percent}%, #4c4c4c 100%)`;
@@ -98,18 +100,19 @@ const PlaybackBar = () => {
     return (
         <div className={s.container}>
             <div className={s.trackInfo}>
-                {currentTrack && (
+                {track && (
                     <>
                         <div className={s.trackInfoCover}>
-                            <img src={`${currentTrack.picture}?size=low`} alt={"cover"}/>
+                            <img src={`${track.picture}?size=low`} alt={"cover"}/>
                         </div>
                         <div className={s.trackInfoMeta}>
-                            <p className={classNames(s.trackName, isRemoteSong(currentTrack) ? s.link : "")} onClick={handleTitleClick}>{currentTrack.title}</p>
+                            <p className={classNames(s.trackName, isRemoteSong(track) ? s.link : "")}
+                               onClick={handleTitleClick}>{track.title}</p>
                             <p className={s.trackArtists}>
-                                {currentTrack.artists.map((a, i) => (
+                                {track.artists.map((a, i) => (
                                     <span key={a}>
-                                    <span className={isRemoteSong(currentTrack) ? s.link : ""}>{a}</span>
-                                        {i < currentTrack.artists.length - 1 ? ", " : ""}
+                                    <span className={isRemoteSong(track) ? s.link : ""}>{a}</span>
+                                        {i < track.artists.length - 1 ? ", " : ""}
                                 </span>
                                 ))}
                             </p>
@@ -119,10 +122,22 @@ const PlaybackBar = () => {
             </div>
             <div className={s.middleContainer}>
                 <div className={classNames(s.row, s.controls)}>
-                    <button className={classNames(s.btnAnim, s.backward)} onClick={() => previousTrack()}><FaBackwardStep /></button>
-                    <button className={`${s.play} ${s.btnAnim}`} onClick={() => pauseOrResume()}>{userPaused ?<HiPlay /> :
-                        <FaPause />}</button>
-                    <button className={classNames(s.btnAnim, s.forward)} onClick={() => nextTrack()}><FaForwardStep /></button>
+                    <button className={classNames(s.btnAnim, s.backward)} onClick={() => previousTrack()}>
+                        <FaBackwardStep/></button>
+                    {(waitingForData || pendingTrack && (currentTrack !== pendingTrack)) && (track && isRemoteSong(track)) ?
+                        <p className={s.controlMiddle}><MoonLoader speedMultiplier={1} color={"white"} size={25}/></p>
+                        :
+                        <button className={`${s.play} ${s.btnAnim} ${s.controlMiddle}`} onClick={() => pauseOrResume()}>
+                            {
+                                userPaused ?
+                                    <HiPlay/>
+                                    :
+                                    <FaPause/>
+                            }
+                        </button>
+                    }
+                    <button className={classNames(s.btnAnim, s.forward)} onClick={() => nextTrack()}><FaForwardStep/>
+                    </button>
                 </div>
                 <div className={s.row} id={s.middleRow}>
                     <p className={s.time}>{formatTime(Math.max(currentTime, 0))}</p>
@@ -158,6 +173,6 @@ const PlaybackBar = () => {
 
 const round2Dec = (v: number) => {
     return Math.round(v * 100) / 100;
-}
+};
 
 export default PlaybackBar;

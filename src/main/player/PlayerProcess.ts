@@ -21,9 +21,10 @@ type PlayerSession = {
     waitingForData: boolean;
     duration: number;
     pcm: Float32Array;
-    segmentIndex: Uint8Array;
+    segmentMap: Uint8Array;
     sourceType: SourceType;
     ended: boolean;
+    firstSegmentLoaded: boolean;
 };
 
 interface DeviceInformation {
@@ -162,14 +163,14 @@ export class PlayerProcess {
             let outputBuf: Buffer = this.deviceInfo.silentBuffer;
 
             if (this.session && !this.isFullyPaused() && !this.session.ended) {
-                const {readOffset, pcm, segmentIndex} = this.session;
+                const {readOffset, pcm, segmentMap} = this.session;
                 const segmentSize = this.samplesPerSegment();
                 const startSegment = Math.floor(readOffset / segmentSize);
                 const endSegment = Math.floor((readOffset + this.deviceInfo.samplesPerBuffer - 1) / segmentSize);
 
                 let allSegmentsReady = true;
-                for (let seg = startSegment; seg <= endSegment && seg < segmentIndex.length; seg++) {
-                    if (Atomics.load(segmentIndex, seg) === 0) {
+                for (let seg = startSegment; seg <= endSegment && seg < segmentMap.length; seg++) {
+                    if (Atomics.load(segmentMap, seg) === 0) {
                         allSegmentsReady = false;
                         break;
                     }
@@ -180,6 +181,12 @@ export class PlayerProcess {
                         const queuedLatencyFrames = this.getQueuedLatencyFrames();
                         this.playheadAnchorFrames = readOffset - queuedLatencyFrames;
                         this.playheadAnchorWall = Date.now();
+                    } else {
+                        // emit event for faster ui update (updates are usually only every 200ms)
+                        if(!this.session.firstSegmentLoaded) {
+                            this.notifyState();
+                            this.session.firstSegmentLoaded = true;
+                        }
                     }
 
                     const end = Math.min(readOffset + this.deviceInfo.samplesPerBuffer, pcm.length);
@@ -297,21 +304,24 @@ export class PlayerProcess {
 
 
     // === Session Management ===
-    public load(path: string, id: string, duration: number, pcm: Float32Array, segmentIndex: Uint8Array, sourceType: SourceType) {
+    public load(path: string, id: string, duration: number, pcm: Float32Array, segmentMap: Uint8Array, sourceType: SourceType) {
         if (!this.deviceInfo) return;
 
         this.playbackState = "playing";
 
+        const waitingForData = Atomics.load(segmentMap, segmentMap.length - 1) === 0;
         this.session = {
             readOffset: 0,
-            waitingForData: true,
+            waitingForData,
             duration,
             path,
             id,
             pcm,
-            segmentIndex,
+            segmentMap,
             sourceType,
-            ended: false
+            ended: false,
+            // initial safe state, this has nothing to do with firstSegment logic
+            firstSegmentLoaded: !waitingForData
         };
         this.nextTrack = null;
 

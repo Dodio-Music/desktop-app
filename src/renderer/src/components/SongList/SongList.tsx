@@ -18,7 +18,9 @@ export const SongList = <T extends BaseSongEntry>({
                                                       gridTemplateColumns = "30px 4.5fr 3fr 1.8fr 50px"}: Props<T>) => {
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
-    const {id, userPaused} = useSelector((root: RootState) => root.nativePlayer);
+    const {currentTrack, pendingTrack, userPaused} = useSelector((root: RootState) => root.nativePlayer);
+
+    const id = currentTrack?.id ?? pendingTrack?.id ?? null;
 
     const pauseOrLoadSong = useCallback((song: T) => {
         if (song.id === id) {

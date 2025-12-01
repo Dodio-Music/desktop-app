@@ -130,6 +130,7 @@ export class PlayerSession {
     }
 
     async loadTrack(track: BaseSongEntry) {
+        this.mainWindow.webContents.send("player:event", { type: "pending-track", track });
         const {
             source,
             segmentSab,

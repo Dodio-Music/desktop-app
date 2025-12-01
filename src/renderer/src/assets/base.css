@@ -123,6 +123,12 @@ img {
     height: 100%;
 }
 
+button:has(svg) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 button:focus {
     outline: none;
 }

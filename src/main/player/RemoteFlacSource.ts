@@ -39,7 +39,7 @@ export class RemoteFlacSource extends BaseAudioSource {
     }
 
     async spawnFFmpeg(startSec: number, endSec: number) {
-        if (this.DEBUG_LOG) console.log("NEW FFMPEG SPAWNED");
+        if (this.DEBUG_LOG) console.log(`[FlacStreamSource ${this.count}] NEW FFMPEG SPAWNED, START: ${startSec}, END: ${endSec}`);
 
         this.ffmpegStartSec = startSec;
         this.ffmpegEndSec = endSec;

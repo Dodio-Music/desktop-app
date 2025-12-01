@@ -41,6 +41,8 @@ export interface GenericAudioMeta {
 export type AudioMeta = FlacAudioMeta | GenericAudioMeta | RemoteFlacAudioMeta;
 
 export class AudioSourceFactory {
+    static count: number = 0;
+
     static async create(
         id: string,
         pathOrUrl: string,
@@ -94,7 +96,8 @@ export class AudioSourceFactory {
             duration: meta.duration,
             pcmSab,
             mainWindow,
-            segmentSab
+            segmentSab,
+            count: this.count
         };
 
         let source: BaseAudioSource;
@@ -112,6 +115,7 @@ export class AudioSourceFactory {
             });
         }
 
+        this.count++;
         return {source, pcmSab, segmentSab, duration: meta.duration};
     }
 

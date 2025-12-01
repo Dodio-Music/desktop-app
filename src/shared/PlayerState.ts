@@ -1,7 +1,8 @@
-import {BaseSongEntry} from "./TrackInfo.js";
+import {BaseSongEntry, RemoteSongEntry} from "./TrackInfo.js";
 
 export interface PlayerState {
     currentTrack: BaseSongEntry | null;
+    pendingTrack: BaseSongEntry | null;
     id: string | null;
     url: string | null;
     userPaused: boolean;
@@ -20,6 +21,7 @@ export interface WaveformData {
 
 export type PlayerEvent =
     | { type: "media-transition"; id: string, waveformData?: WaveformData, track: BaseSongEntry}
+    | { type: "pending-track"; id: string, track: RemoteSongEntry}
     | ({ type: "waveform-data"} & WaveformData)
     | { type: "loading-progress"; progress: number[] };
 

@@ -18,6 +18,7 @@ export interface BaseAudioSourceInit {
     pcmSab: SharedArrayBuffer;
     mainWindow: BrowserWindow;
     segmentSab: SharedArrayBuffer;
+    count: number;
 }
 
 function resolveFfmpegPath() {
@@ -62,6 +63,7 @@ export abstract class BaseAudioSource extends EventEmitter {
     public readonly outputSampleRate: number;
     public readonly duration: number;
     protected mainWindow: BrowserWindow;
+    protected count = 0;
 
     constructor(init: BaseAudioSourceInit) {
         super();
@@ -71,10 +73,10 @@ export abstract class BaseAudioSource extends EventEmitter {
         this.outputSampleRate = init.outputSampleRate;
         this.duration = init.duration;
         this.mainWindow = init.mainWindow;
-        console.log(this.ffmpegPath);
 
         this.pcm = new Float32Array(init.pcmSab);
         this.segmentMap = new Uint8Array(init.segmentSab);
+        this.count = init.count;
     }
 
     protected getSegmentMapProgress(): number[] {
@@ -118,7 +120,7 @@ export abstract class BaseAudioSource extends EventEmitter {
             this.progressInterval = null;
         }
         await this.stopFFmpeg();
-        if(this.DEBUG_LOG) console.log(`[FlacStreamSource] Cleaned up (${reason})`);
+        if(this.DEBUG_LOG) console.log(`[FlacStreamSource ${this.count}] Cleaned up (${reason})`);
         this.cancelled = true;
     }
 
@@ -218,7 +220,7 @@ export abstract class BaseAudioSource extends EventEmitter {
                     this.pcm.set(floatChunk.subarray(0, remaining), writeOffsetLocal);
                     writeOffsetLocal += remaining;
                 }
-                if(this.DEBUG_LOG) console.warn(`[FlacStreamSource] Clamped final write at ${writeOffsetLocal - remaining}/${this.pcm.length} samples (overflow of ${overflow} samples prevented)`);
+                if(this.DEBUG_LOG) console.warn(`[FlacStreamSource ${this.count}] Clamped final write at ${writeOffsetLocal - remaining}/${this.pcm.length} samples (overflow of ${overflow} samples prevented)`);
                 return;
             }
 
@@ -237,7 +239,7 @@ export abstract class BaseAudioSource extends EventEmitter {
             this.ffmpegProcess = null;
             this.stoppingManually = false;
 
-            if(this.DEBUG_LOG) console.log("FFMPEG EXITED");
+            if(this.DEBUG_LOG) console.log(`[FlacStreamSource ${this.count}] EXITED, END: ${endSec}`);
 
             this.checkIfFullyLoaded();
 

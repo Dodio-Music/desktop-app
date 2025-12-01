@@ -13,13 +13,14 @@ import {isRemoteSong} from "../../../../shared/TrackInfo";
 const HomePage = () => {
     const navigate = useNavigate();
     const {data, loading, error} = useFetchData<ReleaseDTO[]>("/api/release/all");
-    const {currentTrack, userPaused} = useSelector((state: RootState) => state.nativePlayer);
+    const {currentTrack, userPaused, pendingTrack} = useSelector((state: RootState) => state.nativePlayer);
+    const track = pendingTrack ?? currentTrack;
 
     if (loading) return <LoadingPage/>;
 
     const handleIconClick = (e: MouseEvent, release: ReleaseDTO) => {
         e.stopPropagation();
-        if (currentTrack && isRemoteSong(currentTrack) && currentTrack.releaseId === release.releaseId) {
+        if (track && isRemoteSong(track) && track.releaseId === release.releaseId) {
             window.api.pauseOrResume();
         } else {
             const releaseTracks = releaseToSongEntries(release);
@@ -43,7 +44,7 @@ const HomePage = () => {
                                 <div className={s.coverWrapper}>
                                     <img alt={"cover"} className={s.cover} src={`${t.coverArtUrl}?size=low`}/>
                                     <button className={s.play} onClick={(e) => handleIconClick(e, t)}>
-                                        {currentTrack && isRemoteSong(currentTrack) && currentTrack.releaseId === t.releaseId && !userPaused ?
+                                        {track && isRemoteSong(track) && track.releaseId === t.releaseId && !userPaused ?
                                             <FaPause size={24} className={s.pauseIcon}/>
                                             :
                                             <FaPlay size={24} className={s.playIcon}/>
