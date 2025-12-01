@@ -17,9 +17,12 @@ export default defineConfig({
                     }
                 }
             },
-            define: {
-                "process.env": defined_envs
-            }
+            define: Object.fromEntries(
+                Object.entries(defined_envs).map(([k, v]) => [
+                    `process.env.${k}`,
+                    JSON.stringify(v)
+                ])
+            )
         }
     },
     preload: {
