@@ -177,7 +177,7 @@ async function scanFolder() {
                         title: common.title || f.name.substring(0, f.name.lastIndexOf(".")) || f.name,
                         artists: common.artists || ["Unknown Artist"],
                         album: common.album || "Unknown Album",
-                        duration: metadata.format.duration || undefined,
+                        duration: metadata.format.duration ?? 0,
                         picture: pictureUrl,
                         createdAt: f.createdAt
                     }

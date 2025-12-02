@@ -32,24 +32,23 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
 
                 mainWindow.webContents.send("player:event", {
                     type: "media-transition",
-                    url: session.id,
                     ...(session.getWaveformData()?.id === session.id && { waveformData: session.getWaveformData() }),
                     track: session.getTracks().currentTrack
                 });
 
                 break;
             }
-            case "player-state": {
-                const remaining =  msg.state.duration - msg.state.currentTime;
-                if(remaining <= 5 && !session.isPreloading) {
-                    const nextTrack = queue.getNext();
-                    if(nextTrack) {
-                        session.markPreloadStarted();
-                        await session.preloadNextTrack(nextTrack);
-                    }
-                }
-                break;
-            }
+            // case "player-state": {
+            //     const remaining =  msg.state.duration - msg.state.currentTime;
+            //     if(remaining <= 5 && !session.isPreloading) {
+            //         const nextTrack = queue.getNext();
+            //         if(nextTrack) {
+            //             session.markPreloadStarted();
+            //             await session.preloadNextTrack(nextTrack);
+            //         }
+            //     }
+            //     break;
+            // }
         }
     });
 

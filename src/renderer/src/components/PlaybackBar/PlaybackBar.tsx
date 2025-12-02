@@ -22,10 +22,9 @@ const PlaybackBar = () => {
     const prefsReady = volume !== null && isMuted !== null;
     const displayVolume = prefsReady ? round2Dec(!isMuted ? volume : 0) : 1;
     const debouncedVolume = useDebounce(displayVolume, 250);
-    const {duration, currentTime, userPaused, currentTrack: currentTrack, pendingTrack, waitingForData} = useSelector(
+    const {duration, currentTime, userPaused, currentTrack: track, waitingForData} = useSelector(
         (state: RootState) => state.nativePlayer
     );
-    const track = pendingTrack ?? currentTrack;
 
     useEffect(() => {
         if (!prefsReady) return;
@@ -124,7 +123,7 @@ const PlaybackBar = () => {
                 <div className={classNames(s.row, s.controls)}>
                     <button className={classNames(s.btnAnim, s.backward)} onClick={() => previousTrack()}>
                         <FaBackwardStep/></button>
-                    {(waitingForData || pendingTrack && (currentTrack !== pendingTrack)) && (track && isRemoteSong(track)) ?
+                    {waitingForData ?
                         <p className={s.controlMiddle}><MoonLoader speedMultiplier={1} color={"white"} size={25}/></p>
                         :
                         <button className={`${s.play} ${s.btnAnim} ${s.controlMiddle}`} onClick={() => pauseOrResume()}>

@@ -13,8 +13,7 @@ import {isRemoteSong} from "../../../../shared/TrackInfo";
 const HomePage = () => {
     const navigate = useNavigate();
     const {data, loading, error} = useFetchData<ReleaseDTO[]>("/api/release/all");
-    const {currentTrack, userPaused, pendingTrack} = useSelector((state: RootState) => state.nativePlayer);
-    const track = pendingTrack ?? currentTrack;
+    const {currentTrack: track, userPaused} = useSelector((state: RootState) => state.nativePlayer);
 
     if (loading) return <LoadingPage/>;
 

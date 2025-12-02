@@ -3,7 +3,6 @@ import {parentPort} from "node:worker_threads";
 import {clearInterval} from "node:timers";
 import {activePreset} from "../../shared/latencyPresets.js";
 import {SEGMENT_DURATION} from "../../shared/TrackInfo.js";
-import {SourceType} from "../../shared/PlayerState.js";
 import os from "node:os";
 
 const IPC_UPDATE_INTERVAL = 200;
@@ -16,13 +15,11 @@ try {
 
 type PlayerSession = {
     id: string;
-    path: string;
     readOffset: number;
     waitingForData: boolean;
     duration: number;
     pcm: Float32Array;
     segmentMap: Uint8Array;
-    sourceType: SourceType;
     ended: boolean;
     firstSegmentLoaded: boolean;
 };
@@ -42,14 +39,12 @@ export interface OutputDevice {
 
 export type StateMessage = {
     id: string;
-    url: string;
     currentTime: number;
     waitingForData: boolean;
     userPaused: boolean;
     duration: number;
     latency: number;
     playbackRunning: boolean;
-    sourceType: SourceType;
 };
 
 export class PlayerProcess {
@@ -72,6 +67,7 @@ export class PlayerProcess {
     private nextTrack: LoadPayload | null = null;
 
     private stateLoopInterval: NodeJS.Timeout | null = null;
+    private sendStateUpdates = true;
 
     private playheadAnchorFrames = 0;
     private playheadAnchorWall = Date.now();
@@ -198,7 +194,7 @@ export class PlayerProcess {
                             this.session.readOffset = pcm.length;
                             this.notifyState();
                         } else {
-                            this.load(next.path, next.id, next.duration, new Float32Array(next.pcmSab), new Uint8Array(next.segmentSab), next.sourceType);
+                            this.load(next.id, new Float32Array(next.pcmSab), new Uint8Array(next.segmentSab), next.duration);
                             continue;
                         }
                     }
@@ -304,7 +300,7 @@ export class PlayerProcess {
 
 
     // === Session Management ===
-    public load(path: string, id: string, duration: number, pcm: Float32Array, segmentMap: Uint8Array, sourceType: SourceType) {
+    public load(id: string, pcm: Float32Array, segmentMap: Uint8Array, duration: number) {
         if (!this.deviceInfo) return;
 
         this.playbackState = "playing";
@@ -314,11 +310,9 @@ export class PlayerProcess {
             readOffset: 0,
             waitingForData,
             duration,
-            path,
             id,
             pcm,
             segmentMap,
-            sourceType,
             ended: false,
             // initial safe state, this has nothing to do with firstSegment logic
             firstSegmentLoaded: !waitingForData
@@ -328,6 +322,8 @@ export class PlayerProcess {
         const queuedLatencyFrames = this.getQueuedLatencyFrames();
         this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
         this.playheadAnchorWall = Date.now();
+
+        this.sendStateUpdates = true;
 
         this.notifyState("media-transition");
     }
@@ -445,7 +441,7 @@ export class PlayerProcess {
         this.stopStateLoop();
 
         this.stateLoopInterval = setInterval(() => {
-            if (!this.isFullyPaused()) this.notifyState();
+            if (!this.isFullyPaused() && this.sendStateUpdates) this.notifyState();
         }, IPC_UPDATE_INTERVAL);
     }
 
@@ -454,6 +450,10 @@ export class PlayerProcess {
             clearInterval(this.stateLoopInterval);
             this.stateLoopInterval = null;
         }
+    }
+
+    public setStateUpdates(sendStateUpdates: boolean) {
+        this.sendStateUpdates = sendStateUpdates;
     }
 
     private notifyState(type?: string) {
@@ -479,13 +479,11 @@ export class PlayerProcess {
 
         const state: StateMessage = {
             id: this.session.id,
-            url: this.session.path,
             currentTime: currentTimeSeconds,
             waitingForData: this.session.waitingForData,
             userPaused: this.isPausingOrPaused(),
             playbackRunning: !this.session.waitingForData && !this.isFullyPaused(),
             duration: this.session.duration,
-            sourceType: this.session.sourceType,
             latency: latencySeconds
         };
 
@@ -523,11 +521,9 @@ export interface IMsg<T> {
 
 interface LoadPayload {
     id: string;
-    path: string;
     duration: number;
     pcmSab: SharedArrayBuffer;
     segmentSab: SharedArrayBuffer;
-    sourceType: SourceType;
 }
 
 parentPort?.on("message", (msg: IMsg<unknown>) => {
@@ -543,7 +539,7 @@ parentPort?.on("message", (msg: IMsg<unknown>) => {
         }
         case "load": {
             const info = msg.payload as LoadPayload;
-            playerProcess.load(info.path, info.id, info.duration, new Float32Array(info.pcmSab), new Uint8Array(info.segmentSab), info.sourceType);
+            playerProcess.load(info.id, new Float32Array(info.pcmSab), new Uint8Array(info.segmentSab), info.duration);
             break;
         }
         case "set-volume": {
@@ -569,6 +565,11 @@ parentPort?.on("message", (msg: IMsg<unknown>) => {
         case "load-next": {
             const info = msg.payload as LoadPayload;
             playerProcess.setNext(info);
+            break;
+        }
+        case "set-updates": {
+            const sendUpdates = msg.payload as boolean;
+            playerProcess.setStateUpdates(sendUpdates);
         }
     }
 });

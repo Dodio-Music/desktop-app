@@ -5,6 +5,7 @@ import {Worker} from "node:worker_threads";
 import {IMsg, OutputDevice} from "./PlayerProcess.js";
 import {AudioSourceFactory} from "./AudioSourceFactory.js";
 import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../shared/TrackInfo.js";
+import {PlayerState} from "../../shared/PlayerState.js";
 
 export class PlayerSession {
     private source: BaseAudioSource | null = null;
@@ -85,6 +86,21 @@ export class PlayerSession {
         return this.waveformData;
     }
 
+    sendPendingData(duration: number) {
+        const data: Partial<PlayerState> = {
+            currentTrack: this.getTracks().currentTrack,
+            duration,
+            waitingForData: true,
+            currentTime: 0,
+            latency: 0,
+            playbackRunning: false
+        }
+        this.mainWindow.webContents.send("player:event", {
+            type: "pending-data",
+            data
+        });
+    }
+
     async createTrackBuffers(track: BaseSongEntry) {
         const devInfo = await this.getDeviceInfoFromWorker();
         let url = "";
@@ -109,7 +125,7 @@ export class PlayerSession {
         source.once("waveform:data", (data) => this.setWaveformData(data));
         void source.start();
 
-        return {pcmSab, segmentSab, devInfo, source, duration, pathOrUrl};
+        return {pcmSab, segmentSab, devInfo, source, duration};
     }
 
     private async getDeviceInfoFromWorker(): Promise<OutputDevice> {
@@ -130,36 +146,36 @@ export class PlayerSession {
     }
 
     async loadTrack(track: BaseSongEntry) {
-        this.mainWindow.webContents.send("player:event", { type: "pending-track", track });
+        this.playerProcess.postMessage({type: "set-updates", payload: false});
+
+        this.track = track;
+        this.preloadSource?.cancel();
+        this.preloadSource = null;
+
+        this.sendPendingData(this.track.duration);
+
         const {
             source,
             segmentSab,
             pcmSab,
             devInfo,
-            duration,
-            pathOrUrl
+            duration
         } = await this.createTrackBuffers(track);
         this.setSources(source, null);
-        this.track = track;
-        this.preloadSource?.cancel();
-        this.preloadSource = null;
 
         this.playerProcess.postMessage({
             type: "load",
             payload: {
                 pcmSab,
-                path: pathOrUrl,
-                id: track.id,
-                duration,
                 devInfo,
+                duration,
                 segmentSab,
-                sourceType: track.type
             }
         });
     };
 
     async preloadNextTrack(track: BaseSongEntry) {
-        const {pcmSab, segmentSab, devInfo, source, duration, pathOrUrl} =
+        const {pcmSab, segmentSab, devInfo, source, duration} =
             await this.createTrackBuffers(track);
 
         this.preloadSource = source;
@@ -170,7 +186,6 @@ export class PlayerSession {
             type: "load-next",
             payload: {
                 pcmSab,
-                path: pathOrUrl,
                 id: track.id,
                 duration,
                 devInfo,

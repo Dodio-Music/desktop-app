@@ -3,7 +3,7 @@ import {createRoot} from "react-dom/client";
 import App from "./App";
 import {HashRouter} from "react-router-dom";
 import {store} from "./redux/store";
-import {updatePlayerState, setCurrentTrack, setPendingTrack} from "./redux/nativePlayerSlice";
+import {updatePlayerState, setCurrentTrack, setPendingData} from "./redux/nativePlayerSlice";
 import {Provider} from "react-redux";
 import {setAuthStatus} from "@renderer/redux/authSlice";
 import {isLocalSong} from "../../shared/TrackInfo";
@@ -23,22 +23,25 @@ window.api.onPlayerUpdate((state) => {
 });
 
 window.api.onPlayerEvent((event) => {
-    if(event.type === "pending-track") {
-        store.dispatch(setPendingTrack(event.track));
-    } else if(event.type === "media-transition") {
-        if(isLocalSong(event.track)) {
-            const localTrack = event.track;
-            const track = {
-                ...localTrack,
-                createdAt: typeof event.track.createdAt === "string"
-                    ? event.track.createdAt
-                    : event.track.createdAt?.toISOString()
+    switch(event.type) {
+        case "media-transition": {
+            if(isLocalSong(event.track)) {
+                const localTrack = event.track;
+                const track = {
+                    ...localTrack,
+                    createdAt: typeof event.track.createdAt === "string"
+                        ? event.track.createdAt
+                        : event.track.createdAt?.toISOString()
+                }
+                store.dispatch(setCurrentTrack(track));
+            } else {
+                store.dispatch(setCurrentTrack(event.track));
             }
-            store.dispatch(setCurrentTrack(track));
-        } else {
-            store.dispatch(setCurrentTrack(event.track));
+            break;
         }
-        store.dispatch(setPendingTrack(null));
+        case "pending-data": {
+            store.dispatch(setPendingData(event.data));
+        }
     }
 });
 

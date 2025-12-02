@@ -6,7 +6,7 @@ export interface BaseSongEntry {
     title: string;
     artists: string[];
     album: string;
-    duration?: number;
+    duration: number;
     picture?: string;
     type: SourceType;
 }

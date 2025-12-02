@@ -3,7 +3,7 @@ import {MouseEvent, useEffect, useRef, useState} from "react";
 import {formatTime} from "../../../util/timeUtils";
 import {useSelector} from "react-redux";
 import {RootState} from "../../../redux/store";
-import {SEGMENT_DURATION} from "../../../../../shared/TrackInfo";
+import {isRemoteSong, SEGMENT_DURATION} from "../../../../../shared/TrackInfo";
 import {useWaveform} from "@renderer/components/PlaybackBar/SeekBar/useWaveform";
 import {WaveformData} from "../../../../../shared/PlayerState";
 
@@ -20,9 +20,8 @@ const SeekBar = () => {
         latency,
         duration,
         currentTime,
-        sourceType,
         playbackRunning,
-        id
+        currentTrack
     } = useSelector((state: RootState) => state.nativePlayer);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -36,12 +35,12 @@ const SeekBar = () => {
     const dragTimeRef = useRef<number | null>(null);
     const lastSeekRef = useRef<number | null>(null);
 
-    const displayStyle = sourceType === "remote"
+    const displayStyle = currentTrack && isRemoteSong(currentTrack)
         ? SeekBarDisplayStyle.DEFAULT
         : wantedDisplayStyle;
     const seekbarHeight = displayStyle === SeekBarDisplayStyle.WAVEFORM ? 25 : 5;
 
-    const waveformRef = useWaveform(waveformData, seekbarWidth, seekbarHeight, id);
+    const waveformRef = useWaveform(waveformData, seekbarWidth, seekbarHeight, currentTrack?.id ?? null);
     const lastIpcTimeRef = useRef<number>(0);
     const lastIpcTimestampRef = useRef<number>(0);
     const rafRef = useRef<number | null>(null);
