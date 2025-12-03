@@ -17,17 +17,7 @@ const nativePlayerSlice = createSlice({
     initialState,
     reducers: {
         updatePlayerState(state, action: PayloadAction<PlayerState>) {
-            const payload = action.payload;
-
-            // only updated currenttime if floor different (to avoid unnecessary rerenders)
-            const newCurrentTime = Math.floor(payload.currentTime);
-            const oldCurrentTime = Math.floor(state.currentTime);
-
-            return {
-                ...state,
-                ...payload,
-                currentTime: newCurrentTime !== oldCurrentTime ? payload.currentTime : state.currentTime
-            };
+            return {...state, ...action.payload};
         },
         setCurrentTrack(state, action: PayloadAction<BaseSongEntry>) {
             state.currentTrack = action.payload;
