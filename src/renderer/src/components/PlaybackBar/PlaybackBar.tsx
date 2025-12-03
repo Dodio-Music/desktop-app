@@ -1,12 +1,11 @@
 import s from "./PlaybackBar.module.css";
-import {useDispatch, useSelector} from "react-redux";
+import {shallowEqual, useDispatch, useSelector} from "react-redux";
 import {AppDispatch, RootState} from "../../redux/store";
 import {FaBackwardStep, FaForwardStep, FaPause} from "react-icons/fa6";
 import {useEffect, WheelEvent} from "react";
 import {FiVolume1, FiVolume2, FiVolumeX} from "react-icons/fi";
 import SeekBar from "./SeekBar/SeekBar";
 import {useDebounce} from "@uidotdev/usehooks";
-import {formatTime} from "../../util/timeUtils";
 import {setVolume, setIsMuted} from "@renderer/redux/rendererPlayerSlice";
 import classNames from "classnames";
 import {HiPlay} from "react-icons/hi2";
@@ -22,15 +21,20 @@ const PlaybackBar = () => {
     const prefsReady = volume !== null && isMuted !== null;
     const displayVolume = prefsReady ? round2Dec(!isMuted ? volume : 0) : 1;
     const debouncedVolume = useDebounce(displayVolume, 250);
-    const {duration, currentTime, userPaused, currentTrack: track, waitingForData} = useSelector(
-        (state: RootState) => state.nativePlayer
+    const { userPaused, waitingForData, currentTrack: track } = useSelector(
+        (state: RootState) => ({
+            userPaused: state.nativePlayer.userPaused,
+            waitingForData: state.nativePlayer.waitingForData,
+            currentTrack: state.nativePlayer.currentTrack
+        }),
+        shallowEqual
     );
 
     useEffect(() => {
         if (!prefsReady) return;
 
         window.api.setPreferences({
-            volume,
+            volume: debouncedVolume,
             muted: isMuted
         });
     }, [debouncedVolume, isMuted]);
@@ -138,11 +142,7 @@ const PlaybackBar = () => {
                     <button className={classNames(s.btnAnim, s.forward)} onClick={() => nextTrack()}><FaForwardStep/>
                     </button>
                 </div>
-                <div className={s.row} id={s.middleRow}>
-                    <p className={s.time}>{formatTime(Math.max(currentTime, 0))}</p>
-                    <SeekBar/>
-                    <p className={s.time}>{formatTime(duration)}</p>
-                </div>
+                <SeekBar/>
             </div>
             <div className={s.rightContainer}>
                 <div className={s.volumeControl}>

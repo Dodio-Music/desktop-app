@@ -1,7 +1,7 @@
 import s from "../PlaybackBar.module.css";
 import {MouseEvent, useEffect, useRef, useState} from "react";
 import {formatTime} from "../../../util/timeUtils";
-import {useSelector} from "react-redux";
+import {shallowEqual, useSelector} from "react-redux";
 import {RootState} from "../../../redux/store";
 import {isRemoteSong, SEGMENT_DURATION} from "../../../../../shared/TrackInfo";
 import {useWaveform} from "@renderer/components/PlaybackBar/SeekBar/useWaveform";
@@ -16,13 +16,11 @@ const seekbarWidth = 600;
 const showLoadingProcess = false;
 
 const SeekBar = () => {
-    const {
-        latency,
-        duration,
-        currentTime,
-        playbackRunning,
-        currentTrack
-    } = useSelector((state: RootState) => state.nativePlayer);
+    const latency = useSelector((state: RootState) => state.nativePlayer.latency);
+    const duration = useSelector((state: RootState) => state.nativePlayer.duration);
+    const currentTime = useSelector((state: RootState) => state.nativePlayer.currentTime);
+    const playbackRunning = useSelector((state: RootState) => state.nativePlayer.playbackRunning);
+    const currentTrack = useSelector((state: RootState) => state.nativePlayer.currentTrack, shallowEqual);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const durationRef = useRef<number>(duration);
@@ -56,7 +54,7 @@ const SeekBar = () => {
 
     useEffect(() => {
         const unsub = window.api.onPlayerEvent((event) => {
-            switch(event.type) {
+            switch (event.type) {
                 case "loading-progress":
                     loadingProgressRef.current = event.progress;
                     break;
@@ -196,28 +194,32 @@ const SeekBar = () => {
     };
 
     return (
-        <div
-            style={{width: seekbarWidth, padding: displayStyle === SeekBarDisplayStyle.WAVEFORM ? 0 : "10px 0"}}
-            className={s.seekBar}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            onMouseDown={handleMouseDown}
-            onMouseMove={(e) => {
-                updateHover(e.clientX, false);
-            }}
-            ref={barRef}>
-            <div className={s.barWrapper} style={{height: seekbarHeight + "px"}}>
-                <canvas className={s.canvas} ref={canvasRef} width={seekbarWidth} height={seekbarHeight + "px"}
-                        style={displayStyle === SeekBarDisplayStyle.WAVEFORM ? {backgroundColor: "transparent"} : {borderRadius: "2px"}}/>
-                {(isHovering || dragTimeRef.current) && hoverTimeRef.current !== null && (
-                    <div
-                        className={s.tooltip}
-                        style={{left: hoverX}}
-                    >
-                        {formatTime(hoverTimeRef.current)}
-                    </div>
-                )}
+        <div className={s.row} id={s.middleRow}>
+            <p className={s.time}>{formatTime(Math.max(currentTime, 0))}</p>
+            <div
+                style={{width: seekbarWidth, padding: displayStyle === SeekBarDisplayStyle.WAVEFORM ? 0 : "10px 0"}}
+                className={s.seekBar}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onMouseDown={handleMouseDown}
+                onMouseMove={(e) => {
+                    updateHover(e.clientX, false);
+                }}
+                ref={barRef}>
+                <div className={s.barWrapper} style={{height: seekbarHeight + "px"}}>
+                    <canvas className={s.canvas} ref={canvasRef} width={seekbarWidth} height={seekbarHeight + "px"}
+                            style={displayStyle === SeekBarDisplayStyle.WAVEFORM ? {backgroundColor: "transparent"} : {borderRadius: "2px"}}/>
+                    {(isHovering || dragTimeRef.current) && hoverTimeRef.current !== null && (
+                        <div
+                            className={s.tooltip}
+                            style={{left: hoverX}}
+                        >
+                            {formatTime(hoverTimeRef.current)}
+                        </div>
+                    )}
+                </div>
             </div>
+            <p className={s.time}>{formatTime(duration)}</p>
         </div>
     );
 };
