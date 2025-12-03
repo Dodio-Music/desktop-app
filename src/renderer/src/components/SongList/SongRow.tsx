@@ -7,9 +7,9 @@ interface RowProps<T extends BaseSongEntry> {
     index: number,
     song: T,
     slots: SongRowSlot<T>[];
-    selectedRow?: string;
+    isSelected: boolean;
     setSelectedRow: (name?: string) => void;
-    currentTrackId: string | null;
+    isActive: boolean;
     userPaused: boolean;
     pauseOrLoadSong: (song: T) => void;
     gridTemplateColumns: string;
@@ -19,14 +19,13 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
                                                           index,
                                                           song,
                                                           setSelectedRow,
-                                                          selectedRow,
+                                                          isSelected,
                                                           userPaused,
-                                                          currentTrackId,
+                                                          isActive,
                                                           pauseOrLoadSong,
                                                           slots,
                                                           gridTemplateColumns
                                                       }: RowProps<T>) {
-    const isActive = song.id === currentTrackId;
 
     const handlePlay = useCallback((song: T) => pauseOrLoadSong(song), [pauseOrLoadSong]);
 
@@ -34,7 +33,7 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
     return (
         <div
             data-row={"true"}
-            id={selectedRow === song.id ? s.activeRow : ""}
+            id={isSelected ? s.activeRow : ""}
             className={rowClass}
             style={{gridTemplateColumns}}
             onClick={(e) => {

@@ -1,8 +1,8 @@
-import {useSelector} from "react-redux";
+import {shallowEqual, useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 import {SongRow} from "@renderer/components/SongList/SongRow";
 import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../../../shared/TrackInfo";
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import s from "./SongList.module.css";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
 
@@ -15,22 +15,31 @@ interface Props<T extends BaseSongEntry> {
 export const SongList = <T extends BaseSongEntry>({
                                                       songs,
                                                       slots,
-                                                      gridTemplateColumns = "30px 4.5fr 3fr 1.8fr 50px"}: Props<T>) => {
+                                                      gridTemplateColumns = "30px 4.5fr 3fr 1.8fr 50px"
+                                                  }: Props<T>) => {
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
-    const {currentTrack, userPaused} = useSelector((root: RootState) => root.nativePlayer);
+    const currentTrack = useSelector((root: RootState) => root.nativePlayer.currentTrack, shallowEqual);
+    const userPaused = useSelector((root: RootState) => root.nativePlayer.userPaused);
 
     const id = currentTrack?.id ?? null;
 
+    const memoSlots = useMemo(() => slots, [slots]);
+    const setSelectedRowCallback = useCallback((id?: string) => setSelectedRow(id), []);
+    const currentTrackRef = useRef(currentTrack);
+
+    useEffect(() => {
+        currentTrackRef.current = currentTrack;
+    }, [currentTrack]);
+
     const pauseOrLoadSong = useCallback((song: T) => {
-        if (song.id === id) {
+        if (song.id === currentTrackRef.current?.id) {
             window.api.pauseOrResume();
+        } else {
+            if (isLocalSong(song)) window.api.loadTrack(song, songs);
+            else if (isRemoteSong(song)) window.api.loadTrackRemote(song, songs);
         }
-        else {
-            if(isLocalSong(song)) window.api.loadTrack(song, songs);
-            else if(isRemoteSong(song)) window.api.loadTrackRemote(song, songs);
-        }
-    }, [id, songs]);
+    }, [songs]);
 
     // deselect handler -> clicking anywhere results in a song deselect
     useEffect(() => {
@@ -64,20 +73,24 @@ export const SongList = <T extends BaseSongEntry>({
                 ))}
             </div>
             <div className={s.divider}/>
-            {songs.map((song, index) => (
-                <SongRow
-                    key={song.id}
-                    index={index}
-                    song={song}
-                    currentTrackId={id}
-                    userPaused={userPaused}
-                    gridTemplateColumns={gridTemplateColumns}
-                    pauseOrLoadSong={pauseOrLoadSong}
-                    selectedRow={selectedRow}
-                    setSelectedRow={setSelectedRow}
-                    slots={slots}
-                />
-            ))}
+            {songs.map((song, index) => {
+                const isActive = song.id === id;
+                const isSelected = song.id === selectedRow;
+                return (
+                    <SongRow
+                        key={song.id}
+                        index={index}
+                        song={song}
+                        userPaused={userPaused}
+                        gridTemplateColumns={gridTemplateColumns}
+                        pauseOrLoadSong={pauseOrLoadSong}
+                        isActive={isActive}
+                        isSelected={isSelected}
+                        setSelectedRow={setSelectedRowCallback}
+                        slots={memoSlots}
+                    />
+                );
+            })}
         </div>
     );
 };
