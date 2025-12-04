@@ -28,7 +28,7 @@ function App() {
                 containerClassName={s.toast}
                 reverseOrder={false}
             />
-            <div className={s.appContainer} data-theme="dark">
+            <div className={s.appContainer} data-theme="purple">
                 <Titlebar zoomLevel={Math.round(zoomFactor * 100)}/>
                 <div className={s.displayContainer}>
                     <div className={s.mainContainer}>

@@ -1,3 +1,15 @@
+:root{
+    /* themes */
+    --color-bg: #111112;
+    --color-bar: #070707;
+    --color-panel: #171719;
+    --color-text-primary: #E5E5E7;
+    --color-text-secondary: #9B9BA0;
+    --color-accent-primary: #DC143C ;
+    --color-accent-hover: #FF1E56 ;
+    --color-section-glow: #DC143C33 ;
+    --color-border: #2E2E32 ;
+}
 .displayContainer {
     position: relative;
     flex: 1;
@@ -26,6 +38,8 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
+
+
 }
 
 /* themes */
