@@ -2,32 +2,36 @@
     padding: 10px;
     background-color: var(--color-panel);
     height: 100%;
-}
-
-.main button {
-    font-size: 1.15rem;
     width: 100%;
-    font-weight: 500;
-    background-color: transparent;
-    border: none;
-    border-radius: 8px;
-    color: #ffffff;
-    text-align: left;
-    padding: 13px;
-    cursor: pointer;
-    transition: 0.1s;
-}
+    overflow-x: hidden;
 
-.main button:hover,
-.main button.active {
-    background-color: rgb(255, 255, 255, 0.12);
-}
+    button {
+        font-size: 1.1rem;
+        width: 100%;
+        font-weight: 500;
+        background-color: transparent;
+        border: none;
+        border-radius: 8px;
+        color: #ffffff;
+        text-align: left;
+        padding: 13px 0 13px 8px;
+        cursor: pointer;
+        transition: 0.1s;
+        text-wrap: nowrap;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        display: grid;
+        grid-template-columns: 2vw 1fr;
+    }
 
-.main button:hover svg,
-.main button.active svg {
-    color: #ffffff;
-}
+    button:hover, button.active {
+        background-color: rgb(255, 255, 255, 0.12);
 
+        svg {
+            color: #ffffff;
+        }
+    }
+}
 .category {
     margin-top: 25px;
     font-weight: 700;

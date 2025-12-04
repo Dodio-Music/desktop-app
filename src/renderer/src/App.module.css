@@ -10,6 +10,15 @@
     --color-section-glow: #DC143C33 ;
     --color-border: #2E2E32 ;
 }
+
+.panelContainer {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
 .displayContainer {
     position: relative;
     flex: 1;

@@ -9,7 +9,8 @@ import {useNavigationShortcuts} from "./hooks/useNavigationShortcuts";
 import {Toaster} from "react-hot-toast";
 import {useShortcuts} from "@renderer/hooks/useShortcuts";
 import {ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
-import {useRef} from "react";
+import {useRef, useState} from "react";
+import CollapsedSidebar from "@renderer/layout/Sidebar/CollapsedSidebar";
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
     useShortcuts();
 
     const leftPanelRef = useRef<ImperativePanelHandle>(null);
+    const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
 
     return (
         <>
@@ -36,21 +38,28 @@ function App() {
             <div className={s.appContainer} data-theme="purple">
                 <Titlebar zoomLevel={Math.round(zoomFactor * 100)}/>
                 <div className={s.displayContainer}>
-                    <PanelGroup className={s.mainContainer} direction={"horizontal"} autoSaveId="mainPanelStructure">
-
-                        <Panel ref={leftPanelRef} collapsible={true} defaultSize={20} minSize={10} maxSize={30}>
-                            <Sidebar/>
-                        </Panel>
-                        <PanelResizeHandle className={s.resizeHandle} />
-                        <Panel>
-                            <ViewBrowser/>
-                        </Panel>
-                        <PanelResizeHandle className={s.resizeHandle} />
-                        <Panel collapsible={true} defaultSize={10} maxSize={20} minSize={8}>
-                            <div className={s.songInfo}></div>
-                        </Panel>
-                    </PanelGroup>
-
+                    <div className={s.panelContainer}>
+                        {leftPanelCollapsed && <CollapsedSidebar/>}
+                        <PanelGroup className={s.mainContainer} direction={"horizontal"}
+                                    autoSaveId="mainPanelStructure">
+                            <Panel order={2} onCollapse={() => setLeftPanelCollapsed(true)}
+                                   onExpand={() => setLeftPanelCollapsed(false)}
+                                   className={s.panel} ref={leftPanelRef}
+                                   collapsible defaultSize={20} minSize={15} maxSize={30}
+                            >
+                                <Sidebar/>
+                            </Panel>
+                            <PanelResizeHandle className={s.resizeHandle}/>
+                            <Panel order={3} className={s.panel}>
+                                <ViewBrowser/>
+                            </Panel>
+                            <PanelResizeHandle className={s.resizeHandle}/>
+                            <Panel order={4} className={s.panel} collapsible={true} defaultSize={10} maxSize={20}
+                                   minSize={8}>
+                                <div className={s.songInfo}></div>
+                            </Panel>
+                        </PanelGroup>
+                    </div>
                     <PlaybackBar/>
                 </div>
             </div>
