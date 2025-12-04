@@ -35,6 +35,10 @@
     min-height: 0;
 }
 
+.panel {
+    overflow-y: auto !important;
+}
+
 .songInfo {
     width: 300px;
     display: none;
