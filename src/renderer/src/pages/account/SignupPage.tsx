@@ -34,7 +34,7 @@ const SignupPage = () => {
 
         setButtonClickable(true);
 
-        toast.success("Successfully created account!");
+        toast.success("Successfully created account! Please verify your email before logging in.");
         navigate("/login", {replace: true});
     }
 
