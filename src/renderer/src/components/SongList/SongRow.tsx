@@ -2,6 +2,8 @@ import s from "./SongList.module.css";
 import {BaseSongEntry} from "../../../../shared/TrackInfo";
 import React, {JSX, useCallback} from "react";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
+import {useSelector} from "react-redux";
+import {RootState} from "@renderer/redux/store";
 
 interface RowProps<T extends BaseSongEntry> {
     index: number,
@@ -10,7 +12,6 @@ interface RowProps<T extends BaseSongEntry> {
     isSelected: boolean;
     setSelectedRow: (name?: string) => void;
     isActive: boolean;
-    userPaused: boolean;
     pauseOrLoadSong: (song: T) => void;
     gridTemplateColumns: string;
 }
@@ -20,13 +21,12 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
                                                           song,
                                                           setSelectedRow,
                                                           isSelected,
-                                                          userPaused,
                                                           isActive,
                                                           pauseOrLoadSong,
                                                           slots,
                                                           gridTemplateColumns
                                                       }: RowProps<T>) {
-
+    const userPaused = useSelector((root: RootState) => (isActive ? root.nativePlayer.userPaused : false));
     const handlePlay = useCallback((song: T) => pauseOrLoadSong(song), [pauseOrLoadSong]);
 
     const rowClass = `${s.songRow} ${s.grid}`;

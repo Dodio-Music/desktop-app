@@ -20,26 +20,29 @@ export const SongList = <T extends BaseSongEntry>({
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
     const currentTrack = useSelector((root: RootState) => root.nativePlayer.currentTrack, shallowEqual);
-    const userPaused = useSelector((root: RootState) => root.nativePlayer.userPaused);
-
-    const id = currentTrack?.id ?? null;
+    const currentTrackRef = useRef<BaseSongEntry | null>(null);
 
     const memoSlots = useMemo(() => slots, [slots]);
     const setSelectedRowCallback = useCallback((id?: string) => setSelectedRow(id), []);
-    const currentTrackRef = useRef(currentTrack);
 
     useEffect(() => {
         currentTrackRef.current = currentTrack;
     }, [currentTrack]);
 
+    const songsRef = useRef(songs);
+    useEffect(() => {
+        songsRef.current = songs;
+    }, [songs]);
+
     const pauseOrLoadSong = useCallback((song: T) => {
         if (song.id === currentTrackRef.current?.id) {
             window.api.pauseOrResume();
         } else {
-            if (isLocalSong(song)) window.api.loadTrack(song, songs);
-            else if (isRemoteSong(song)) window.api.loadTrackRemote(song, songs);
+            const list = songsRef.current;
+            if (isLocalSong(song)) window.api.loadTrack(song, list);
+            else if (isRemoteSong(song)) window.api.loadTrackRemote(song, list);
         }
-    }, [songs]);
+    }, []);
 
     // deselect handler -> clicking anywhere results in a song deselect
     useEffect(() => {
@@ -74,14 +77,13 @@ export const SongList = <T extends BaseSongEntry>({
             </div>
             <div className={s.divider}/>
             {songs.map((song, index) => {
-                const isActive = song.id === id;
+                const isActive = song.id === currentTrackRef.current?.id;
                 const isSelected = song.id === selectedRow;
                 return (
                     <SongRow
                         key={song.id}
                         index={index}
                         song={song}
-                        userPaused={userPaused}
                         gridTemplateColumns={gridTemplateColumns}
                         pauseOrLoadSong={pauseOrLoadSong}
                         isActive={isActive}
