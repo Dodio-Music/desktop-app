@@ -12,6 +12,7 @@ import {HiPlay} from "react-icons/hi2";
 import {useLocation, useNavigate} from "react-router-dom";
 import {isRemoteSong} from "../../../../shared/TrackInfo";
 import {MoonLoader} from "react-spinners";
+import placeholder from "../../../../../resources/img-placeholder-128x128.svg";
 
 const PlaybackBar = () => {
     const loc = useLocation();
@@ -106,7 +107,7 @@ const PlaybackBar = () => {
                 {track && (
                     <>
                         <div className={s.trackInfoCover}>
-                            <img src={`${track.picture}?size=low`} alt={"cover"}/>
+                            <img src={track.picture ? `${track.picture}?size=low` : placeholder} alt={"cover"}/>
                         </div>
                         <div className={s.trackInfoMeta}>
                             <p className={classNames(s.trackName, isRemoteSong(track) ? s.link : "")}

@@ -30,11 +30,8 @@ const playRow = <T extends BaseSongEntry>(): SongRowSlot<T> => ({
     render: ({isActive, userPaused, handlePlay, index, song}) => (
         <div className={s.trackNumberWrapper}>
             <p className={classNames(s.trackNumber, isActive && s.playing)}>{index + 1}</p>
-            <button className={s.playButton} onClick={(e) => {
-                e.stopPropagation();
-                handlePlay(song);
-            }}>
-                {isActive && !userPaused ? <FaPause size={23}/> : <FaPlay size={19}/>}
+            <button className={s.playButton} onClick={() => handlePlay(song)}>
+                {isActive && !userPaused ? <FaPause size={26}/> : <FaPlay size={24}/>}
             </button>
         </div>
     )

@@ -40,7 +40,10 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
                 e.stopPropagation();
                 setSelectedRow(song.id);
             }}
-            onDoubleClick={() => handlePlay(song)}
+            onDoubleClick={(e) => {
+                if ((e.target as HTMLElement).closest("button")) return;
+                handlePlay(song);
+            }}
         >
             {slots.map((slot, i) => (
                 <div key={i} className={s.colWrapper}>

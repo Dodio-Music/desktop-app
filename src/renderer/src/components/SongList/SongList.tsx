@@ -1,4 +1,4 @@
-import {shallowEqual, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 import {SongRow} from "@renderer/components/SongList/SongRow";
 import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../../../shared/TrackInfo";
@@ -19,7 +19,7 @@ export const SongList = <T extends BaseSongEntry>({
                                                   }: Props<T>) => {
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
-    const currentTrack = useSelector((root: RootState) => root.nativePlayer.currentTrack, shallowEqual);
+    const currentTrack = useSelector((root: RootState) => root.nativePlayer.currentTrack);
     const currentTrackRef = useRef<BaseSongEntry | null>(null);
 
     const memoSlots = useMemo(() => slots, [slots]);

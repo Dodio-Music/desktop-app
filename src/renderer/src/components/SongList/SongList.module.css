@@ -132,7 +132,7 @@
 }
 
 .playButton {
-    margin-right: 2px;
+    height: 100%;
     position: absolute;
     display: flex;
     align-items: center;
@@ -141,11 +141,26 @@
     right: 0;
     background: none;
     border: none;
-    color: white;
     text-align: center;
     font-size: 1.2rem;
     opacity: 0;
     padding: 5px;
+}
+
+.playButton svg {
+    padding: 2px;
+    color: white;
+    transition: 0.1s color;
+    transform: translateX(-2px);
+}
+
+.playButton svg:hover {
+    color: #d8d8d8;
+}
+
+.playButton svg:active {
+    transition: 0s color;
+    color: #8a8a8a;
 }
 
 .trackAlbum {
