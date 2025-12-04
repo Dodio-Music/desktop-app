@@ -71,6 +71,7 @@ const LoginPage = () => {
                     <InvalidInputError inputKey="password"/>
                 </div>
                 <button className={classNames(s.button, !buttonClickable ? s.buttonActive : "")} type={"submit"}>Log in</button>
+                <p className={s.createInfo}> <Link className={s.forgotPassword} to="/resetPassword" replace={true}>Forgot your password?</Link></p>
                 <p className={s.createInfo}>Don&#39;t have an account? <Link className={s.create} to="/signup" replace={true}>Sign up</Link></p>
             </form>
         </div>

@@ -12,6 +12,7 @@ import LoginPage from "@renderer/pages/account/LoginPage";
 import SettingsPage from "@renderer/pages/Settings/SettingsPage";
 import ProtectedRoute from "@renderer/components/ProtectedRoute";
 import ReleaseView from "@renderer/pages/ReleaseView/ReleaseView";
+import ForgotPassword from "@renderer/pages/account/ForgotPassword";
 
 const ViewBrowser = () => {
     return (
@@ -27,6 +28,7 @@ const ViewBrowser = () => {
                 <Route path={"/release/:id"} element={<ProtectedRoute><ReleaseView/></ProtectedRoute>}/>
                 <Route path={"/login"} element={<LoginPage/>}/>
                 <Route path={"/signup"} element={<SignupPage/>}/>
+                <Route path={"/resetPassword"} element={<ForgotPassword/>}/>
                 <Route path={"/account"} element={<ProtectedRoute><AccountPage/></ProtectedRoute>}/>
                 <Route path={"*"} element={<NotFoundPage/>}/>
             </Routes>
