@@ -4,6 +4,8 @@ import {IPreferences, setPreferences} from "../preferences.js";
 export const registerMagnifierIPC = async (mainWindow: BrowserWindow, prefs: IPreferences) => {
      let zoomFactor = prefs.zoomFactor;
 
+    const roundZoom = (factor: number) => Math.round(factor * 10) / 10;
+
     const applyZoom = () => {
         mainWindow.webContents.setZoomFactor(zoomFactor);
         mainWindow.webContents.send("zoom-factor-changed", zoomFactor);
@@ -14,7 +16,7 @@ export const registerMagnifierIPC = async (mainWindow: BrowserWindow, prefs: IPr
     });
 
     const updateZoomFactor = async () => {
-        void setPreferences({zoomFactor});
+        void setPreferences({zoomFactor: zoomFactor = roundZoom(zoomFactor)});
         applyZoom();
     };
 
