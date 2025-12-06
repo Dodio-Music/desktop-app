@@ -21,6 +21,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
 
                 const {preloadSource, currentSource} = session.getSources();
                 const {preloadTrack } = session.getTracks();
+
                 if(preloadTrack && preloadSource) {
                     currentSource?.cancel();
                     session.setSources(preloadSource, null);
@@ -28,27 +29,27 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
                     queue.next();
                 }
 
-                session.resetPreload();
+                const {currentTrack} = session.getTracks();
 
-                mainWindow.webContents.send("player:event", {
-                    type: "media-transition",
-                    ...(session.getWaveformData()?.id === session.id && { waveformData: session.getWaveformData() }),
-                    track: session.getTracks().currentTrack
-                });
+                if(currentTrack) {
+                    const waveform = session.getWaveformMap().get(currentTrack.id);
+                    mainWindow.webContents.send("player:event", {
+                        type: "media-transition",
+                        ...(waveform && { waveformData: waveform }),
+                        track: session.getTracks().currentTrack
+                    });
+                }
+
+                if(currentTrack && !session.isPreloading) {
+                    const next = queue.getNext();
+                    if(next) {
+                        session.markPreloadStarted();
+                        void session.preloadNextTrack(next);
+                    }
+                }
 
                 break;
             }
-            // case "player-state": {
-            //     const remaining =  msg.state.duration - msg.state.currentTime;
-            //     if(remaining <= 5 && !session.isPreloading) {
-            //         const nextTrack = queue.getNext();
-            //         if(nextTrack) {
-            //             session.markPreloadStarted();
-            //             await session.preloadNextTrack(nextTrack);
-            //         }
-            //     }
-            //     break;
-            // }
         }
     });
 

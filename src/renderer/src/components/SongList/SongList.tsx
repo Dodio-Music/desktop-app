@@ -20,19 +20,15 @@ export const SongList = <T extends BaseSongEntry>({
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
     const currentTrack = useSelector((root: RootState) => root.nativePlayer.currentTrack);
-    const currentTrackRef = useRef<BaseSongEntry | null>(null);
 
     const memoSlots = useMemo(() => slots, [slots]);
     const setSelectedRowCallback = useCallback((id?: string) => setSelectedRow(id), []);
 
-    useEffect(() => {
-        currentTrackRef.current = currentTrack;
-    }, [currentTrack]);
-
     const songsRef = useRef(songs);
-    useEffect(() => {
-        songsRef.current = songs;
-    }, [songs]);
+    const currentTrackRef = useRef(currentTrack);
+
+    useEffect(() => { songsRef.current = songs; }, [songs]);
+    useEffect(() => { currentTrackRef.current = currentTrack; }, [currentTrack]);
 
     const pauseOrLoadSong = useCallback((song: T) => {
         if (song.id === currentTrackRef.current?.id) {
@@ -77,7 +73,7 @@ export const SongList = <T extends BaseSongEntry>({
             </div>
             <div className={s.divider}/>
             {songs.map((song, index) => {
-                const isActive = song.id === currentTrackRef.current?.id;
+                const isActive = song.id === currentTrack?.id;
                 const isSelected = song.id === selectedRow;
                 return (
                     <SongRow

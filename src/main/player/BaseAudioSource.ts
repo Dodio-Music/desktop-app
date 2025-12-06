@@ -133,6 +133,12 @@ export abstract class BaseAudioSource extends EventEmitter {
         const allLoaded = Array.from(this.segmentMap).every((_, i) => Atomics.load(this.segmentMap, i) === 1);
         if (allLoaded && !this.ffmpegProcess) {
             this.sendProgress();
+
+            this.emit("fully-loaded", {
+                id: this.id,
+                duration: this.duration
+            });
+
             void this.cleanup("finished");
         }
     }

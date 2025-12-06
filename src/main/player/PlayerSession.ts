@@ -12,7 +12,7 @@ export class PlayerSession {
     private preloadSource: BaseAudioSource | null = null;
     private track: BaseSongEntry | null = null;
     private preloadTrack: BaseSongEntry | null = null;
-    private waveformData: { id: string, peaks: number[] } | null = null;
+    private waveformMap = new Map<string, { peaks: number[] }>();
     private nextPreload = false;
 
     private currentStateSecond = 0;
@@ -37,7 +37,8 @@ export class PlayerSession {
     }
 
     setWaveformData(data: { id: string, peaks: number[] }) {
-        this.waveformData = data;
+        this.waveformMap.set(data.id, data);
+
         if (data.id === this.track?.id) {
             this.mainWindow.webContents.send("player:event", {
                 type: "waveform-data",
@@ -82,8 +83,8 @@ export class PlayerSession {
         this.source?.cancel();
     }
 
-    getWaveformData() {
-        return this.waveformData;
+    getWaveformMap() {
+        return this.waveformMap;
     }
 
     sendPendingData(duration: number) {
@@ -103,6 +104,7 @@ export class PlayerSession {
 
     async createTrackBuffers(track: BaseSongEntry) {
         const devInfo = await this.getDeviceInfoFromWorker();
+
         let url = "";
         if(isLocalSong(track)) {
             url = track.fullPath;
@@ -110,6 +112,7 @@ export class PlayerSession {
             const audio = track.sources.find(s => s.quality === "LOSSLESS");
             if(audio) url = audio.url;
         }
+
         const pathOrUrl = url;
 
         const {source, pcmSab, segmentSab, duration} = await AudioSourceFactory.create(
@@ -118,11 +121,21 @@ export class PlayerSession {
             track.type,
             devInfo,
             this.mainWindow
-        )
-
-        this.cancelSource();
+        );
 
         source.once("waveform:data", (data) => this.setWaveformData(data));
+
+        source.once("fully-loaded", async() => {
+            if(this.track?.id !== source.id) return;
+            if(this.nextPreload) return;
+
+            const nextTrack = this.queue.getNext();
+            if(!nextTrack) return;
+
+            this.markPreloadStarted();
+            await this.preloadNextTrack(nextTrack);
+        });
+
         void source.start();
 
         return {pcmSab, segmentSab, devInfo, source, duration};
