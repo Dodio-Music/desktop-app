@@ -125,7 +125,9 @@ const api = {
         return () => ipcRenderer.removeListener("player:update", listener);
     },
     nextTrack: () => ipcRenderer.invoke("player:next"),
-    previousTrack: () => ipcRenderer.invoke("player:previous")
+    previousTrack: () => ipcRenderer.invoke("player:previous"),
+    cycleRepeatMode: () => ipcRenderer.invoke("player:repeat-mode"),
+    ready: () => ipcRenderer.invoke("renderer:ready")
 } satisfies DodioApi & Record<string, unknown>;
 
 let authUpdateCallback: ((data: AuthStatus) => void) | null = null;

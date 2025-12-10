@@ -2,7 +2,7 @@ import {ChildProcessByStdio} from "node:child_process";
 import {Readable, Writable} from "node:stream";
 import {app, BrowserWindow} from "electron";
 import {clearInterval} from "node:timers";
-import {SEGMENT_DURATION} from "../../shared/TrackInfo.js";
+import {SEGMENT_DURATION} from "../../../shared/TrackInfo.js";
 import {EventEmitter} from "node:events";
 import _ffmpegPath from "ffmpeg-static";
 import path from "path";

@@ -1,5 +1,5 @@
 import {BaseAudioSource, BaseAudioSourceInit} from "./BaseAudioSource.js";
-import {extractSeekTable, findFlacAudioStart, getFlacStream, SeekPoint} from "./FlacHelper.js";
+import {extractSeekTable, findFlacAudioStart, getFlacStream, SeekPoint} from "./helper/FlacHelper.js";
 import {spawn} from "child_process";
 
 export interface RemoteFlacSourceInit extends BaseAudioSourceInit {

@@ -8,6 +8,7 @@ export interface PlayerState {
     waitingForData: boolean;
     latency: number;
     playbackRunning: boolean;
+    repeatMode: RepeatMode | null;
 }
 
 export interface WaveformData {
@@ -15,11 +16,18 @@ export interface WaveformData {
     peaks: number[];
 }
 
+export enum RepeatMode {
+    Off = "off",
+    All = "all",
+    One = "one"
+}
+
 export type PlayerEvent =
     | { type: "media-transition", waveformData?: WaveformData, track: BaseSongEntry}
     | { type: "pending-data", data: Partial<PlayerState>}
     | ({ type: "waveform-data"} & WaveformData)
-    | { type: "loading-progress"; progress: number[] };
+    | { type: "loading-progress"; progress: number[] }
+    | {type: "repeat-mode", repeatMode: RepeatMode}
 
 
 export type SourceType = "remote" | "local";

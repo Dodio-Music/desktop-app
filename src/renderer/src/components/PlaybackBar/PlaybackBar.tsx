@@ -13,6 +13,8 @@ import {useLocation, useNavigate} from "react-router-dom";
 import {isRemoteSong} from "../../../../shared/TrackInfo";
 import {MoonLoader} from "react-spinners";
 import placeholder from "../../../../../resources/img-placeholder-128x128.svg";
+import {TbArrowsShuffle, TbRepeat, TbRepeatOff, TbRepeatOnce} from "react-icons/tb";
+import {RepeatMode} from "../../../../shared/PlayerState";
 
 const PlaybackBar = () => {
     const loc = useLocation();
@@ -22,7 +24,7 @@ const PlaybackBar = () => {
     const prefsReady = volume !== null && isMuted !== null;
     const displayVolume = prefsReady ? round2Dec(!isMuted ? volume : 0) : 1;
     const debouncedVolume = useDebounce(displayVolume, 250);
-    const { userPaused, waitingForData, currentTrack: track } = useSelector(
+    const {userPaused, waitingForData, currentTrack: track} = useSelector(
         (state: RootState) => ({
             userPaused: state.nativePlayer.userPaused,
             waitingForData: state.nativePlayer.waitingForData,
@@ -30,6 +32,7 @@ const PlaybackBar = () => {
         }),
         shallowEqual
     );
+    const repeatMode = useSelector((state: RootState) => state.nativePlayer.repeatMode);
 
     useEffect(() => {
         if (!prefsReady) return;
@@ -126,10 +129,13 @@ const PlaybackBar = () => {
             </div>
             <div className={s.middleContainer}>
                 <div className={classNames(s.row, s.controls)}>
+                    <button className={classNames(s.btnAnim, s.disabledBtn)}>
+                        <TbArrowsShuffle size={24}/>
+                    </button>
                     <button className={classNames(s.btnAnim, s.backward)} onClick={() => previousTrack()}>
                         <FaBackwardStep/></button>
                     {waitingForData ?
-                        <p className={s.controlMiddle}><MoonLoader speedMultiplier={1} color={"white"} size={25}/></p>
+                        <p className={s.controlMiddle}><MoonLoader speedMultiplier={1} color={"white"} size={24}/></p>
                         :
                         <button className={`${s.play} ${s.btnAnim} ${s.controlMiddle}`} onClick={() => pauseOrResume()}>
                             {
@@ -141,6 +147,16 @@ const PlaybackBar = () => {
                         </button>
                     }
                     <button className={classNames(s.btnAnim, s.forward)} onClick={() => nextTrack()}><FaForwardStep/>
+                    </button>
+                    <button className={classNames(s.btnAnim, s.repeatButton)} onClick={() => window.api.cycleRepeatMode()}>
+                        {repeatMode === RepeatMode.One ?
+                            <TbRepeatOnce size={24}/>
+                            :
+                            repeatMode === RepeatMode.All ?
+                                <TbRepeat size={24}/>
+                                :
+                                <TbRepeatOff size={24} className={s.disabledBtn}/>
+                        }
                     </button>
                 </div>
                 <SeekBar/>

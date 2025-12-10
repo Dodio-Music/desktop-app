@@ -5,6 +5,7 @@ import {Worker} from "node:worker_threads";
 import {QueueManager} from "../player/QueueManager.js";
 import {PlayerSession} from "../player/PlayerSession.js";
 import {registerCleanupTask} from "./shutdownManager.js";
+import {RepeatMode} from "../../shared/PlayerState.js";
 
 export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
     const playerProcess = new Worker(playerProcessPath);
@@ -18,6 +19,8 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
         switch(msg.type) {
             case "media-transition": {
                 session.resetPreload();
+
+                if(queue.getRepeatMode() === RepeatMode.One) queue.cycleRepeatMode("backward");
 
                 const {preloadSource, currentSource} = session.getSources();
                 const {preloadTrack } = session.getTracks();
@@ -96,7 +99,20 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
         playerProcess.postMessage({type: "pause-or-resume"});
     });
 
+    ipcMain.handle("player:repeat-mode", () => {
+        queue.cycleRepeatMode("forward");
+    });
+
     ipcMain.handle("player:seek", (_, time: number) => {
         session.seek(time);
+    });
+
+    queue.on("repeat-mode", (repeatMode: RepeatMode) => {
+        if(repeatMode === RepeatMode.One) playerProcess.postMessage({type: "set-repeat", payload: true});
+        else playerProcess.postMessage({type: "set-repeat", payload: false});
+    });
+
+    ipcMain.handle("renderer:ready", () => {
+        queue.notifyInitial();
     });
 };

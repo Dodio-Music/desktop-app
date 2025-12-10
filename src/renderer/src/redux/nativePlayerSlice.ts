@@ -1,5 +1,5 @@
 import {createSlice, PayloadAction} from "@reduxjs/toolkit";
-import {PlayerState} from "../../../shared/PlayerState";
+import {PlayerState, RepeatMode} from "../../../shared/PlayerState";
 import {BaseSongEntry} from "../../../shared/TrackInfo";
 
 const initialState: PlayerState = {
@@ -9,7 +9,8 @@ const initialState: PlayerState = {
     duration: 0,
     waitingForData: false,
     latency: 0,
-    playbackRunning: false
+    playbackRunning: false,
+    repeatMode: null
 };
 
 const nativePlayerSlice = createSlice({
@@ -24,9 +25,12 @@ const nativePlayerSlice = createSlice({
         },
         setPendingData(state, action: PayloadAction<Partial<PlayerState>>) {
             return {...state, ...action.payload};
+        },
+        setRepeatMode(state, action: PayloadAction<RepeatMode>) {
+            state.repeatMode = action.payload;
         }
     },
 });
 
-export const { updatePlayerState, setCurrentTrack, setPendingData } = nativePlayerSlice.actions;
+export const { updatePlayerState, setCurrentTrack, setPendingData, setRepeatMode } = nativePlayerSlice.actions;
 export default nativePlayerSlice.reducer;

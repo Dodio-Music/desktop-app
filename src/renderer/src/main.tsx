@@ -3,7 +3,7 @@ import {createRoot} from "react-dom/client";
 import App from "./App";
 import {HashRouter} from "react-router-dom";
 import {store} from "./redux/store";
-import {updatePlayerState, setCurrentTrack, setPendingData} from "./redux/nativePlayerSlice";
+import {updatePlayerState, setCurrentTrack, setPendingData, setRepeatMode} from "./redux/nativePlayerSlice";
 import {Provider} from "react-redux";
 import {setAuthStatus} from "@renderer/redux/authSlice";
 import {isLocalSong} from "../../shared/TrackInfo";
@@ -41,6 +41,11 @@ window.api.onPlayerEvent((event) => {
         }
         case "pending-data": {
             store.dispatch(setPendingData(event.data));
+            break;
+        }
+        case "repeat-mode": {
+            store.dispatch(setRepeatMode(event.repeatMode));
+            break;
         }
     }
 });
@@ -53,3 +58,5 @@ window.api.onAuthUpdate((status) => {
     const status = await window.api.getAuthStatus();
     store.dispatch(setAuthStatus(status));
 })();
+
+window.api.ready();

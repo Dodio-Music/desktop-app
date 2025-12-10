@@ -1,18 +1,18 @@
 import {BrowserWindow} from "electron";
-import {OutputDevice} from "./PlayerProcess.js";
-import {SourceType} from "../../shared/PlayerState.js";
+import {OutputDevice} from "../PlayerProcess.js";
+import {SourceType} from "../../../shared/PlayerState.js";
 import {BaseAudioSource, BaseAudioSourceInit} from "./BaseAudioSource.js";
-import {SEGMENT_DURATION} from "../../shared/TrackInfo.js";
+import {SEGMENT_DURATION} from "../../../shared/TrackInfo.js";
 import {
     parseFlacStreamInfo,
     readFileRange, SeekPoint
-} from "./FlacHelper.js";
+} from "./helper/FlacHelper.js";
 import {LocalAudioSource} from "./LocalAudioSource.js";
 import {RemoteFlacSource} from "./RemoteFlacSource.js";
 import path from "path";
 import {parseFile} from "music-metadata";
 import {readFile} from "node:fs/promises";
-import {detectOggCodec, getOggDuration} from "./OpusHelper.js";
+import {detectOggCodec, getOggDuration} from "./helper/OpusHelper.js";
 
 export interface FlacAudioMeta {
     type: "flac";

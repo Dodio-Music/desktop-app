@@ -65,6 +65,7 @@ export class PlayerProcess {
     private fadeProgressSamples = 0;
     private playbackState: "paused" | "playing" | "fading-in" | "fading-out" = "paused";
     private nextTrack: LoadPayload | null = null;
+    private repeatCurrent = false;
 
     private stateLoopInterval: NodeJS.Timeout | null = null;
     private sendStateUpdates = true;
@@ -188,6 +189,14 @@ export class PlayerProcess {
                     const end = Math.min(readOffset + this.deviceInfo.samplesPerBuffer, pcm.length);
 
                     if (readOffset >= pcm.length) {
+                        if(this.repeatCurrent) {
+                            this.session.readOffset = 0;
+                            const queuedLatencyFrames = this.getQueuedLatencyFrames();
+                            this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
+                            this.playheadAnchorWall = Date.now();
+                            this.notifyState();
+                            continue;
+                        }
                         const next = this.nextTrack;
                         if(!next) {
                             this.session.ended = true;
@@ -403,6 +412,10 @@ export class PlayerProcess {
         }
     }
 
+    public setRepeat(repeat: boolean) {
+        this.repeatCurrent = repeat;
+    }
+
     public setNext(payload: LoadPayload | null) {
         this.nextTrack = payload;
     }
@@ -570,6 +583,11 @@ parentPort?.on("message", (msg: IMsg<unknown>) => {
         case "set-updates": {
             const sendUpdates = msg.payload as boolean;
             playerProcess.setStateUpdates(sendUpdates);
+            break;
+        }
+        case "set-repeat": {
+            const repeat = msg.payload as boolean;
+            playerProcess.setRepeat(repeat);
         }
     }
 });

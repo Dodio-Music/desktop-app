@@ -1,11 +1,11 @@
-import {BaseAudioSource} from "./BaseAudioSource.js";
+import {BaseAudioSource} from "./AudioSource/BaseAudioSource.js";
 import {BrowserWindow} from "electron";
 import {QueueManager} from "./QueueManager.js";
 import {Worker} from "node:worker_threads";
 import {IMsg, OutputDevice} from "./PlayerProcess.js";
-import {AudioSourceFactory} from "./AudioSourceFactory.js";
+import {AudioSourceFactory} from "./AudioSource/AudioSourceFactory.js";
 import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../shared/TrackInfo.js";
-import {PlayerState} from "../../shared/PlayerState.js";
+import {PlayerState, RepeatMode} from "../../shared/PlayerState.js";
 
 export class PlayerSession {
     private source: BaseAudioSource | null = null;
@@ -133,7 +133,9 @@ export class PlayerSession {
             if(!nextTrack) return;
 
             this.markPreloadStarted();
-            await this.preloadNextTrack(nextTrack);
+            if(this.queue.getRepeatMode() !== RepeatMode.One) {
+                await this.preloadNextTrack(nextTrack);
+            }
         });
 
         void source.start();
@@ -209,7 +211,8 @@ export class PlayerSession {
     }
 
     async previous() {
-        if (this.currentTime < 3) {
+        const previous = this.queue.getPrevious();
+        if (this.currentTime < 3 && previous !== null) {
             const previous = this.queue.previous();
             if (previous) await this.loadTrack(previous);
         } else {
