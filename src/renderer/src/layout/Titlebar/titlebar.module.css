@@ -14,8 +14,9 @@
 }
 
 .title {
-    font-size: 25px;
-    margin-left: 20px;
+    font-size: 24px;
+    margin-left: 15px;
+    font-weight: 500;
 }
 
 .buttons {
@@ -102,5 +103,12 @@
 .settings {
     -webkit-app-region: no-drag;
     cursor: pointer;
+}
+
+.icon {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 13px;
 }
 

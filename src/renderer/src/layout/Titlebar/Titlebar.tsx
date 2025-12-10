@@ -3,6 +3,7 @@ import {VscChromeClose, VscChromeMaximize, VscChromeMinimize, VscChromeRestore} 
 import {FC, useEffect, useState} from "react";
 import {GoGear} from "react-icons/go";
 import {useNavigate} from "react-router-dom";
+import dodos from "../../../../../resources/dodo_transparent_white_256.png";
 
 interface TitlebarProps {
     zoomLevel: number;
@@ -30,7 +31,7 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
 
     return (
         <div className={s.title_bar}>
-            <p className={s.title}>Dodio</p>
+            <div className={s.icon}><img src={dodos} alt={"Dodio"}/><p className={s.title}>Dodio</p></div>
             <div className={s.right}>
                 {zoomLevel !== 100 &&
                     <button onClick={() => window.api.resetZoom()} className={s.zoomContainer}><p className={s.zoomLevel}>{zoomLevel}%</p></button>}

@@ -37,7 +37,7 @@ const ReleaseView = () => {
             <div className={s.headerWrapper}>
                 <div className={s.infoWrapper}>
                     <div className={s.cover}>
-                        <img alt={"cover"} className={s.cover} src={`${release.coverArtUrl}?size=mid`}/>
+                        <img alt={"cover"} className={s.cover} src={`${release.coverArtUrl}?size=low`}/>
                     </div>
                     <div className={s.releaseInfo}>
                         <div>

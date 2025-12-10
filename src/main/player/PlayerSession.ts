@@ -94,7 +94,7 @@ export class PlayerSession {
             waitingForData: true,
             currentTime: 0,
             latency: 0,
-            playbackRunning: false
+            userPaused: false
         }
         this.mainWindow.webContents.send("player:event", {
             type: "pending-data",
