@@ -11,9 +11,9 @@ import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 
 const accountPages = {
-    login: {url: "/login", text: "Sign In", icon: <MdOutlineLogin/> },
-    signup: {url: "/signup", text: "Sign Up", icon: <MdOutlineLogin/> },
-    account: {url: "/account", text: "Account Page", icon: <VscAccount/> },
+    login: {url: "/login", text: "Sign In", icon: <MdOutlineLogin/>},
+    signup: {url: "/signup", text: "Sign Up", icon: <MdOutlineLogin/>},
+    account: {url: "/account", text: "Account Page", icon: <VscAccount/>},
 } as const satisfies Record<AuthStatus, { url: string, text: string, icon: React.ReactElement }>;
 
 const Sidebar = () => {
@@ -22,14 +22,14 @@ const Sidebar = () => {
     return (
         <div className={s.main}>
             <NavButton url={"/home"}>Home</NavButton>
-            <p className={s.category}>Collection</p>
+            <p className={s.categoryTitle}>Collection</p>
             <div className={s.collection}>
-                <NavButton url={"/collection/local"}><FaRegFolderOpen/>Local Files</NavButton>
-                <NavButton url={"/collection/tracks"}><FaRegHeart/>Liked Tracks</NavButton>
-                <NavButton url={"/collection/albums"}><BiAlbum id={s.album}/> Liked Albums</NavButton>
-                <NavButton url={"/collection/artists"}><PiMicrophoneStageBold id={s.artist}/> Followed
-                    Artists</NavButton>
-                <NavButton url={accountUrl}>{accountIcon}{accountText}</NavButton>
+                <NavButton url={"/collection/local"}><FaRegFolderOpen/><span>Local Files</span></NavButton>
+                <NavButton url={"/collection/tracks"}><FaRegHeart/><span>Liked Tracks</span></NavButton>
+                <NavButton url={"/collection/albums"}><BiAlbum id={s.album}/><span>Liked Albums</span></NavButton>
+                <NavButton url={"/collection/artists"}><PiMicrophoneStageBold id={s.artist}/><span>Followed
+                    Artists</span></NavButton>
+                <NavButton url={accountUrl}>{accountIcon}<span>{accountText}</span></NavButton>
             </div>
         </div>
     );
