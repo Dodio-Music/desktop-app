@@ -1,75 +1,73 @@
-import { ipcMain, app } from "electron";
-import path from "path";
-import fs from "fs/promises";
-import {clearTimeout} from "node:timers";
-import {registerCleanupTask} from "./ipc/shutdownManager.js";
+import {JsonStore} from "./JsonStore.js";
+import {ipcMain} from "electron";
+import {RepeatMode} from "../shared/PlayerState.js";
+
+export type IAllPreferences  = IPreferences & IState;
 
 export interface IPreferences {
-    zoomFactor: number;
     localFilesDir?: string;
-    volume: number;
-    muted: boolean;
     latencyPreset: string;
     closeBehavior: "quit" | "tray";
 }
 
-const prefsPath = path.join(app.getPath("userData"), "preferences.json");
-const tmpPath = prefsPath + ".tmp";
+export interface IState {
+    zoomFactor: number;
+    volume: number;
+    muted: boolean;
+    repeatMode: RepeatMode;
+}
 
 const defaultPrefs: IPreferences = {
-    zoomFactor: 1,
     localFilesDir: undefined,
-    volume: 1,
-    muted: false,
     latencyPreset: "safe",
     closeBehavior: "quit"
 };
 
-let prefs: IPreferences = {...defaultPrefs};
-let initialized = false;
-let saveTimeout: NodeJS.Timeout | null = null;
-
-export async function loadPreferencesFromDisk(): Promise<IPreferences> {
-    try {
-        const raw = await fs.readFile(prefsPath, "utf-8");
-        prefs = {...defaultPrefs, ...JSON.parse(raw)};
-    } catch {
-        prefs = {...defaultPrefs};
-        await savePreferencesDisk();
-    }
-    initialized = true;
-    return prefs;
+const defaultState: IState = {
+    zoomFactor: 1,
+    volume: 1,
+    muted: false,
+    repeatMode: RepeatMode.All
 }
 
-async function savePreferencesDisk(): Promise<void> {
-    const json = JSON.stringify(prefs, null, 2);
-    await fs.writeFile(tmpPath, json, "utf-8");
-    await fs.rename(tmpPath, prefsPath);
-}
+const preferencesStore = new JsonStore<IPreferences>("preferences.json", defaultPrefs);
+const stateStore = new JsonStore<IState>("state.json", defaultState);
 
-function scheduleSave() {
-    if(saveTimeout) clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => savePreferencesDisk(), 500);
+export async function loadPreferencesFromDisk() {
+    const prefs = await preferencesStore.load();
+    const state = await stateStore.load();
+    return { ...prefs, ...state };
 }
 
 export function getPreferences() {
-    if (!initialized) throw new Error("Preferences not loaded yet");
-    return prefs;
+    return {
+        ...preferencesStore.get(),
+        ...stateStore.get(),
+    };
 }
 
-export function setPreferences(update: Partial<IPreferences>) {
-    if(!initialized) throw new Error("Preferences not loaded yet");
+export function setPreferences(update: Partial<IPreferences & IState>) {
+    const persistentUpdate: Partial<IPreferences> = {};
+    const stateUpdate: Partial<IState> = {};
 
-    prefs = {...prefs, ...update};
-    scheduleSave();
-    return prefs;
+    for (const key in update) {
+        if (key in defaultPrefs) {
+            persistentUpdate[key as keyof IPreferences] = update[key as keyof typeof update] as never;
+        } else {
+            stateUpdate[key as keyof IState] = update[key as keyof typeof update] as never;
+        }
+    }
+
+    if (Object.keys(persistentUpdate).length) preferencesStore.set(persistentUpdate);
+    if (Object.keys(stateUpdate).length) stateStore.set(stateUpdate);
+
+    return getPreferences();
 }
+
 
 export function registerPreferencesIPC() {
-    ipcMain.handle("preferences:get", async () => getPreferences());
-    ipcMain.handle("preferences:set", (_event, prefs: Partial<IPreferences>) => setPreferences(prefs));
+    ipcMain.handle("preferences:get", () => getPreferences());
+    ipcMain.handle("preferences:set", (_e, update: Partial<IPreferences & IState>) =>
+        setPreferences(update)
+    );
 }
-
-registerCleanupTask(async () => {
-    await savePreferencesDisk();
-});

@@ -6,11 +6,15 @@ import {QueueManager} from "../player/QueueManager.js";
 import {PlayerSession} from "../player/PlayerSession.js";
 import {registerCleanupTask} from "./shutdownManager.js";
 import {RepeatMode} from "../../shared/PlayerState.js";
+import {IAllPreferences} from "../preferences.js";
 
-export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
-    const playerProcess = new Worker(playerProcessPath);
-    const queue = new QueueManager(mainWindow);
-    const session = new PlayerSession(mainWindow, playerProcess, queue);
+let playerProcess!: Worker;
+let queue!: QueueManager;
+let session!: PlayerSession;
+export const registerPlayerProcessIPC = (mainWindow: BrowserWindow, initialPrefs: IAllPreferences) => {
+    playerProcess = new Worker(playerProcessPath);
+    queue = new QueueManager(mainWindow, initialPrefs.repeatMode);
+    session = new PlayerSession(mainWindow, playerProcess, queue);
 
     playerProcess.on("message", async (msg) => {
         if(mainWindow.isDestroyed() || !mainWindow.webContents || msg.type === "device-info") return;
@@ -111,8 +115,8 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow) => {
         if(repeatMode === RepeatMode.One) playerProcess.postMessage({type: "set-repeat", payload: true});
         else playerProcess.postMessage({type: "set-repeat", payload: false});
     });
-
-    ipcMain.handle("renderer:ready", () => {
-        queue.notifyInitial();
-    });
 };
+
+export const registerPlayerProcessStartup = () => {
+    queue.notifyInitial();
+}

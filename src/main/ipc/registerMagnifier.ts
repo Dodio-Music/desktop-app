@@ -1,7 +1,7 @@
 import {BrowserWindow, ipcMain} from "electron";
-import {IPreferences, setPreferences} from "../preferences.js";
+import {IAllPreferences, setPreferences} from "../preferences.js";
 
-export const registerMagnifierIPC = async (mainWindow: BrowserWindow, prefs: IPreferences) => {
+export const registerMagnifierIPC = async (mainWindow: BrowserWindow, prefs: IAllPreferences) => {
      let zoomFactor = prefs.zoomFactor;
 
     const roundZoom = (factor: number) => Math.round(factor * 10) / 10;

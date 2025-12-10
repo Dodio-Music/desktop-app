@@ -1,7 +1,7 @@
 import {ipcMain, BrowserWindow, Tray, Menu, app} from "electron";
 import fallbackIcon from "../../../resources/dodo_transparent_white_256.png?asset";
 import windowsIcon from "../../../resources/dodo_transparent_white.ico?asset";
-import {IPreferences} from "../preferences.js";
+import {IAllPreferences} from "../preferences.js";
 
 let tray: Tray | null = null;
 let window: BrowserWindow | null = null;
@@ -32,7 +32,7 @@ function emitMaximizeChange() {
     window.webContents.send("maximize-change", window.isMaximized());
 }
 
-export async function registerWindowControlsIPC(mainWindow: BrowserWindow, prefs: IPreferences) {
+export async function registerWindowControlsIPC(mainWindow: BrowserWindow, prefs: IAllPreferences) {
     window = mainWindow;
 
     let icon = fallbackIcon;

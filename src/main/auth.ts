@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain} from "electron";
+import {app, BrowserWindow} from "electron";
 import path from "path";
 import fs from "fs/promises";
 import {IAuthData} from "./web/Typing.js";
@@ -6,7 +6,10 @@ import {safeStorage} from "electron"
 import {AuthStatus} from "../shared/Api.js";
 import {refreshAuthToken} from "./web/dodio_api.js";
 
+
 export const authPath = path.join(app.getPath("userData"), "auth.json");
+
+let authStatusCache: AuthStatus | null = null;
 
 async function loadAuth(): Promise<IAuthData> {
     try {
@@ -35,29 +38,24 @@ export function updateAuth(new_auth: Partial<IAuthData>) {
             ? "login"
             : "signup";
 
-    if (mainWindow?.webContents?.isLoadingMainFrame() === false) {
-        mainWindow.webContents.send("auth:statusChange", authStatus);
-    } else {
-        mainWindow.webContents.once("did-finish-load", () => {
-            mainWindow.webContents.send("auth:statusChange", authStatus);
-        });
-    }
+    authStatusCache = authStatus;
+
+    mainWindow.webContents.send("auth:statusChange", authStatus);
 
     const data = JSON.stringify(auth, null, 2);
     const encrypted = safeStorage.encryptString(data);
     fs.writeFile(authPath, encrypted)
         .catch(err => console.error("could not save auth data", err));
 }
-let mainWindow: BrowserWindow;
+let mainWindow!: BrowserWindow;
 export async function setupAuth(window: BrowserWindow) {
     mainWindow = window;
     updateAuth(await loadAuth());
     await refreshAuthToken();
 }
 
-ipcMain.handle("auth:getStatus", () => {
-    if (!auth) return "signup";
-    if (auth.access_token) return "account";
-    if (auth.hasAccount) return "login";
-    return "signup";
-});
+export function registerAuthStartup() {
+    if (authStatusCache !== null) {
+        mainWindow.webContents.send("auth:statusChange", authStatusCache);
+    }
+}

@@ -1,16 +1,16 @@
 import { electronApp, optimizer } from "@electron-toolkit/utils";
-import { app, BrowserWindow, protocol, net } from "electron";
+import {app, BrowserWindow, protocol, net, ipcMain} from "electron";
 import { registerMagnifierIPC } from "./ipc/registerMagnifier.js";
-import { registerPlayerProcessIPC } from "./ipc/registerPlayerProcess.js";
+import {registerPlayerProcessIPC, registerPlayerProcessStartup} from "./ipc/registerPlayerProcess.js";
 import { registerWindowControlsIPC } from "./ipc/registerWindowControls.js";
-import {loadPreferencesFromDisk, registerPreferencesIPC} from "./preferences.js";
 import { registerSongIndexer } from "./songIndexer.js";
 import { createMainWindow, registerAppLifecycle } from "./window.js";
 import {registerDodioApiIPC} from "./ipc/registerDodioApi.js";
-import {setupAuth} from "./auth.js";
+import {registerAuthStartup, setupAuth} from "./auth.js";
 import path from "path";
 import {runCleanupTasks} from "./ipc/shutdownManager.js";
 import {setupApi} from "./web/dodio_api.js";
+import {loadPreferencesFromDisk, registerPreferencesIPC} from "./preferences.js";
 
 let mainWindow: BrowserWindow;
 
@@ -41,15 +41,20 @@ app.whenReady().then(async () => {
 
     const prefs = await loadPreferencesFromDisk();
 
+    ipcMain.handle("renderer:ready", () => {
+        registerAuthStartup();
+        registerPlayerProcessStartup();
+    });
+
     setupApi();
     createWindow();
-    registerSongIndexer(mainWindow);
+    registerPreferencesIPC();
+    registerPlayerProcessIPC(mainWindow, prefs);
+    void setupAuth(mainWindow);
     await registerWindowControlsIPC(mainWindow, prefs);
     await registerMagnifierIPC(mainWindow, prefs);
-    registerPreferencesIPC();
-    registerPlayerProcessIPC(mainWindow);
+    registerSongIndexer(mainWindow);
     registerDodioApiIPC();
-    void setupAuth(mainWindow);
 
     registerAppLifecycle(createWindow);
 });

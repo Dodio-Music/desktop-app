@@ -2,6 +2,7 @@ import {BaseSongEntry} from "../../shared/TrackInfo.js";
 import {BrowserWindow} from "electron";
 import {PlayerEvent, RepeatMode} from "../../shared/PlayerState.js";
 import {EventEmitter} from "node:events";
+import {setPreferences} from "../preferences.js";
 
 export interface PlaybackStrategy {
     getUpcoming(state: QueueState, count: number): BaseSongEntry[];
@@ -157,6 +158,7 @@ export class QueueManager extends EventEmitter {
     setRepeatMode(mode: RepeatMode) {
         this.repeatMode = mode;
         this.strategy = this.strategyFromRepeatMode(mode);
+        setPreferences({repeatMode: this.repeatMode});
         this.emit("repeat-mode", this.repeatMode);
         this.notifyState("repeat-mode", {repeatMode: this.repeatMode});
     }

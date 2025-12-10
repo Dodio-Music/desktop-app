@@ -3,11 +3,11 @@ import path from "path";
 import fsp from "fs/promises";
 import fs from "fs";
 import {parseFile} from "music-metadata";
-import {getPreferences, setPreferences} from "./preferences.js";
 import {createHash} from "node:crypto";
 import sharp from "sharp";
 import pLimit from "p-limit";
 import {LocalSongEntry, SongDirectoryResponse} from "../shared/TrackInfo.js";
+import {getPreferences, setPreferences} from "./preferences.js";
 
 const LOG_BENCHMARK = false;
 let mainWindow: BrowserWindow | null = null;

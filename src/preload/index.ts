@@ -2,11 +2,11 @@ import {contextBridge, ipcRenderer} from "electron";
 import {ElectronAPI, electronAPI} from "@electron-toolkit/preload";
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerEvent, PlayerState} from "../shared/PlayerState.js";
-import {IPreferences} from "../main/preferences.js";
 import {BaseSongEntry, LocalSongEntry, RemoteSongEntry, SongDirectoryResponse} from "../shared/TrackInfo.js";
 import {ApiResult, AuthStatus, DodioApi, MayError, RequestMethods} from "../shared/Api.js";
 import {AxiosInstance} from "axios";
 import IpcRenderer = Electron.IpcRenderer;
+import {IAllPreferences} from "../main/preferences.js";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -95,17 +95,18 @@ const api = {
         ipcRenderer.on("zoom-factor-changed", handler);
         return () => ipcRenderer.removeListener("zoom-factor-changed", handler);
     },
-    getPreferences: (): Promise<IPreferences> => ipcRenderer.invoke("preferences:get"),
-    setPreferences: (pref: Partial<IPreferences>) => ipcRenderer.invoke("preferences:set", pref),
-    onPreferencesUpdated: (callback: (prefs?: IPreferences) => void) => {
-        const handler = (_ev: IpcRendererEvent, prefs?: IPreferences) => callback(prefs);
+    getPreferences: (): Promise<IAllPreferences> => ipcRenderer.invoke("preferences:get"),
+    setPreferences: (pref: Partial<IAllPreferences>) => ipcRenderer.invoke("preferences:set", pref),
+    onPreferencesUpdated: (callback: (prefs?: IAllPreferences) => void) => {
+        const handler = (_ev: IpcRendererEvent, prefs?: IAllPreferences) => callback(prefs);
         ipcRenderer.on("preferences:update", handler);
         return () => ipcRenderer.removeListener("preferences:update", handler);
     },
     showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory"),
-    onAuthUpdate: (cb: (data: AuthStatus) => void) => {
-        authUpdateCallback = cb;
-        if(authStatusCache !== null) cb(authStatusCache);
+    onAuthUpdate: (cb: (status: AuthStatus) => void) => {
+        const handler = (_: unknown, status: AuthStatus) => cb(status);
+        ipcRenderer.on("auth:statusChange", handler);
+        return () => ipcRenderer.removeListener("auth:statusChange", handler);
     },
     getAuthStatus: () => ipcRenderer.invoke("auth:getStatus"),
     authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>) {
@@ -129,14 +130,6 @@ const api = {
     cycleRepeatMode: () => ipcRenderer.invoke("player:repeat-mode"),
     ready: () => ipcRenderer.invoke("renderer:ready")
 } satisfies DodioApi & Record<string, unknown>;
-
-let authUpdateCallback: ((data: AuthStatus) => void) | null = null;
-
-let authStatusCache: AuthStatus | null = null;
-ipcRenderer.on("auth:statusChange", (_event, newStatus: AuthStatus) => {
-    if(authUpdateCallback === null) authStatusCache = newStatus;
-    else authUpdateCallback(newStatus)
-});
 
 export type ApiType = typeof api;
 
