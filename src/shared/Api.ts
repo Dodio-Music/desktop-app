@@ -1,13 +1,21 @@
 import {AxiosInstance, AxiosResponse} from "axios";
 
-export type RequestMethods = "get" | "post" | "put" | "patch" | "delete";
+export type AxiosMethodArgs = {
+    get: Parameters<AxiosInstance["get"]>;
+    delete: Parameters<AxiosInstance["delete"]>;
+    head: Parameters<AxiosInstance["head"]>;
+    options: Parameters<AxiosInstance["options"]>;
+    post: Parameters<AxiosInstance["post"]>;
+    put: Parameters<AxiosInstance["put"]>;
+    patch: Parameters<AxiosInstance["patch"]>;
+};
 export type AuthStatus = "login" | "signup" | "account";
 
 export interface DodioApi {
     login(login: string, password: string): Promise<MayError>;
     signup(username: string, email: string, password: string): Promise<MayError>;
     logout(): Promise<MayError>;
-    authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>): Promise<ApiResult<AxiosResponse<T>>>,
+    authRequest<M extends keyof AxiosMethodArgs, T = unknown>(method: M, ...args: AxiosMethodArgs[M]): Promise<ApiResult<AxiosResponse<T>>>,
 }
 export type InvalidInputKeys = "username" | "email" | "login" | "password";
 export const NoLoginError = {error: "no-login"} satisfies DodioError;

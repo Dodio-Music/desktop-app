@@ -1,5 +1,5 @@
 import axios, {AxiosError, AxiosInstance, AxiosResponse} from "axios";
-import {ApiResult, DodioApi, DodioError, MayError, NoLoginError, RequestMethods} from "../../shared/Api.js";
+import {ApiResult, AxiosMethodArgs, DodioApi, DodioError, MayError, NoLoginError} from "../../shared/Api.js";
 import {auth, updateAuth} from "../auth.js";
 
 let instance: AxiosInstance = null!;
@@ -177,10 +177,9 @@ export default {
             return handleError(e);
         }
     },
-    async authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>): Promise<ApiResult<T>> {
+    async authRequest<M extends keyof AxiosMethodArgs, T = unknown>(method: M, ...args: AxiosMethodArgs[M]): Promise<ApiResult<T>> {
         try {
-            //@ts-expect-error spread args are annoying
-            const result = (await instance[method]<T>(...args)) as AxiosResponse<T>;
+            const result = await (instance[method] as (...p: AxiosMethodArgs[M]) => Promise<AxiosResponse<T>>)(...args);
             return {type: "ok", value: result.data};
         } catch (e) {
             return { type: "error", error: handleError(e) };

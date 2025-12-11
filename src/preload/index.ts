@@ -3,8 +3,7 @@ import {ElectronAPI, electronAPI} from "@electron-toolkit/preload";
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerEvent, PlayerState} from "../shared/PlayerState.js";
 import {BaseSongEntry, LocalSongEntry, RemoteSongEntry, SongDirectoryResponse} from "../shared/TrackInfo.js";
-import {ApiResult, AuthStatus, DodioApi, MayError, RequestMethods} from "../shared/Api.js";
-import {AxiosInstance} from "axios";
+import {ApiResult, AuthStatus, DodioApi, MayError, AxiosMethodArgs} from "../shared/Api.js";
 import IpcRenderer = Electron.IpcRenderer;
 import {IAllPreferences} from "../main/preferences.js";
 
@@ -109,7 +108,7 @@ const api = {
         return () => ipcRenderer.removeListener("auth:statusChange", handler);
     },
     getAuthStatus: () => ipcRenderer.invoke("auth:getStatus"),
-    authRequest<M extends RequestMethods, T = unknown>(method: M, ...args: Parameters<AxiosInstance[M]>) {
+    authRequest<M extends keyof AxiosMethodArgs, T = unknown>(method: M, ...args: AxiosMethodArgs[M]) {
         return ipcRenderer.invoke("api:authRequest", method, ...args) as Promise<ApiResult<T>>;
     },
     login: (login: string, password: string) => ipcRenderer.invoke("api:login", login, password) as Promise<MayError>,
