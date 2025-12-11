@@ -17,7 +17,7 @@ export interface DodioApi {
     logout(): Promise<MayError>;
     authRequest<M extends keyof AxiosMethodArgs, T = unknown>(method: M, ...args: AxiosMethodArgs[M]): Promise<ApiResult<AxiosResponse<T>>>,
 }
-export type InvalidInputKeys = "username" | "email" | "login" | "password";
+export type InvalidInputKeys = "username" | "email" | "login" | "password" | "password-reset-token";
 export const NoLoginError = {error: "no-login"} satisfies DodioError;
 export type DodioError = {
     error: "Not Found"
