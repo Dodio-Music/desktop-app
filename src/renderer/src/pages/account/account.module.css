@@ -34,7 +34,7 @@
     color: #ff8d8d !important;
 }
 
-.error > input {
+.error input {
     border: 2px solid #ff8d8d !important;
 }
 
@@ -68,7 +68,7 @@
     font-weight: 500;
     text-decoration: none;
     color: white;
-    transition: color 0.4s;
+    transition: color 0.2s;
 }
 
 
@@ -80,7 +80,7 @@
     font-weight: 500;
     text-decoration: none;
     color: white;
-    transition: color 0.4s;
+    transition: color 0.2s;
 }
 
 .forgotPassword:hover {

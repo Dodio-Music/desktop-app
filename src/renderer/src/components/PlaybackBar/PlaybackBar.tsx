@@ -135,7 +135,7 @@ const PlaybackBar = () => {
                     <button className={classNames(s.btnAnim, s.backward)} onClick={() => previousTrack()}>
                         <FaBackwardStep/></button>
                     {waitingForData ?
-                        <p className={s.controlMiddle}><MoonLoader speedMultiplier={1} color={"white"} size={24}/></p>
+                        <p className={s.controlMiddle}><MoonLoader speedMultiplier={1} color={"white"} size={23}/></p>
                         :
                         <button className={`${s.play} ${s.btnAnim} ${s.controlMiddle}`} onClick={() => pauseOrResume()}>
                             {
