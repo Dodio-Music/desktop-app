@@ -42,7 +42,8 @@
 }
 
 .buttons button:hover {
-    background-color: rgb(60, 60, 60);
+    /*background-color: rgb(60, 60, 60);*/
+    color: var(--color-accent-hover);
 }
 
 .buttons button:active {
@@ -51,12 +52,12 @@
 }
 
 #exit:hover {
-    background-color: rgb(179, 39, 39);
+    /*background-color: rgb(179, 39, 39);*/
 }
 
 #exit:active {
     transition: 0s background-color;
-    background-color: rgb(228, 60, 60);
+    background-color: rgb(103, 103, 103);
 }
 
 .right {
@@ -95,7 +96,6 @@
 }
 
 .settingsContainer:hover {
-    /*color: crimson;*/
     color: var(--color-accent-hover);
     transform: rotate(180deg);
 }
