@@ -1,9 +1,9 @@
 import {spawn} from "child_process";
 import {BaseAudioSource} from "./BaseAudioSource.js";
+import {normalizeLUFSToPeaks} from "./helper/WaveformHelper.js";
 
 export class LocalAudioSource extends BaseAudioSource {
     private numPeaks = 600;
-    private waveformBuckets: Float32Array = new Float32Array(this.numPeaks);
 
     public async start() {
         if (this.cancelled) return;
@@ -50,8 +50,7 @@ export class LocalAudioSource extends BaseAudioSource {
 
     /** LUFS-based waveform (background process) */
     private async calculateLUFSWaveform() {
-        this.waveformBuckets = new Float32Array(this.numPeaks);
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<void>((resolve) => {
             const lufsProcess = spawn(this.ffmpegPath!, [
                 "-i", this.url,
                 "-filter_complex", "ebur128",
@@ -75,25 +74,12 @@ export class LocalAudioSource extends BaseAudioSource {
                     }
                 }
 
-                if (lufsValues.length === 0) {
-                    return reject(new Error("No LUFS data found"));
-                }
+                const peaks = normalizeLUFSToPeaks(lufsValues, {
+                    numPeaks: this.numPeaks
+                });
 
-                const maxLUFS = Math.max(...lufsValues);
-                const minLUFS = Math.max(maxLUFS - 20, -40);
-                const skipFrames = Math.ceil(0.22 / 0.1);
-                const trimmedValues = lufsValues.slice(skipFrames);
-                for (let i = 0; i < this.numPeaks; i++) {
-                    const idx = Math.floor((i / this.numPeaks) * trimmedValues.length);
-                    let normalized = (trimmedValues[idx] - minLUFS) / (maxLUFS - minLUFS);
-                    normalized = Math.min(Math.max(normalized, 0), 1);
-                    normalized = Math.pow(normalized, 2);
-                    this.waveformBuckets[i] = normalized;
-                }
-
-                const peaksToSend = this.waveformBuckets;
                 if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-                    this.emit("waveform:data", {id: this.id, peaks: peaksToSend});
+                    this.emit("waveform:data", {id: this.id, peaks: peaks});
                 }
 
                 resolve();

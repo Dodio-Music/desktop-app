@@ -19,6 +19,7 @@ export interface LocalSongEntry extends BaseSongEntry {
 
 export interface RemoteSongEntry extends BaseSongEntry {
     sources: SongSource[];
+    waveformUrl: string | null;
     releaseDate: string;
     releaseId: string;
 }

@@ -12,6 +12,7 @@ export function releaseToSongEntries(rel: ReleaseDTO): RemoteSongEntry[] {
             album: rel.releaseName,
             duration: t.duration,
             picture: rel.coverArtUrl,
+            waveformUrl: t.waveformUrl,
             releaseId: rel.releaseId,
             releaseDate: rel.releaseDate,
             type: "remote",

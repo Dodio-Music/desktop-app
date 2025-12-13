@@ -7,6 +7,7 @@ import {AudioSourceFactory} from "./AudioSource/AudioSourceFactory.js";
 import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../shared/TrackInfo.js";
 import {PlayerState, RepeatMode} from "../../shared/PlayerState.js";
 import {readWaveform, writeWaveform} from "./WaveformCache.js";
+import {resolveRemoteWaveform} from "./AudioSource/helper/WaveformHelper.js";
 
 export class PlayerSession {
     private source: BaseAudioSource | null = null;
@@ -114,17 +115,32 @@ export class PlayerSession {
             if(audio) url = audio.url;
         }
 
-        const cached = await readWaveform(track.id);
+        let waveformPeaks: Float32Array | null = null;
 
+        const cached = await readWaveform(track.id);
         if (cached) {
-            this.setWaveformData({ id: track.id, peaks: cached.peaks });
+            waveformPeaks = cached.peaks;
         }
+
+        if(!waveformPeaks && isRemoteSong(track) && track.waveformUrl) {
+            waveformPeaks = await resolveRemoteWaveform(track);
+            if(waveformPeaks)  {
+                this.setWaveformData({id: track.id, peaks: waveformPeaks});
+                void writeWaveform(track.id, waveformPeaks);
+            }
+        }
+
+        if(waveformPeaks) {
+            this.setWaveformData({id: track.id, peaks: waveformPeaks});
+        }
+
+        const shouldGenerateWaveform = isLocalSong(track) && !waveformPeaks;
 
         const {source, pcmSab, segmentSab, duration} = await AudioSourceFactory.create(
             track.id,
             url,
             track.type,
-            !cached,
+            shouldGenerateWaveform,
             devInfo,
             this.mainWindow
         );

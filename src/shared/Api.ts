@@ -56,6 +56,7 @@ export interface TrackDTO {
     duration: number;
     artists: string[];
     sources: SourceDTO[];
+    waveformUrl: string;
 }
 
 export interface ReleaseTrackDTO {

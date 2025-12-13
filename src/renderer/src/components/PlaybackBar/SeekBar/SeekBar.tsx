@@ -33,7 +33,7 @@ const SeekBar = () => {
     const dragTimeRef = useRef<number | null>(null);
     const lastSeekRef = useRef<number | null>(null);
 
-    const displayStyle = currentTrack && isRemoteSong(currentTrack)
+    const displayStyle = currentTrack && (isRemoteSong(currentTrack) && currentTrack.waveformUrl === null)
         ? SeekBarDisplayStyle.DEFAULT
         : wantedDisplayStyle;
     const seekbarHeight = displayStyle === SeekBarDisplayStyle.WAVEFORM ? 25 : 5;

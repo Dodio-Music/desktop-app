@@ -26,10 +26,11 @@ const LocalFilesPage = () => {
             }
             setError("");
             songMapRef.current.set(res.song.id, res.song);
-            setSongs([...songMapRef.current.values()]);
-            setSongs(prev =>
-                prev.map(s => s.id === res.song.id ? {...s, ...res.song} : s)
-            );
+            setSongs(prev => {
+                const map = new Map(prev.map(s => [s.id, s]));
+                map.set(res.song.id, res.song);
+                return Array.from(map.values());
+            });
         };
 
         const handleMeta = (res: SongDirectoryResponse) => {
