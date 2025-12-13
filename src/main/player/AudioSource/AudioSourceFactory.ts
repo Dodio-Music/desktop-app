@@ -47,6 +47,7 @@ export class AudioSourceFactory {
         id: string,
         pathOrUrl: string,
         sourceType: SourceType,
+        generateWaveform: boolean,
         devInfo: OutputDevice,
         mainWindow: BrowserWindow
     ): Promise<{
@@ -97,7 +98,8 @@ export class AudioSourceFactory {
             pcmSab,
             mainWindow,
             segmentSab,
-            count: this.count
+            count: this.count,
+            generateWaveform
         };
 
         let source: BaseAudioSource;

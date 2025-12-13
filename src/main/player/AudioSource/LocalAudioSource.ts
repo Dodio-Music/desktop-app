@@ -13,6 +13,8 @@ export class LocalAudioSource extends BaseAudioSource {
         void this.fillMissingSegments();
         this.startProgressUpdates();
 
+        if(!this.generateWaveform) return;
+
         void this.calculateLUFSWaveform().catch(err => {
             console.warn("LUFS waveform failed: ", err);
         });

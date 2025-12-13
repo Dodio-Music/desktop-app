@@ -6,13 +6,14 @@ import {IMsg, OutputDevice} from "./PlayerProcess.js";
 import {AudioSourceFactory} from "./AudioSource/AudioSourceFactory.js";
 import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../shared/TrackInfo.js";
 import {PlayerState, RepeatMode} from "../../shared/PlayerState.js";
+import {readWaveform, writeWaveform} from "./WaveformCache.js";
 
 export class PlayerSession {
     private source: BaseAudioSource | null = null;
     private preloadSource: BaseAudioSource | null = null;
     private track: BaseSongEntry | null = null;
     private preloadTrack: BaseSongEntry | null = null;
-    private waveformMap = new Map<string, { peaks: number[] }>();
+    private waveformMap = new Map<string, { peaks: Float32Array }>();
     private nextPreload = false;
 
     private currentStateSecond = 0;
@@ -36,7 +37,7 @@ export class PlayerSession {
         return this.nextPreload;
     }
 
-    setWaveformData(data: { id: string, peaks: number[] }) {
+    setWaveformData(data: { id: string, peaks: Float32Array }) {
         this.waveformMap.set(data.id, data);
 
         if (data.id === this.track?.id) {
@@ -113,17 +114,25 @@ export class PlayerSession {
             if(audio) url = audio.url;
         }
 
-        const pathOrUrl = url;
+        const cached = await readWaveform(track.id);
+
+        if (cached) {
+            this.setWaveformData({ id: track.id, peaks: cached.peaks });
+        }
 
         const {source, pcmSab, segmentSab, duration} = await AudioSourceFactory.create(
             track.id,
-            pathOrUrl,
+            url,
             track.type,
+            !cached,
             devInfo,
             this.mainWindow
         );
 
-        source.once("waveform:data", (data) => this.setWaveformData(data));
+        source.once("waveform:data", (data) => {
+            this.setWaveformData(data);
+            void writeWaveform(data.id, data.peaks);
+        });
 
         source.once("fully-loaded", async() => {
             if(this.track?.id !== source.id) return;
@@ -164,8 +173,6 @@ export class PlayerSession {
         this.playerProcess.postMessage({type: "set-updates", payload: false});
 
         this.track = track;
-        this.preloadSource?.cancel();
-        this.preloadSource = null;
 
         this.sendPendingData(this.track.duration);
 

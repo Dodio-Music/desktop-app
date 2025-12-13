@@ -18,6 +18,7 @@ export interface BaseAudioSourceInit {
     pcmSab: SharedArrayBuffer;
     mainWindow: BrowserWindow;
     segmentSab: SharedArrayBuffer;
+    generateWaveform: boolean;
     count: number;
 }
 
@@ -62,11 +63,14 @@ export abstract class BaseAudioSource extends EventEmitter {
     public readonly outputChannels: number;
     public readonly outputSampleRate: number;
     public readonly duration: number;
+    protected readonly generateWaveform: boolean;
     protected mainWindow: BrowserWindow;
     protected count = 0;
 
     constructor(init: BaseAudioSourceInit) {
         super();
+
+        this.generateWaveform = init.generateWaveform;
         this.id = init.id;
         this.url = init.url;
         this.outputChannels = init.outputChannels;
