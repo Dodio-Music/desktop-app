@@ -42,7 +42,7 @@ function resolveFfmpegPath() {
 }
 
 export abstract class BaseAudioSource extends EventEmitter {
-    public DEBUG_LOG = false;
+    public DEBUG_LOG = true;
     public ffmpegPath = resolveFfmpegPath();
 
     protected ffmpegProcess: ChildProcessByStdio<Writable, Readable, Readable> | null = null;
@@ -54,6 +54,8 @@ export abstract class BaseAudioSource extends EventEmitter {
     protected ffmpegEndSec = 0;
     protected progressInterval: NodeJS.Timeout | null = null;
     protected cleanupStarted = false;
+    protected fullyLoaded = false;
+    protected tailLoaded = false;
 
     protected pcm: Float32Array;
     protected segmentMap: Uint8Array;
@@ -83,6 +85,14 @@ export abstract class BaseAudioSource extends EventEmitter {
         this.count = init.count;
     }
 
+    isFullyLoaded() {
+        return this.fullyLoaded;
+    }
+
+    isTailLoaded() {
+        return this.tailLoaded;
+    }
+
     protected getSegmentMapProgress(): number[] {
         return Array.from(this.segmentMap).map((_, i) => Atomics.load(this.segmentMap, i));
     }
@@ -101,7 +111,7 @@ export abstract class BaseAudioSource extends EventEmitter {
         if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
 
         const segmentProgress = this.getSegmentMapProgress();
-        this.mainWindow.webContents.send("player:event", {type: "loading-progress", progress: segmentProgress});
+        this.mainWindow.webContents.send("player:event", {type: "loading-progress", progress: segmentProgress, id: this.id});
     }
 
     protected startProgressUpdates() {
@@ -136,6 +146,8 @@ export abstract class BaseAudioSource extends EventEmitter {
     protected checkIfFullyLoaded() {
         const allLoaded = Array.from(this.segmentMap).every((_, i) => Atomics.load(this.segmentMap, i) === 1);
         if (allLoaded && !this.ffmpegProcess) {
+            this.fullyLoaded = true;
+
             this.sendProgress();
 
             this.emit("fully-loaded", {
@@ -260,6 +272,15 @@ export abstract class BaseAudioSource extends EventEmitter {
             if (endSec >= this.duration - 0.05) {
                 this.markLastSegmentLoaded();
                 this.sendProgress();
+
+                if(!this.tailLoaded) {
+                    this.tailLoaded = true;
+                    this.emit("tail-loaded", {
+                        id: this.id,
+                        duration: this.duration
+                    });
+                }
+
                 this.checkIfFullyLoaded();
                 return;
             }

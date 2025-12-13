@@ -8,7 +8,7 @@ export class LocalAudioSource extends BaseAudioSource {
     public async start() {
         if (this.cancelled) return;
 
-        this.mainWindow.webContents.send("player:event", {type: "loading-progress", progress: this.getSegmentMapProgress()});
+        this.mainWindow.webContents.send("player:event", {type: "loading-progress", progress: this.getSegmentMapProgress(), id: this.id});
 
         void this.fillMissingSegments();
         this.startProgressUpdates();

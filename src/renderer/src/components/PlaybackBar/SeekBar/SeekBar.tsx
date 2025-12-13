@@ -43,6 +43,11 @@ const SeekBar = () => {
     const lastIpcTimestampRef = useRef<number>(0);
     const rafRef = useRef<number | null>(null);
     const playbackRunningRef = useRef(playbackRunning);
+    const trackRef = useRef(currentTrack);
+
+    useEffect(() => {
+        trackRef.current = currentTrack;
+    }, [currentTrack]);
 
     useEffect(() => {
         playbackRunningRef.current = playbackRunning;
@@ -56,7 +61,7 @@ const SeekBar = () => {
         const unsub = window.api.onPlayerEvent((event) => {
             switch (event.type) {
                 case "loading-progress":
-                    loadingProgressRef.current = event.progress;
+                    if(trackRef.current?.id === event.id) loadingProgressRef.current = event.progress;
                     break;
                 case "waveform-data":
                     setWaveformData(event);

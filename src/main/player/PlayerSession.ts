@@ -63,7 +63,9 @@ export class PlayerSession {
     }
 
     setSources(main: BaseAudioSource | null, preload: BaseAudioSource | null) {
-        this.source?.cancel();
+        if (this.source && this.source !== main) {
+            this.source.cancel();
+        }
         this.source = main;
         this.preloadSource = preload;
     }
@@ -150,17 +152,9 @@ export class PlayerSession {
             void writeWaveform(data.id, data.peaks);
         });
 
-        source.once("fully-loaded", async() => {
-            if(this.track?.id !== source.id) return;
-            if(this.nextPreload) return;
-
-            const nextTrack = this.queue.getNext();
-            if(!nextTrack) return;
-
-            this.markPreloadStarted();
-            if(this.queue.getRepeatMode() !== RepeatMode.One) {
-                await this.preloadNextTrack(nextTrack);
-            }
+        source.once("tail-loaded", async() => {
+            if (this.track?.id !== source.id) return;
+            await this.tryPreloadNext();
         });
 
         void source.start();
@@ -188,6 +182,10 @@ export class PlayerSession {
     async loadTrack(track: BaseSongEntry) {
         this.playerProcess.postMessage({type: "set-updates", payload: false});
 
+        this.preloadSource?.cancel();
+        this.preloadSource = null;
+        this.preloadTrack = null;
+        this.nextPreload = false;
         this.track = track;
 
         this.sendPendingData(this.track.duration);
@@ -231,6 +229,19 @@ export class PlayerSession {
                 sourceType: track.type
             }
         });
+    }
+
+    public async tryPreloadNext() {
+        if (this.nextPreload) return;
+        if (!this.track || !this.source) return;
+        if (!this.source.isTailLoaded()) return;
+
+        const next = this.queue.getNext();
+        if (!next) return;
+        if (this.queue.getRepeatMode() === RepeatMode.One) return;
+
+        this.markPreloadStarted();
+        await this.preloadNextTrack(next);
     }
 
     async previous() {

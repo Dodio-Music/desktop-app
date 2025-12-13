@@ -26,7 +26,7 @@ export type PlayerEvent =
     | { type: "media-transition", waveformData?: WaveformData, track: BaseSongEntry}
     | { type: "pending-data", data: Partial<PlayerState>}
     | ({ type: "waveform-data"} & WaveformData)
-    | { type: "loading-progress"; progress: number[] }
+    | { type: "loading-progress"; progress: number[], id: string }
     | {type: "repeat-mode", repeatMode: RepeatMode}
 
 

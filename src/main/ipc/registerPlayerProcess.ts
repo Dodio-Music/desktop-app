@@ -26,11 +26,10 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow, initialPrefs
 
                 if(queue.getRepeatMode() === RepeatMode.One) queue.cycleRepeatMode("backward");
 
-                const {preloadSource, currentSource} = session.getSources();
+                const {preloadSource} = session.getSources();
                 const {preloadTrack } = session.getTracks();
 
                 if(preloadTrack && preloadSource) {
-                    currentSource?.cancel();
                     session.setSources(preloadSource, null);
                     session.setTracks(preloadTrack, null);
                     queue.next();
@@ -47,14 +46,7 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow, initialPrefs
                     });
                 }
 
-                if(currentTrack && !session.isPreloading) {
-                    const next = queue.getNext();
-                    if(next) {
-                        session.markPreloadStarted();
-                        void session.preloadNextTrack(next);
-                    }
-                }
-
+                await session.tryPreloadNext();
                 break;
             }
         }
