@@ -22,7 +22,8 @@ export class JsonStore<T extends IPreferences | IState> {
     async load() {
         try {
             const raw = await fs.readFile(this.path, "utf-8");
-            this.data = { ...this.defaultData, ...JSON.parse(raw) };
+            const parsed = JSON.parse(raw);
+            this.data = pickKnownKeys(parsed, this.defaultData);
         } catch {
             this.data = { ...this.defaultData };
             await this.save();
@@ -53,4 +54,15 @@ export class JsonStore<T extends IPreferences | IState> {
         if (this.saveTimeout) clearTimeout(this.saveTimeout);
         this.saveTimeout = setTimeout(() => this.save(), 500);
     }
+}
+
+function pickKnownKeys<T extends object>(source: unknown, defaults: T): T {
+    const result = { ...defaults };
+    if (typeof source !== "object" || source === null) return result;
+    for (const key of Object.keys(defaults) as (keyof T)[]) {
+        if (key in source) {
+            (result[key] as T[keyof T]) = (source as never)[key];
+        }
+    }
+    return result;
 }
