@@ -42,7 +42,7 @@ function resolveFfmpegPath() {
 }
 
 export abstract class BaseAudioSource extends EventEmitter {
-    public DEBUG_LOG = true;
+    public DEBUG_LOG = false;
     public ffmpegPath = resolveFfmpegPath();
 
     protected ffmpegProcess: ChildProcessByStdio<Writable, Readable, Readable> | null = null;

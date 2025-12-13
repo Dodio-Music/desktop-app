@@ -1,7 +1,7 @@
 import s from "./HomePage.module.css";
 import useFetchData from "@renderer/hooks/useFetchData";
 import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
-import {ReleaseDTO} from "../../../../shared/Api";
+import {ReleaseDTO, ReleasePreviewDTO} from "../../../../shared/Api";
 import {releaseToSongEntries} from "@renderer/util/parseBackendTracks";
 import {useNavigate} from "react-router-dom";
 import {FaPause, FaPlay} from "react-icons/fa6";
@@ -9,20 +9,27 @@ import {MouseEvent} from "react";
 import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 import {isRemoteSong} from "../../../../shared/TrackInfo";
+import toast from "react-hot-toast";
 
 const HomePage = () => {
     const navigate = useNavigate();
-    const {data, loading, error} = useFetchData<ReleaseDTO[]>("/api/release/all");
+    const {data, loading, error} = useFetchData<ReleasePreviewDTO[]>("/api/release/all");
     const {currentTrack: track, userPaused} = useSelector((state: RootState) => state.nativePlayer);
 
     if (loading) return <LoadingPage/>;
 
-    const handleIconClick = (e: MouseEvent, release: ReleaseDTO) => {
+    const handleIconClick = async (e: MouseEvent, releasePrev: ReleasePreviewDTO) => {
         e.stopPropagation();
-        if (track && isRemoteSong(track) && track.releaseId === release.releaseId) {
+        if (track && isRemoteSong(track) && track.releaseId === releasePrev.releaseId) {
             window.api.pauseOrResume();
         } else {
-            const releaseTracks = releaseToSongEntries(release);
+            const req = await window.api.authRequest("get", `/api/release/${releasePrev.releaseId}`);
+            if(req.type === "error") {
+                toast.error("Couldn't load release!");
+                return;
+            }
+
+            const releaseTracks = releaseToSongEntries(req.value as ReleaseDTO);
             window.api.loadTrackRemote(releaseTracks[0], releaseTracks);
         }
     };

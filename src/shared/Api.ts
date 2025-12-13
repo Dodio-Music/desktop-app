@@ -74,6 +74,13 @@ export interface ReleaseDTO {
     releaseTracks: ReleaseTrackDTO[];
 }
 
+export interface ReleasePreviewDTO {
+    releaseId: string;
+    releaseName: string;
+    coverArtUrl: string;
+    artists: string[];
+}
+
 export interface SourceDTO {
     sourceId: string;
     url: string;
