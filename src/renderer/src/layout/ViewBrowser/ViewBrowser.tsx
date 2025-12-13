@@ -13,6 +13,7 @@ import SettingsPage from "@renderer/pages/Settings/SettingsPage";
 import ProtectedRoute from "@renderer/components/ProtectedRoute";
 import ReleaseView from "@renderer/pages/ReleaseView/ReleaseView";
 import ForgotPassword from "@renderer/pages/account/ForgotPassword";
+import UploadDashboard from "@renderer/pages/UploadDashboard/UploadDashboard";
 
 const ViewBrowser = () => {
     return (
@@ -21,6 +22,7 @@ const ViewBrowser = () => {
                 <Route path={"/"} element={<Navigate to={"/collection/local"} replace/>}/>
                 <Route path={"/home"} element={<ProtectedRoute redirect={false}><HomePage/></ProtectedRoute>}/>
                 <Route path={"/settings"} element={<SettingsPage/>}/>
+                <Route path={"/dashboard"} element={<UploadDashboard/>}/>
                 <Route path={"/collection/local"} element={<LocalFilesPage/>}/>
                 <Route path={"/collection/tracks"} element={<ProtectedRoute><LikedTracksPage/></ProtectedRoute>}/>
                 <Route path={"/collection/albums"} element={<ProtectedRoute><LikedAlbumsPage/></ProtectedRoute>}/>

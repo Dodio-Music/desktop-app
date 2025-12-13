@@ -93,7 +93,8 @@ export class RemoteFlacSource extends BaseAudioSource {
 
         inputStream.pipe(this.ffmpegProcess.stdin!);
 
-        const writeOffset = Number(startSeek.sampleNumber) * this.outputChannels;
+        const writeOffset =
+            Math.floor(Number(startSeek.sampleNumber) * this.outputSampleRate / this.originalSampleRate) * this.outputChannels;
         this.setupFfmpegLifecycle(endSec, writeOffset);
     }
 

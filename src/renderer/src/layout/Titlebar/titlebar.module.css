@@ -65,7 +65,7 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    gap: 10px;
+    gap: 20px;
 }
 
 .zoomContainer {
@@ -110,5 +110,18 @@
     align-items: center;
     height: 100%;
     padding: 13px;
+}
+
+.admin {
+    -webkit-app-region: no-drag;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.admin:hover {
+    color: var(--color-accent-hover);
 }
 

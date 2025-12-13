@@ -58,6 +58,7 @@
         "dotenv": "^17.2.3",
         "electron-updater": "^6.3.9",
         "ffmpeg-static": "^5.2.0",
+        "mime": "^4.1.0",
         "music-metadata": "^11.10.1",
         "p-limit": "^7.1.1",
         "react-hot-toast": "^2.6.0",

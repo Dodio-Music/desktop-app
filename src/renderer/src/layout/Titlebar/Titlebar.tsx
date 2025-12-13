@@ -4,6 +4,7 @@ import {FC, useEffect, useState} from "react";
 import {GoGear} from "react-icons/go";
 import {useNavigate} from "react-router-dom";
 import dodos from "../../../../../resources/dodo_transparent_white_256.png";
+import {LuLayoutDashboard} from "react-icons/lu";
 
 interface TitlebarProps {
     zoomLevel: number;
@@ -25,10 +26,6 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
         };
     }, []);
 
-    const handleSettingsClick= () =>{
-        navigate("/settings")
-    };
-
     return (
         <div className={s.title_bar}>
             <div className={s.icon}><img src={dodos} alt={"Dodio"}/><p className={s.title}>Dodio</p></div>
@@ -36,9 +33,12 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
                 {zoomLevel !== 100 &&
                     <button onClick={() => window.api.resetZoom()} className={s.zoomContainer}><p className={s.zoomLevel}>{zoomLevel}%</p></button>}
 
+                {/*Admin UI*/}
+                <button className={s.admin}><LuLayoutDashboard size={23} onClick={() => navigate("/dashboard")}/></button>
+
                 {/*Settings*/}
                 <div className={s.settingsContainer}>
-                    <GoGear className={s.settings} size={25} onClick={handleSettingsClick} />
+                    <GoGear className={s.settings} size={25} onClick={() => navigate("/settings")} />
                 </div>
 
                 <div className={s.buttons}>

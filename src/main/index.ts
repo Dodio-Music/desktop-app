@@ -11,6 +11,7 @@ import path from "path";
 import {runCleanupTasks} from "./ipc/shutdownManager.js";
 import {setupApi} from "./web/dodio_api.js";
 import {loadPreferencesFromDisk, registerPreferencesIPC} from "./preferences.js";
+import {registerDashboardIPC} from "./dashboard.js";
 
 let mainWindow: BrowserWindow;
 
@@ -55,6 +56,7 @@ app.whenReady().then(async () => {
     await registerMagnifierIPC(mainWindow, prefs);
     registerSongIndexer(mainWindow);
     registerDodioApiIPC();
+    registerDashboardIPC();
 
     registerAppLifecycle(createWindow);
 });

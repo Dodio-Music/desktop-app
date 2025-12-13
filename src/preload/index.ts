@@ -1,4 +1,4 @@
-import {contextBridge, ipcRenderer} from "electron";
+import {contextBridge, ipcRenderer, webUtils} from "electron";
 import {ElectronAPI, electronAPI} from "@electron-toolkit/preload";
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerEvent, PlayerState} from "../shared/PlayerState.js";
@@ -6,6 +6,7 @@ import {BaseSongEntry, LocalSongEntry, RemoteSongEntry, SongDirectoryResponse} f
 import {ApiResult, AuthStatus, DodioApi, MayError, AxiosMethodArgs} from "../shared/Api.js";
 import IpcRenderer = Electron.IpcRenderer;
 import {IAllPreferences} from "../main/preferences.js";
+import {UploadResponse} from "../main/dashboard.js";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -127,7 +128,8 @@ const api = {
     nextTrack: () => ipcRenderer.invoke("player:next"),
     previousTrack: () => ipcRenderer.invoke("player:previous"),
     cycleRepeatMode: () => ipcRenderer.invoke("player:repeat-mode"),
-    ready: () => ipcRenderer.invoke("renderer:ready")
+    ready: () => ipcRenderer.invoke("renderer:ready"),
+    uploadFile: (file: File): Promise<UploadResponse> => ipcRenderer.invoke("dashboard:upload", webUtils.getPathForFile(file))
 } satisfies DodioApi & Record<string, unknown>;
 
 export type ApiType = typeof api;
