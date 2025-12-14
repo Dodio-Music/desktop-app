@@ -10,7 +10,7 @@ type FetchState<T> = {
 };
 
 export default function useFetchData<T>(url: string): FetchState<T> {
-    const {status: authStatus} = useAuth();
+    const {info: authInfo} = useAuth();
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -34,14 +34,14 @@ export default function useFetchData<T>(url: string): FetchState<T> {
     }, [url]);
 
     useEffect(() => {
-        if (authStatus !== "account") {
+        if (authInfo.status !== "account") {
             setLoading(false);
             return;
         }
 
         void fetchData();
 
-    }, [authStatus, fetchData]);
+    }, [authInfo, fetchData]);
 
     return { data, loading, error, refetch: fetchData };
 }

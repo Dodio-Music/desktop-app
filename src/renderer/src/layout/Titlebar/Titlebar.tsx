@@ -5,6 +5,7 @@ import {GoGear} from "react-icons/go";
 import {useNavigate} from "react-router-dom";
 import dodos from "../../../../../resources/dodo_transparent_white_256.png";
 import {LuLayoutDashboard} from "react-icons/lu";
+import {useAuth} from "@renderer/hooks/reduxHooks";
 
 interface TitlebarProps {
     zoomLevel: number;
@@ -12,6 +13,7 @@ interface TitlebarProps {
 
 const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
     const [isMaximized, setIsMaximized] = useState(false);
+    const {info} = useAuth();
 
     const navigate = useNavigate();
 
@@ -34,7 +36,10 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
                     <button onClick={() => window.api.resetZoom()} className={s.zoomContainer}><p className={s.zoomLevel}>{zoomLevel}%</p></button>}
 
                 {/*Admin UI*/}
-                <button className={s.admin}><LuLayoutDashboard size={23} onClick={() => navigate("/dashboard")}/></button>
+                {
+                    info.role === "ADMIN" &&
+                    <button className={s.admin}><LuLayoutDashboard size={23} onClick={() => navigate("/dashboard")}/></button>
+                }
 
                 {/*Settings*/}
                 <div className={s.settingsContainer}>

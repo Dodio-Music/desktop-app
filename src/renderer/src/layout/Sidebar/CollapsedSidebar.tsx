@@ -3,13 +3,12 @@ import {PiMicrophoneStageBold} from "react-icons/pi";
 import {BiAlbum, BiCollection} from "react-icons/bi";
 import {FaRegFolderOpen, FaRegHeart} from "react-icons/fa6";
 import NavButton from "./NavButton/NavButton";
-import {AuthStatus} from "../../../../shared/Api";
 import React from "react";
 import {VscAccount} from "react-icons/vsc";
 import {MdOutlineLogin} from "react-icons/md";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
 import {FaHome} from "react-icons/fa";
+import {AuthStatus} from "../../../../main/web/Typing";
+import {useAuth} from "@renderer/hooks/reduxHooks";
 
 const accountPages = {
     login: {url: "/login", text: "Sign In", icon: <MdOutlineLogin/> },
@@ -18,8 +17,8 @@ const accountPages = {
 } as const satisfies Record<AuthStatus, { url: string, text: string, icon: React.ReactElement }>;
 
 const Sidebar = () => {
-    const {status} = useSelector((state: RootState) => state.auth);
-    const {url: accountUrl, icon: accountIcon} = accountPages[status];
+    const {info} = useAuth();
+    const {url: accountUrl, icon: accountIcon} = accountPages[info.status];
 
     return (
         <div className={s.main}>

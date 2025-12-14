@@ -9,7 +9,6 @@ export type AxiosMethodArgs = {
     put: Parameters<AxiosInstance["put"]>;
     patch: Parameters<AxiosInstance["patch"]>;
 };
-export type AuthStatus = "login" | "signup" | "account";
 
 export interface DodioApi {
     login(login: string, password: string): Promise<MayError>;

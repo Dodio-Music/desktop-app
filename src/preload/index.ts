@@ -3,10 +3,11 @@ import {ElectronAPI, electronAPI} from "@electron-toolkit/preload";
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerEvent, PlayerState} from "../shared/PlayerState.js";
 import {BaseSongEntry, LocalSongEntry, RemoteSongEntry, SongDirectoryResponse} from "../shared/TrackInfo.js";
-import {ApiResult, AuthStatus, DodioApi, MayError, AxiosMethodArgs} from "../shared/Api.js";
+import {ApiResult, DodioApi, MayError, AxiosMethodArgs} from "../shared/Api.js";
 import IpcRenderer = Electron.IpcRenderer;
 import {IAllPreferences} from "../main/preferences.js";
-import {UploadResponse} from "../main/dashboard.js";
+import {UploadProgress, UploadResponse} from "../main/dashboard.js";
+import {AuthInfo} from "../main/web/Typing.js";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -103,12 +104,11 @@ const api = {
         return () => ipcRenderer.removeListener("preferences:update", handler);
     },
     showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory"),
-    onAuthUpdate: (cb: (status: AuthStatus) => void) => {
-        const handler = (_: unknown, status: AuthStatus) => cb(status);
+    onAuthUpdate: (cb: (status: AuthInfo) => void) => {
+        const handler = (_: unknown, status: AuthInfo) => cb(status);
         ipcRenderer.on("auth:statusChange", handler);
         return () => ipcRenderer.removeListener("auth:statusChange", handler);
     },
-    getAuthStatus: () => ipcRenderer.invoke("auth:getStatus"),
     authRequest<M extends keyof AxiosMethodArgs, T = unknown>(method: M, ...args: AxiosMethodArgs[M]) {
         return ipcRenderer.invoke("api:authRequest", method, ...args) as Promise<ApiResult<T>>;
     },
@@ -129,7 +129,12 @@ const api = {
     previousTrack: () => ipcRenderer.invoke("player:previous"),
     cycleRepeatMode: () => ipcRenderer.invoke("player:repeat-mode"),
     ready: () => ipcRenderer.invoke("renderer:ready"),
-    uploadFile: (file: File): Promise<UploadResponse> => ipcRenderer.invoke("dashboard:upload", webUtils.getPathForFile(file))
+    uploadFile: (file: File): Promise<UploadResponse> => ipcRenderer.invoke("dashboard:upload", webUtils.getPathForFile(file)),
+    onProgress: (cb: (progress: UploadProgress) => void) => {
+        const listener = (_: IpcRendererEvent, uploadProgress: UploadProgress) => cb(uploadProgress);
+        ipcRenderer.on("dashboard:upload-progress", listener);
+        return () => ipcRenderer.removeListener("dashboard:upload-progress", listener);
+    }
 } satisfies DodioApi & Record<string, unknown>;
 
 export type ApiType = typeof api;

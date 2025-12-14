@@ -5,7 +5,7 @@ import {HashRouter} from "react-router-dom";
 import {store} from "./redux/store";
 import {updatePlayerState, setCurrentTrack, setPendingData, setRepeatMode} from "./redux/nativePlayerSlice";
 import {Provider} from "react-redux";
-import {setAuthStatus} from "@renderer/redux/authSlice";
+import {setAuthInfo} from "@renderer/redux/authSlice";
 import {isLocalSong} from "../../shared/TrackInfo";
 
 createRoot(document.getElementById("root")!).render(
@@ -50,8 +50,8 @@ window.api.onPlayerEvent((event) => {
     }
 });
 
-window.api.onAuthUpdate((status) => {
-    store.dispatch(setAuthStatus(status));
+window.api.onAuthUpdate((info) => {
+    store.dispatch(setAuthInfo(info));
 });
 
 window.api.ready();

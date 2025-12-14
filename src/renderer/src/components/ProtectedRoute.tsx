@@ -1,8 +1,7 @@
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
+import {useAuth} from "@renderer/hooks/reduxHooks";
 
 interface ProtectedRouteProps {
     children: ReactNode;
@@ -11,11 +10,11 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, redirect = true }: ProtectedRouteProps) => {
     const location = useLocation();
-    const authStatus = useSelector((state: RootState) => state.auth.status);
+    const {info} = useAuth();
 
-    if(!authStatus) return <LoadingPage/>;
+    if(!info.status) return <LoadingPage/>;
 
-    if(authStatus === "account") return <>{children}</>;
+    if(info.status === "account") return <>{children}</>;
 
     if(!redirect) return (
         <div className={"pageWrapper"}>

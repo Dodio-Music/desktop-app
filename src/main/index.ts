@@ -56,7 +56,7 @@ app.whenReady().then(async () => {
     await registerMagnifierIPC(mainWindow, prefs);
     registerSongIndexer(mainWindow);
     registerDodioApiIPC();
-    registerDashboardIPC();
+    registerDashboardIPC(mainWindow);
 
     registerAppLifecycle(createWindow);
 });

@@ -1,6 +1,7 @@
 import axios, {AxiosError, AxiosInstance, AxiosResponse} from "axios";
 import {ApiResult, AxiosMethodArgs, DodioApi, DodioError, MayError, NoLoginError} from "../../shared/Api.js";
 import {auth, updateAuth} from "../auth.js";
+import {IRole} from "./Typing.js";
 
 let instance: AxiosInstance = null!;
 
@@ -125,6 +126,7 @@ interface SignInResponse {
     accessTokenExpirationDate: string,
     refreshToken: string,
     refreshTokenExpirationDate: string,
+    role: IRole
 }
 
 interface RefreshTokenResponse {
@@ -148,7 +150,8 @@ export default {
                 access_token: res.data.accessToken,
                 refresh_token: res.data.refreshToken,
                 access_token_expiry: new Date(res.data.accessTokenExpirationDate),
-                refresh_token_expiry: new Date(res.data.refreshTokenExpirationDate)
+                refresh_token_expiry: new Date(res.data.refreshTokenExpirationDate),
+                role: res.data.role
             });
             return null;
         } catch (e) {

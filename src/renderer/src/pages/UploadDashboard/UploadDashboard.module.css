@@ -3,8 +3,8 @@ h1 {
 }
 
 .dragArea {
-    width: 300px;
-    height: 300px;
+    width: 100%;
+    aspect-ratio: 1;
     background-color: #212121;
     display: flex;
     justify-content: center;
@@ -24,4 +24,67 @@ h1 {
 .dragArea p {
     font-size: 1.5rem;
     color: #9c9c9c;
+}
+
+.horizontal {
+    display: grid;
+    gap: 50px;
+    grid-template-columns: 350px 1fr;
+    margin-right: 20px;
+}
+
+.tableContainer {
+    width: 100%;
+}
+
+.tableRow, .tableHead {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 30px;
+    padding: 15px;
+    line-height: 1;
+    border-radius: 5px;
+    gap: 25px;
+}
+
+.tableRow {
+    position: relative;
+    overflow: hidden;
+}
+
+.tableRow p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tableHead p {
+    font-weight: 700;
+    color: white;
+}
+
+.delete svg {
+    transition: color 0.1s, opacity 0.1s;
+    opacity: 0.6;
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translate(-50%, -50%);
+}
+
+.delete:hover svg {
+    color: #ff5252;
+    opacity: 1;
+}
+
+.status, .fileName {
+    color: #d7d7d7;
+}
+
+.statusError {
+    color: #ff8b8b;
+}
+
+.statusSuccess {
+    color: #8bff8d;
 }

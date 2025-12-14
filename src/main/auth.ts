@@ -1,15 +1,14 @@
 import {app, BrowserWindow} from "electron";
 import path from "path";
 import fs from "fs/promises";
-import {IAuthData} from "./web/Typing.js";
+import {AuthInfo, AuthStatus, IAuthData} from "./web/Typing.js";
 import {safeStorage} from "electron"
-import {AuthStatus} from "../shared/Api.js";
 import {refreshAuthToken} from "./web/dodio_api.js";
 
 
 export const authPath = path.join(app.getPath("userData"), "auth.json");
 
-let authStatusCache: AuthStatus | null = null;
+let authInfoCache: AuthInfo | null = null;
 
 async function loadAuth(): Promise<IAuthData> {
     try {
@@ -21,7 +20,8 @@ async function loadAuth(): Promise<IAuthData> {
             access_token_expiry: new Date(Date.parse(parsed.access_token_expiry)),
             refresh_token_expiry: new Date(Date.parse(parsed.refresh_token_expiry)),
             refresh_token: parsed.refresh_token,
-            access_token: parsed.access_token
+            access_token: parsed.access_token,
+            role: parsed.role
         };
     } catch {
         return {hasAccount: false};
@@ -38,9 +38,9 @@ export function updateAuth(new_auth: Partial<IAuthData>) {
             ? "login"
             : "signup";
 
-    authStatusCache = authStatus;
+    authInfoCache = {status: authStatus, role: auth.role};
 
-    mainWindow.webContents.send("auth:statusChange", authStatus);
+    mainWindow.webContents.send("auth:statusChange", authInfoCache);
 
     const data = JSON.stringify(auth, null, 2);
     const encrypted = safeStorage.encryptString(data);
@@ -55,7 +55,7 @@ export async function setupAuth(window: BrowserWindow) {
 }
 
 export function registerAuthStartup() {
-    if (authStatusCache !== null) {
-        mainWindow.webContents.send("auth:statusChange", authStatusCache);
+    if (authInfoCache !== null) {
+        mainWindow.webContents.send("auth:statusChange", authInfoCache);
     }
 }

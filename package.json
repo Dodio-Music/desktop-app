@@ -58,6 +58,8 @@
         "dotenv": "^17.2.3",
         "electron-updater": "^6.3.9",
         "ffmpeg-static": "^5.2.0",
+        "form-data": "^4.0.5",
+        "got": "^14.6.5",
         "mime": "^4.1.0",
         "music-metadata": "^11.10.1",
         "p-limit": "^7.1.1",

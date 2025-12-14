@@ -13,7 +13,7 @@ enum SeekBarDisplayStyle {
 
 const wantedDisplayStyle = SeekBarDisplayStyle.WAVEFORM;
 const seekbarWidth = 600;
-const showLoadingProcess = true;
+const showLoadingProcess = false;
 
 const SeekBar = () => {
     const latency = useSelector((state: RootState) => state.nativePlayer.latency);
