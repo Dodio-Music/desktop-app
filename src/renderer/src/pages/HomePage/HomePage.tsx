@@ -5,16 +5,53 @@ import {ReleaseDTO, ReleasePreviewDTO} from "../../../../shared/Api";
 import {releaseToSongEntries} from "@renderer/util/parseBackendTracks";
 import {useNavigate} from "react-router-dom";
 import {FaPause, FaPlay} from "react-icons/fa6";
-import {MouseEvent} from "react";
+import {MouseEvent, useState} from "react";
 import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 import {isRemoteSong} from "../../../../shared/TrackInfo";
 import toast from "react-hot-toast";
+import {useAuth} from "@renderer/hooks/reduxHooks";
+import {ListItemIcon, ListItemText, Menu, MenuItem} from "@mui/material";
+import Delete from "@mui/icons-material/Delete";
 
 const HomePage = () => {
     const navigate = useNavigate();
-    const {data, loading, error} = useFetchData<ReleasePreviewDTO[]>("/api/release/all");
+    const {data, loading, error, refetch} = useFetchData<ReleasePreviewDTO[]>("/api/release/all");
+    const [menuPos, setMenuPos] = useState<{ mouseX: number; mouseY: number } | null>(null);
+    const [selectedRelease, setSelectedRelease] = useState<ReleasePreviewDTO | null>(null);
     const {currentTrack: track, userPaused} = useSelector((state: RootState) => state.nativePlayer);
+    const role = useAuth().info.role;
+
+    const handleContextMenu = (e: MouseEvent, release: ReleasePreviewDTO) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        setSelectedRelease(release);
+        setMenuPos({
+            mouseX: e.clientX + 2,
+            mouseY: e.clientY - 6,
+        });
+    };
+
+    const handleDelete = async () => {
+        if (!selectedRelease) return;
+
+        const res = await window.api.authRequest("delete", `/admin/release/${selectedRelease.releaseId}`);
+
+        if (res.type === "error") {
+            toast.error(res.error.error);
+        } else {
+            toast.success("Release deleted");
+            refetch();
+        }
+
+        closeMenu();
+    };
+
+    const closeMenu = () => {
+        setMenuPos(null);
+        setSelectedRelease(null);
+    };
 
     if (loading) return <LoadingPage/>;
 
@@ -46,7 +83,8 @@ const HomePage = () => {
                     <div className={s.releases}>
                         {data.map(t =>
                             <div key={t.releaseName} className={s.release}
-                                 onClick={() => navigate(`/release/${t.releaseId}`)}>
+                                 onClick={() => navigate(`/release/${t.releaseId}`)}
+                                 onContextMenu={(e) => handleContextMenu(e, t)}>
                                 <div className={s.coverWrapper}>
                                     <img alt={"cover"} className={s.cover} src={`${t.coverArtUrl}?size=low`}/>
                                     <button className={s.play} onClick={(e) => handleIconClick(e, t)}>
@@ -63,6 +101,28 @@ const HomePage = () => {
                         )}
                     </div>
             }
+            <Menu
+                open={Boolean(menuPos)}
+                onClose={closeMenu}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                    menuPos
+                        ? { top: menuPos.mouseY, left: menuPos.mouseX }
+                        : undefined
+                }
+            >
+                {role === "ADMIN" && (
+                    <MenuItem onClick={handleDelete}>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                            <Delete sx={{color: "rgb(255,255,255)"}} fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText
+                            primary="Delete release"
+                            sx={{color: "rgb(255,255,255)"}}
+                        />
+                    </MenuItem>
+                )}
+            </Menu>
         </div>
     );
 };

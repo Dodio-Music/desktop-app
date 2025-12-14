@@ -7,13 +7,18 @@ import {updatePlayerState, setCurrentTrack, setPendingData, setRepeatMode} from 
 import {Provider} from "react-redux";
 import {setAuthInfo} from "@renderer/redux/authSlice";
 import {isLocalSong} from "../../shared/TrackInfo";
+import {CssBaseline, ThemeProvider} from "@mui/material";
+import {theme} from "./muiTheme";
 
 createRoot(document.getElementById("root")!).render(
     <Provider store={store}>
         <StrictMode>
-            <HashRouter>
-                <App/>
-            </HashRouter>
+            <ThemeProvider theme={theme}>
+                <HashRouter>
+                    <CssBaseline/>
+                    <App/>
+                </HashRouter>
+            </ThemeProvider>
         </StrictMode>
     </Provider>
 );
@@ -23,16 +28,16 @@ window.api.onPlayerUpdate((state) => {
 });
 
 window.api.onPlayerEvent((event) => {
-    switch(event.type) {
+    switch (event.type) {
         case "media-transition": {
-            if(isLocalSong(event.track)) {
+            if (isLocalSong(event.track)) {
                 const localTrack = event.track;
                 const track = {
                     ...localTrack,
                     createdAt: typeof event.track.createdAt === "string"
                         ? event.track.createdAt
                         : event.track.createdAt?.toISOString()
-                }
+                };
                 store.dispatch(setCurrentTrack(track));
             } else {
                 store.dispatch(setCurrentTrack(event.track));
