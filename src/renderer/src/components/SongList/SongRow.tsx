@@ -17,17 +17,20 @@ interface RowProps<T extends BaseSongEntry> {
 }
 
 export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
-                                                          index,
-                                                          song,
-                                                          setSelectedRow,
-                                                          isSelected,
-                                                          isActive,
-                                                          pauseOrLoadSong,
-                                                          slots,
-                                                          gridTemplateColumns
-                                                      }: RowProps<T>) {
-    const userPaused = useSelector((root: RootState) => (isActive ? root.nativePlayer.userPaused : false));
+                                                                                index,
+                                                                                song,
+                                                                                setSelectedRow,
+                                                                                isSelected,
+                                                                                isActive,
+                                                                                pauseOrLoadSong,
+                                                                                slots,
+                                                                                gridTemplateColumns,
+                                                                            }: RowProps<T>) {
     const handlePlay = useCallback((song: T) => pauseOrLoadSong(song), [pauseOrLoadSong]);
+    const userPaused = useSelector(
+        (root: RootState) =>
+            isActive ? root.nativePlayer.userPaused : null
+    );
 
     const rowClass = `${s.songRow} ${s.grid}`;
     return (

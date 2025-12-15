@@ -1,5 +1,5 @@
 import {useEffect, useRef} from "react";
-import {WaveformData} from "../../../../../shared/PlayerState";
+import {WaveformData} from "../../../../../../shared/PlayerState";
 
 export function useWaveform (waveformData: WaveformData | undefined, width: number, height: number, currentTrackId: string | null) {
     const offscreenCanvasRef = useRef<HTMLCanvasElement>(

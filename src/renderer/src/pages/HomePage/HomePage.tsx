@@ -4,8 +4,7 @@ import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
 import {ReleaseDTO, ReleasePreviewDTO} from "../../../../shared/Api";
 import {releaseToSongEntries} from "@renderer/util/parseBackendTracks";
 import {useNavigate} from "react-router-dom";
-import {FaPause, FaPlay} from "react-icons/fa6";
-import {MouseEvent, useState} from "react";
+import {MouseEvent, useCallback, useEffect, useRef, useState} from "react";
 import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 import {isRemoteSong} from "../../../../shared/TrackInfo";
@@ -13,14 +12,27 @@ import toast from "react-hot-toast";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import {ListItemIcon, ListItemText, Menu, MenuItem} from "@mui/material";
 import Delete from "@mui/icons-material/Delete";
+import ReleaseCard from "@renderer/pages/HomePage/ReleaseCard";
 
 const HomePage = () => {
     const navigate = useNavigate();
     const {data, loading, error, refetch} = useFetchData<ReleasePreviewDTO[]>("/api/release/all");
     const [menuPos, setMenuPos] = useState<{ mouseX: number; mouseY: number } | null>(null);
     const [selectedRelease, setSelectedRelease] = useState<ReleasePreviewDTO | null>(null);
-    const {currentTrack: track, userPaused} = useSelector((state: RootState) => state.nativePlayer);
+    const track = useSelector((state: RootState) => state.nativePlayer.currentTrack);
+    const userPaused = useSelector((state: RootState) => state.nativePlayer.userPaused);
     const role = useAuth().info.role;
+
+    const trackRef = useRef(track);
+    const userPausedRef = useRef(userPaused);
+
+    useEffect(() => {
+        trackRef.current = track;
+    }, [track]);
+
+    useEffect(() => {
+        userPausedRef.current = userPaused;
+    }, [userPaused]);
 
     const handleContextMenu = (e: MouseEvent, release: ReleasePreviewDTO) => {
         e.preventDefault();
@@ -29,7 +41,7 @@ const HomePage = () => {
         setSelectedRelease(release);
         setMenuPos({
             mouseX: e.clientX + 2,
-            mouseY: e.clientY - 6,
+            mouseY: e.clientY - 6
         });
     };
 
@@ -53,23 +65,40 @@ const HomePage = () => {
         setSelectedRelease(null);
     };
 
-    if (loading) return <LoadingPage/>;
+    const handleIconClick = useCallback(
+        async (e: MouseEvent, releasePrev: ReleasePreviewDTO) => {
+            e.stopPropagation();
 
-    const handleIconClick = async (e: MouseEvent, releasePrev: ReleasePreviewDTO) => {
-        e.stopPropagation();
-        if (track && isRemoteSong(track) && track.releaseId === releasePrev.releaseId) {
-            window.api.pauseOrResume();
-        } else {
+            const track = trackRef.current;
+
+            if (track && isRemoteSong(track) && track.releaseId === releasePrev.releaseId) {
+                window.api.pauseOrResume();
+                return;
+            }
+
             const req = await window.api.authRequest("get", `/api/release/${releasePrev.releaseId}`);
-            if(req.type === "error") {
+            if (req.type === "error") {
                 toast.error("Couldn't load release!");
                 return;
             }
 
             const releaseTracks = releaseToSongEntries(req.value as ReleaseDTO);
             window.api.loadTrackRemote(releaseTracks[0], releaseTracks);
-        }
-    };
+        },
+        []
+    );
+
+    const handleClick = useCallback(
+        (release: ReleasePreviewDTO) => navigate(`/release/${release.releaseId}`),
+        [navigate]
+    );
+
+    const handleContextMenuCb = useCallback(
+        (e: MouseEvent, release: ReleasePreviewDTO) => handleContextMenu(e, release),
+        []
+    );
+
+    if (loading) return <LoadingPage/>;
 
     if (error || data === null) return <p className={"errorPage"}>{error ?? "Couldn't load homepage!"}</p>;
 
@@ -81,24 +110,18 @@ const HomePage = () => {
                     <p>{error ?? "An unknown error occurred!"}</p>
                     :
                     <div className={s.releases}>
-                        {data.map(t =>
-                            <div key={t.releaseName} className={s.release}
-                                 onClick={() => navigate(`/release/${t.releaseId}`)}
-                                 onContextMenu={(e) => handleContextMenu(e, t)}>
-                                <div className={s.coverWrapper}>
-                                    <img alt={"cover"} className={s.cover} src={`${t.coverArtUrl}?size=low`}/>
-                                    <button className={s.play} onClick={(e) => handleIconClick(e, t)}>
-                                        {track && isRemoteSong(track) && track.releaseId === t.releaseId && !userPaused ?
-                                            <FaPause size={24} className={s.pauseIcon}/>
-                                            :
-                                            <FaPlay size={24} className={s.playIcon}/>
-                                        }
-                                    </button>
-                                </div>
-                                <p className={`${s.title} ${s.link}`}>{t.releaseName}</p>
-                                <p className={`${s.artist} ${s.link}`}>{t.artists.join(", ")}</p>
-                            </div>
-                        )}
+                        {data.map(t => {
+                            const isPlaying = track && isRemoteSong(track) && track.releaseId === t.releaseId && !userPaused;
+
+                            return <ReleaseCard
+                                onIconClick={handleIconClick}
+                                key={t.releaseName}
+                                release={t}
+                                isPlaying={isPlaying}
+                                onClick={handleClick}
+                                onContextMenu={handleContextMenuCb}
+                            />;
+                        })}
                     </div>
             }
             <Menu
@@ -107,14 +130,14 @@ const HomePage = () => {
                 anchorReference="anchorPosition"
                 anchorPosition={
                     menuPos
-                        ? { top: menuPos.mouseY, left: menuPos.mouseX }
+                        ? {top: menuPos.mouseY, left: menuPos.mouseX}
                         : undefined
                 }
             >
                 {role === "ADMIN" && (
                     <MenuItem onClick={handleDelete}>
-                        <ListItemIcon sx={{ minWidth: 32 }}>
-                            <Delete sx={{color: "rgb(255,255,255)"}} fontSize="small" />
+                        <ListItemIcon sx={{minWidth: 32}}>
+                            <Delete sx={{color: "rgb(255,255,255)"}} fontSize="small"/>
                         </ListItemIcon>
                         <ListItemText
                             primary="Delete release"

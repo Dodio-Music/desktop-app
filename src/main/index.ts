@@ -12,6 +12,7 @@ import {runCleanupTasks} from "./ipc/shutdownManager.js";
 import {setupApi} from "./web/dodio_api.js";
 import {loadPreferencesFromDisk, registerPreferencesIPC} from "./preferences.js";
 import {registerDashboardIPC} from "./dashboard.js";
+import {installExtension, REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS} from "electron-devtools-installer";
 
 let mainWindow: BrowserWindow;
 
@@ -35,7 +36,7 @@ app.whenReady().then(async () => {
         return net.fetch(filePath);
     })
 
-    //devtools init
+    //devtools shortcuts
     app.on("browser-window-created", (_, window) => {
         optimizer.watchWindowShortcuts(window);
     });
@@ -59,4 +60,8 @@ app.whenReady().then(async () => {
     registerDashboardIPC(mainWindow);
 
     registerAppLifecycle(createWindow);
+
+    installExtension([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS])
+        .then(([redux, react]) => console.log(`Added Extensions:  ${redux.name}, ${react.name}`))
+        .catch((err) => console.log("An error occurred: ", err));
 });

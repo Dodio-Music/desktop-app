@@ -1,11 +1,11 @@
-import s from "../PlaybackBar.module.css";
+import s from "../../PlaybackBar.module.css";
 import {MouseEvent, useEffect, useRef, useState} from "react";
-import {formatTime} from "../../../util/timeUtils";
 import {shallowEqual, useSelector} from "react-redux";
-import {RootState} from "../../../redux/store";
-import {isRemoteSong, SEGMENT_DURATION} from "../../../../../shared/TrackInfo";
-import {useWaveform} from "@renderer/components/PlaybackBar/SeekBar/useWaveform";
-import {WaveformData} from "../../../../../shared/PlayerState";
+import {isRemoteSong, SEGMENT_DURATION} from "../../../../../../shared/TrackInfo";
+import {useWaveform} from "@renderer/components/PlaybackBar/PlaybackControls/SeekBar/useWaveform";
+import {WaveformData} from "../../../../../../shared/PlayerState";
+import {RootState} from "@renderer/redux/store";
+import {formatTime} from "@renderer/util/timeUtils";
 
 enum SeekBarDisplayStyle {
     DEFAULT, WAVEFORM

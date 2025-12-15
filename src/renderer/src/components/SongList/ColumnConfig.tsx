@@ -11,7 +11,7 @@ import placeholder from "../../../../../resources/img-placeholder-128x128.svg";
 export interface SongRowSlotProps<T> {
     song: T;
     isActive: boolean;
-    userPaused: boolean;
+    userPaused: boolean | null;
     index: number;
     handlePlay: (song: T) => void;
 }
