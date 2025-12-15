@@ -91,6 +91,8 @@ async function scanFolder() {
             })
     );
 
+    mainWindow.webContents.send("songs:count", list.length);
+
     list.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
     await loadMetadataCache();

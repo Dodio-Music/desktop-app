@@ -66,6 +66,11 @@ const windowControls: CustomWindowControls = {
 
 const api = {
     startSongScan: () => ipcRenderer.invoke("songs:start-scan"),
+    onSongCount: (cb: (count: number) => void) => {
+        const handler = (_ev: Electron.IpcRendererEvent, res: number) => cb(res);
+        ipcRenderer.on("songs:count", handler);
+        return () => { ipcRenderer.removeListener("songs:count", handler) }
+    },
     onSongBasic: (cb: (song: SongDirectoryResponse) => void) => {
         const handler = (_ev: Electron.IpcRendererEvent, res: SongDirectoryResponse) => cb(res);
         ipcRenderer.on("songs:basic", handler);
