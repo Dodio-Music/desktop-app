@@ -49,6 +49,12 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow, initialPrefs
                 await session.tryPreloadNext();
                 break;
             }
+            case "replaying": {
+                const curSource = session.getSources().currentSource;
+                if(!curSource) return;
+
+                void curSource.seek(0);
+            }
         }
     });
 
@@ -103,9 +109,10 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow, initialPrefs
         session.seek(time);
     });
 
-    queue.on("repeat-mode", (repeatMode: RepeatMode) => {
-        if(repeatMode === RepeatMode.One) playerProcess.postMessage({type: "set-repeat", payload: true});
-        else playerProcess.postMessage({type: "set-repeat", payload: false});
+    queue.on("next-track", (track: BaseSongEntry) => {
+        const currentTrack = session.getTracks().currentTrack;
+        if(queue.getRepeatMode() === "one" && currentTrack !== null) playerProcess.postMessage({type: "next-track", payload: currentTrack});
+        else playerProcess.postMessage({type: "next-track", payload: track});
     });
 };
 

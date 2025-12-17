@@ -160,6 +160,7 @@ export class QueueManager extends EventEmitter {
         this.strategy = this.strategyFromRepeatMode(mode);
         setPreferences({repeatMode: this.repeatMode});
         this.emit("repeat-mode", this.repeatMode);
+        this.notifyNextTrack();
         this.notifyState("repeat-mode", {repeatMode: this.repeatMode});
     }
 
@@ -170,12 +171,14 @@ export class QueueManager extends EventEmitter {
     setContext(type: QueueContextType, tracks: BaseSongEntry[], startIndex: number) {
         this.state.context = { type, tracks, startIndex };
         this.state.current = tracks[startIndex];
+        this.notifyNextTrack();
         this.notifyQueueState();
     }
 
     addToUserQueue(song: BaseSongEntry) {
         this.state.userQueue.push(song);
         this.notifyQueueState();
+        this.notifyNextTrack();
     }
 
     next(): BaseSongEntry | null {
@@ -189,12 +192,14 @@ export class QueueManager extends EventEmitter {
 
         advanceState(this.state, next);
         this.notifyQueueState();
+        this.notifyNextTrack();
         return next;
     }
 
     previous(): BaseSongEntry | null {
         const prev = rewindState(this.state, this.strategy);
         this.notifyQueueState();
+        this.notifyNextTrack();
         return prev;
     }
 
@@ -234,6 +239,11 @@ export class QueueManager extends EventEmitter {
 
     notifyInitial() {
         this.notifyState("repeat-mode", {repeatMode: this.repeatMode});
+    }
+
+    private notifyNextTrack() {
+        const next = this.getNext();
+        this.emit("next-track", next);
     }
 
     notifyState(type: PlayerEvent["type"], payload: object) {

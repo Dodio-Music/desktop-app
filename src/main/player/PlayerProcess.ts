@@ -2,14 +2,14 @@ import {AudioIO, getDevices, getHostAPIs, IoStreamWrite, SampleFormatFloat32} fr
 import {parentPort} from "node:worker_threads";
 import {clearInterval} from "node:timers";
 import {activePreset} from "../../shared/latencyPresets.js";
-import {SEGMENT_DURATION} from "../../shared/TrackInfo.js";
+import {BaseSongEntry, SEGMENT_DURATION} from "../../shared/TrackInfo.js";
 import os from "node:os";
 
 const IPC_UPDATE_INTERVAL = 200;
 const IDLE_TIMEOUT_MS = 2 * 60 * 1000;
 try {
     os.setPriority(-20);
-} catch(err) {
+} catch (err) {
     console.error("Could not set process priority! ", err);
 }
 
@@ -64,8 +64,8 @@ export class PlayerProcess {
     private fadeTotalSamples = 0;
     private fadeProgressSamples = 0;
     private playbackState: "paused" | "playing" | "fading-in" | "fading-out" = "paused";
-    private nextTrack: LoadPayload | null = null;
-    private repeatCurrent = false;
+    private nextPCM: LoadPayload | null = null;
+    private nextTrack: BaseSongEntry | null = null;
 
     private stateLoopInterval: NodeJS.Timeout | null = null;
     private sendStateUpdates = true;
@@ -180,7 +180,7 @@ export class PlayerProcess {
                         this.playheadAnchorWall = Date.now();
                     } else {
                         // emit event for faster ui update (updates are usually only every 200ms)
-                        if(!this.session.firstSegmentLoaded) {
+                        if (!this.session.firstSegmentLoaded) {
                             this.notifyState();
                             this.session.firstSegmentLoaded = true;
                         }
@@ -189,23 +189,27 @@ export class PlayerProcess {
                     const end = Math.min(readOffset + this.deviceInfo.samplesPerBuffer, pcm.length);
 
                     if (readOffset >= pcm.length) {
-                        if(this.repeatCurrent) {
+                        const nextTrack = this.nextTrack;
+                        const nextPCM = this.nextPCM;
+
+                        // is same track -> replay (also applies for repeat mode 1)
+                        if (nextTrack?.id === this.session.id) {
                             this.session.readOffset = 0;
                             const queuedLatencyFrames = this.getQueuedLatencyFrames();
                             this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
                             this.playheadAnchorWall = Date.now();
-                            this.notifyState();
+                            this.notifyState("replaying");
+                            continue;
+                        } else if(nextTrack && nextPCM) {
+                            // other track to play automatically
+                            this.load(nextPCM.id, new Float32Array(nextPCM.pcmSab), new Uint8Array(nextPCM.segmentSab), nextPCM.duration);
                             continue;
                         }
-                        const next = this.nextTrack;
-                        if(!next) {
-                            this.session.ended = true;
-                            this.session.readOffset = pcm.length;
-                            this.notifyState();
-                        } else {
-                            this.load(next.id, new Float32Array(next.pcmSab), new Uint8Array(next.segmentSab), next.duration);
-                            continue;
-                        }
+
+                        // no track to play -> stop playback
+                        this.session.ended = true;
+                        this.session.readOffset = pcm.length;
+                        this.notifyState();
                     }
 
                     const chunk = pcm.subarray(readOffset, end);
@@ -233,7 +237,7 @@ export class PlayerProcess {
                             if (this.playbackState === "fading-out") {
                                 this.playbackState = "paused";
                                 this.updateAnchorForPause();
-                            } else if(this.playbackState === "fading-in") {
+                            } else if (this.playbackState === "fading-in") {
                                 this.playbackState = "playing";
                             }
                         }
@@ -284,7 +288,7 @@ export class PlayerProcess {
     private applyVolumeWithFade(chunk: Float32Array, volumeStart: number, volumeEnd: number): Buffer {
         const byteLen = chunk.length * 4;
 
-        if(!this.fadeScratch ||this.fadeScratch.length !== byteLen) {
+        if (!this.fadeScratch || this.fadeScratch.length !== byteLen) {
             this.fadeScratch = Buffer.allocUnsafe(byteLen);
         }
 
@@ -299,8 +303,8 @@ export class PlayerProcess {
 
             let sample = chunk[i];
             sample *= vol;
-            if(sample > 1) sample = 1;
-            else if(sample < -1) sample = -1;
+            if (sample > 1) sample = 1;
+            else if (sample < -1) sample = -1;
             out.writeFloatLE(sample, i * 4);
         }
 
@@ -326,7 +330,7 @@ export class PlayerProcess {
             // initial safe state, this has nothing to do with firstSegment logic
             firstSegmentLoaded: !waitingForData
         };
-        this.nextTrack = null;
+        this.nextPCM = null;
 
         const queuedLatencyFrames = this.getQueuedLatencyFrames();
         this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
@@ -354,7 +358,7 @@ export class PlayerProcess {
     }
 
     private updateAnchorForPause() {
-        if(!this.deviceInfo) return;
+        if (!this.deviceInfo) return;
 
         const {out} = this.deviceInfo;
         const now = Date.now();
@@ -367,7 +371,7 @@ export class PlayerProcess {
     }
 
     private updateAnchorForResume() {
-        if(!this.session || !this.deviceInfo) return;
+        if (!this.session || !this.deviceInfo) return;
         const queuedLatencyFrames = this.getQueuedLatencyFrames();
         this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
         this.playheadAnchorWall = Date.now();
@@ -381,9 +385,9 @@ export class PlayerProcess {
 
     // === Playback Control & State
     public pauseOrResume() {
-        if(this.playbackState === "paused" || this.playbackState === "fading-out") {
+        if (this.playbackState === "paused" || this.playbackState === "fading-out") {
             this.resume();
-        } else if(this.playbackState === "playing" || this.playbackState === "fading-in") {
+        } else if (this.playbackState === "playing" || this.playbackState === "fading-in") {
             this.pause();
         }
 
@@ -412,12 +416,12 @@ export class PlayerProcess {
         }
     }
 
-    public setRepeat(repeat: boolean) {
-        this.repeatCurrent = repeat;
+    public setNextPCM(payload: LoadPayload | null) {
+        this.nextPCM = payload;
     }
 
-    public setNext(payload: LoadPayload | null) {
-        this.nextTrack = payload;
+    public setNextTrack(track: BaseSongEntry | null) {
+        this.nextTrack = track;
     }
 
     private startFade(target: number, duration = 0.15) {
@@ -577,7 +581,7 @@ parentPort?.on("message", (msg: IMsg<unknown>) => {
         }
         case "load-next": {
             const info = msg.payload as LoadPayload;
-            playerProcess.setNext(info);
+            playerProcess.setNextPCM(info);
             break;
         }
         case "set-updates": {
@@ -585,9 +589,9 @@ parentPort?.on("message", (msg: IMsg<unknown>) => {
             playerProcess.setStateUpdates(sendUpdates);
             break;
         }
-        case "set-repeat": {
-            const repeat = msg.payload as boolean;
-            playerProcess.setRepeat(repeat);
+        case "next-track": {
+            const track = msg.payload as BaseSongEntry | null;
+            playerProcess.setNextTrack(track);
         }
     }
 });

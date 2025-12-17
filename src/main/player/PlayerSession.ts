@@ -202,6 +202,7 @@ export class PlayerSession {
         this.playerProcess.postMessage({
             type: "load",
             payload: {
+                id: track.id,
                 pcmSab,
                 devInfo,
                 duration,
@@ -238,6 +239,11 @@ export class PlayerSession {
 
         const next = this.queue.getNext();
         if (!next) return;
+
+        if(next.id === this.track.id) {
+            return;
+        }
+
         if (this.queue.getRepeatMode() === RepeatMode.One) return;
 
         this.markPreloadStarted();
