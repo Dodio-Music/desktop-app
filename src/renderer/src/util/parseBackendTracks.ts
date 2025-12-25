@@ -1,7 +1,9 @@
 import {RemoteSongEntry} from "../../../shared/TrackInfo.js";
 import {ReleaseDTO} from "../../../shared/Api";
 
-export function releaseToSongEntries(rel: ReleaseDTO): RemoteSongEntry[] {
+export function releaseToSongEntries(rel: ReleaseDTO | null): RemoteSongEntry[] {
+    if(!rel) return [];
+
     return rel.releaseTracks.map(rt => {
         const t = rt.track;
 

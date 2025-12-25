@@ -8,6 +8,7 @@ const LocalFilesPage = () => {
     const [songs, setSongs] = useState<LocalSongEntry[]>([]);
     const [error, setError] = useState("");
     const songMapRef = useRef<Map<string, LocalSongEntry>>(new Map());
+    const scrollPageRef = useRef<HTMLDivElement>(null);
 
     const handleDialog = async () => {
         await window.api.showLocalFilesDialog();
@@ -64,7 +65,7 @@ const LocalFilesPage = () => {
     }, []);
 
     return (
-        <div className={"pageWrapper"}>
+        <div className={"pageWrapper pageWrapperFullHeight"} ref={scrollPageRef}>
             <h1>Local Files</h1>
             {error ?
                 <>
@@ -75,6 +76,7 @@ const LocalFilesPage = () => {
                 <SongList
                     songs={songs}
                     slots={localSongRowSlots}
+                    scrollElement={scrollPageRef}
                 />
             }
         </div>

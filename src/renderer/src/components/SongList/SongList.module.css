@@ -220,3 +220,7 @@
 .songRow > .colWrapper:first-child {
     overflow: visible;
 }
+
+.ReactVirtualized__Grid {
+    outline: none !important;
+}

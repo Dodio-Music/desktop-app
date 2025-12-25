@@ -2,20 +2,25 @@ import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 import {SongRow} from "@renderer/components/SongList/SongRow";
 import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../../../shared/TrackInfo";
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {RefObject, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import s from "./SongList.module.css";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
+import {AutoSizer, List, ListRowProps, WindowScroller} from "react-virtualized";
 
 interface Props<T extends BaseSongEntry> {
     songs: T[];
     slots: SongRowSlot<T>[];
     gridTemplateColumns?: string;
+    scrollElement: RefObject<HTMLDivElement | null>;
 }
+
+const ROW_HEIGHT = 66;
 
 export const SongList = <T extends BaseSongEntry>({
                                                       songs,
                                                       slots,
-                                                      gridTemplateColumns = "30px 4.5fr 3fr 1.8fr 50px"
+                                                      gridTemplateColumns = "30px 4.5fr 3fr 1.8fr 50px",
+                                                      scrollElement
                                                   }: Props<T>) => {
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
@@ -62,6 +67,28 @@ export const SongList = <T extends BaseSongEntry>({
         return () => document.removeEventListener("click", handleClick);
     }, []);
 
+    const rowRender = useCallback(({index, style}: ListRowProps) => {
+        const song = songs[index];
+        const isActive = song.id === currentTrack?.id;
+        const isSelected = song.id === selectedRow;
+        return (
+            <div style={style} key={song.id} className={s.listContainer}>
+                <SongRow
+                    index={index}
+                    song={song}
+                    gridTemplateColumns={gridTemplateColumns}
+                    pauseOrLoadSong={pauseOrLoadSong}
+                    isActive={isActive}
+                    isSelected={isSelected}
+                    setSelectedRow={setSelectedRowCallback}
+                    slots={memoSlots}
+                />
+            </div>
+        );
+    }, [currentTrack, gridTemplateColumns, memoSlots, pauseOrLoadSong, selectedRow, setSelectedRowCallback, songs]);
+
+    if(!scrollElement.current) return null;
+
     return (
         <div className={s.songList} ref={listRef}>
             <div className={`${s.headRow} ${s.grid}`} style={{gridTemplateColumns}}>
@@ -72,23 +99,23 @@ export const SongList = <T extends BaseSongEntry>({
                 ))}
             </div>
             <div className={s.divider}/>
-            {songs.map((song, index) => {
-                const isActive = song.id === currentTrack?.id;
-                const isSelected = song.id === selectedRow;
-                return (
-                    <SongRow
-                        key={song.id}
-                        index={index}
-                        song={song}
-                        gridTemplateColumns={gridTemplateColumns}
-                        pauseOrLoadSong={pauseOrLoadSong}
-                        isActive={isActive}
-                        isSelected={isSelected}
-                        setSelectedRow={setSelectedRowCallback}
-                        slots={memoSlots}
-                    />
-                );
-            })}
+            <WindowScroller scrollElement={scrollElement.current} style={{outline: "none"}}>
+                {({height, isScrolling, scrollTop}) => (
+                    <AutoSizer disableHeight={true} style={{outline: "none"}}>
+                        {({width}) => <List
+                            style={{outline: "none"}}
+                            autoHeight={true}
+                            height={height}
+                            width={width}
+                            rowCount={songs.length}
+                            rowHeight={ROW_HEIGHT}
+                            rowRenderer={rowRender}
+                            scrollTop={scrollTop}
+                            isScrolling={isScrolling}
+                        />}
+                    </AutoSizer>
+                )}
+            </WindowScroller>
         </div>
     );
 };

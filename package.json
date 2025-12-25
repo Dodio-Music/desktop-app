@@ -73,6 +73,7 @@
         "react-resizable-panels": "^3.0.6",
         "react-router-dom": "^7.8.2",
         "react-spinners": "^0.17.0",
+        "react-virtualized": "^9.22.6",
         "sharp": "^0.34.4",
         "timeago.js": "^4.0.2"
     },
@@ -84,6 +85,7 @@
         "@types/react": "^19.1.8",
         "@types/react-dom": "^19.1.6",
         "@types/react-router-dom": "^5.3.3",
+        "@types/react-virtualized": "^9.22.3",
         "@vitejs/plugin-react": "^4.7.0",
         "@vitest/coverage-v8": "^4.0.7",
         "electron": "^39.2.7",
