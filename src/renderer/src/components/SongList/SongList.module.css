@@ -12,7 +12,6 @@
     padding: 8px;
     align-items: center;
     border-radius: 8px;
-    transition: background-color 0.05s;
 }
 
 .durationHeader {
@@ -45,7 +44,6 @@
 }
 
 #activeRow {
-    transition: 0s background-color;
     background-color: rgba(255, 255, 255, 0.2);
 }
 
