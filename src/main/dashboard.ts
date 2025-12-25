@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import mime from "mime";
 import FormData from "form-data";
+// @ts-ignore TS seems to be unable to resolve the 'got' package
 import got, {HTTPError} from "got";
 import {auth} from "./auth.js";
 
