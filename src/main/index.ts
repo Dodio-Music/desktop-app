@@ -4,7 +4,7 @@ import { registerMagnifierIPC } from "./ipc/registerMagnifier.js";
 import {registerPlayerProcessIPC, registerPlayerProcessStartup} from "./ipc/registerPlayerProcess.js";
 import { registerWindowControlsIPC } from "./ipc/registerWindowControls.js";
 import { registerSongIndexer } from "./songIndexer.js";
-import { createMainWindow, registerAppLifecycle } from "./window.js";
+import {createMainWindow, registerAppLifecycle} from "./window.js";
 import {registerDodioApiIPC} from "./ipc/registerDodioApi.js";
 import {registerAuthStartup, setupAuth} from "./auth.js";
 import path from "path";
@@ -15,11 +15,6 @@ import {registerDashboardIPC} from "./dashboard.js";
 import {installExtension, REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS} from "electron-devtools-installer";
 
 let mainWindow: BrowserWindow;
-
-function createWindow() {
-    mainWindow = createMainWindow();
-    return mainWindow;
-}
 
 app.on("before-quit", async (event) => {
     event.preventDefault();
@@ -49,7 +44,7 @@ app.whenReady().then(async () => {
     });
 
     setupApi();
-    createWindow();
+    mainWindow = createMainWindow();
     registerPreferencesIPC();
     registerPlayerProcessIPC(mainWindow, prefs);
     void setupAuth(mainWindow);
@@ -59,7 +54,7 @@ app.whenReady().then(async () => {
     registerDodioApiIPC();
     registerDashboardIPC(mainWindow);
 
-    registerAppLifecycle(createWindow);
+    registerAppLifecycle(createMainWindow);
 
     installExtension([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS])
         .then(([redux, react]) => console.log(`Added Extensions:  ${redux.name}, ${react.name}`))

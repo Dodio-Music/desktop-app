@@ -23,13 +23,22 @@ export function loadWindowState(): WindowState {
     }
 }
 
-export function saveWindowState(win: BrowserWindow) {
-    const state: WindowState = {
-        maximized: win.isMaximized(),
-        fullscreen: win.isFullScreen(),
-        bounds: win.getNormalBounds(),
+function saveWindowStateDebounced(win: BrowserWindow) {
+    let timeout: NodeJS.Timeout | null = null;
+
+    const save = () => {
+        const state = {
+            bounds: win.getNormalBounds(),
+            maximized: win.isMaximized(),
+            fullscreen: win.isFullScreen()
+        };
+        fs.writeFileSync(boundsPath, JSON.stringify(state));
     };
-    fs.writeFileSync(boundsPath, JSON.stringify(state));
+
+    return () => {
+        if (timeout) clearTimeout(timeout);
+        timeout = setTimeout(save, 100);
+    };
 }
 
 function validateBounds(savedBounds?: Electron.Rectangle) {
@@ -77,7 +86,6 @@ export function createMainWindow(): BrowserWindow {
         }
     });
 
-    mainWindow.on("close", () => saveWindowState(mainWindow));
     mainWindow.on("maximize", () => mainWindow.webContents.send("window-is-maximized", true));
     mainWindow.on("unmaximize", () => mainWindow.webContents.send("window-is-maximized", false));
 
@@ -102,7 +110,20 @@ export function createMainWindow(): BrowserWindow {
         void mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
     }
 
+    attachWindowStateListeners(mainWindow);
+
     return mainWindow;
+}
+
+function attachWindowStateListeners(win: BrowserWindow) {
+    const save = saveWindowStateDebounced(win);
+
+    win.on("resize", save);
+    win.on("move", save);
+    win.on("maximize", save);
+    win.on("unmaximize", save);
+    win.on("enter-full-screen", save);
+    win.on("leave-full-screen", save);
 }
 
 
