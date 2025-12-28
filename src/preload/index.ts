@@ -65,26 +65,11 @@ const windowControls: CustomWindowControls = {
 };
 
 const api = {
-    startSongScan: () => ipcRenderer.invoke("songs:start-scan"),
-    onSongCount: (cb: (count: number) => void) => {
-        const handler = (_ev: Electron.IpcRendererEvent, res: number) => cb(res);
-        ipcRenderer.on("songs:count", handler);
-        return () => { ipcRenderer.removeListener("songs:count", handler) }
-    },
-    onSongBasic: (cb: (song: SongDirectoryResponse) => void) => {
+    getAllSongs: () => ipcRenderer.invoke("songs:get-all"),
+    onSongEmit: (cb: (song: SongDirectoryResponse) => void) => {
         const handler = (_ev: Electron.IpcRendererEvent, res: SongDirectoryResponse) => cb(res);
-        ipcRenderer.on("songs:basic", handler);
-        return () => ipcRenderer.removeListener("songs:basic", handler);
-    },
-    onSongMetadata: (cb: (song: SongDirectoryResponse) => void) => {
-        const handler = (_ev: Electron.IpcRendererEvent, res: SongDirectoryResponse) => cb(res);
-        ipcRenderer.on("songs:metadata", handler);
-        return () => ipcRenderer.removeListener("songs:metadata", handler);
-    },
-    onSongScanDone: (cb: () => void) => {
-        const handler = () => cb();
-        ipcRenderer.on("songs:scan-done", handler);
-        return () => ipcRenderer.removeListener("songs:scan-done", handler);
+        ipcRenderer.on("songs:emit", handler);
+        return () => ipcRenderer.removeListener("songs:emit", handler);
     },
     getFullCover: async (fullPath: string): Promise<string> => ipcRenderer.invoke("songs:get-full-cover", fullPath),
     loadTrack: (track: LocalSongEntry, contextTracks: BaseSongEntry[]) => ipcRenderer.invoke("player:load-local", track, contextTracks),

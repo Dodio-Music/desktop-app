@@ -9,61 +9,34 @@ const LocalFilesPage = () => {
     const location = useLocation();
     const [songs, setSongs] = useState<LocalSongEntry[]>([]);
     const [error, setError] = useState("");
-    const songMapRef = useRef<Map<string, LocalSongEntry>>(new Map());
     const scrollPageRef = useRef<HTMLDivElement>(null);
 
     const handleDialog = async () => {
         await window.api.showLocalFilesDialog();
-        startScan();
+        void getAllSongs();
     };
 
-    const startScan = () => {
-        songMapRef.current = new Map();
-        setSongs([]);
-        window.api.startSongScan();
-
-        const handleBasic = (res: SongDirectoryResponse) => {
-            if (!res.success) {
-                setError(res.error);
-                return;
-            }
-            setError("");
-            songMapRef.current.set(res.song.id, res.song);
-            setSongs(prev => {
-                const map = new Map(prev.map(s => [s.id, s]));
-                map.set(res.song.id, res.song);
-                return Array.from(map.values());
-            });
-        };
-
-        const handleMeta = (res: SongDirectoryResponse) => {
-            if (!res.success) {
-                setError(res.error);
-                return;
-            }
-
-            const existing = songMapRef.current.get(res.song.id);
-            if (existing) {
-                setError("");
-                Object.assign(existing, res.song);
-                setSongs(prev =>
-                    prev.map(s => s.id === res.song.id ? {...s, ...res.song} : s)
-                );
-            }
-        };
-
-        const unsubscribeBasic = window.api.onSongBasic(handleBasic);
-        const unsubscribeMeta = window.api.onSongMetadata(handleMeta);
-
-        return () => {
-            unsubscribeBasic();
-            unsubscribeMeta();
-        };
-    };
+    const getAllSongs = () => {
+        window.api.getAllSongs();
+    }
 
     useEffect(() => {
-        const cleanup = startScan();
-        return () => cleanup?.();
+        const handleSongEmit = (sdr: SongDirectoryResponse) => {
+            if(sdr.success) {
+                setError("");
+                setSongs(sdr.songs);
+            } else {
+                setError(sdr.error);
+                setSongs([]);
+            }
+        }
+
+        const unsub = window.api.onSongEmit(handleSongEmit);
+        void getAllSongs();
+
+        return () => {
+            unsub();
+        };
     }, []);
 
     return (

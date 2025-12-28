@@ -32,13 +32,7 @@ window.api.onPlayerEvent((event) => {
         case "media-transition": {
             if (isLocalSong(event.track)) {
                 const localTrack = event.track;
-                const track = {
-                    ...localTrack,
-                    createdAt: typeof event.track.createdAt === "string"
-                        ? event.track.createdAt
-                        : event.track.createdAt?.toISOString()
-                };
-                store.dispatch(setCurrentTrack(track));
+                store.dispatch(setCurrentTrack(localTrack));
             } else {
                 store.dispatch(setCurrentTrack(event.track));
             }

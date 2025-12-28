@@ -3,7 +3,6 @@ import {app, BrowserWindow, protocol, net, ipcMain} from "electron";
 import { registerMagnifierIPC } from "./ipc/registerMagnifier.js";
 import {registerPlayerProcessIPC, registerPlayerProcessStartup} from "./ipc/registerPlayerProcess.js";
 import { registerWindowControlsIPC } from "./ipc/registerWindowControls.js";
-import { registerSongIndexer } from "./songIndexer.js";
 import {createMainWindow, registerAppLifecycle} from "./window.js";
 import {registerDodioApiIPC} from "./ipc/registerDodioApi.js";
 import {registerAuthStartup, setupAuth} from "./auth.js";
@@ -13,6 +12,7 @@ import {setupApi} from "./web/dodio_api.js";
 import {loadPreferencesFromDisk, registerPreferencesIPC} from "./preferences.js";
 import {registerDashboardIPC} from "./dashboard.js";
 import {installExtension, REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS} from "electron-devtools-installer";
+import {registerSongIndexIPC} from "./songIndex.js";
 
 let mainWindow: BrowserWindow;
 
@@ -50,7 +50,7 @@ app.whenReady().then(async () => {
     void setupAuth(mainWindow);
     await registerWindowControlsIPC(mainWindow, prefs);
     await registerMagnifierIPC(mainWindow, prefs);
-    registerSongIndexer(mainWindow);
+    registerSongIndexIPC(mainWindow);
     registerDodioApiIPC();
     registerDashboardIPC(mainWindow);
 

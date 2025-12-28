@@ -58,6 +58,7 @@
         "@uidotdev/usehooks": "^2.4.1",
         "@underswing/naudiodon": "github:underswing/naudiodon",
         "axios": "^1.12.2",
+        "chokidar": "^5.0.0",
         "classnames": "^2.5.1",
         "dotenv": "^17.2.3",
         "electron-updater": "^6.3.9",

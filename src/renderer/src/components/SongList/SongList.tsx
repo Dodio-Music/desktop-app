@@ -102,13 +102,24 @@ export const SongList = <T extends BaseSongEntry>({
         if (!scroll || !scrollElement.current) return;
         const index = songs.findIndex(s => s.id === scroll.scrollToId);
 
+        console.log("trying...");
         if (index < 0) return;
         const HEADER_HEIGHT = 250;
         const top = index * ROW_HEIGHT - (scrollElement.current.clientHeight / 2) + ROW_HEIGHT / 2 + HEADER_HEIGHT;
-        scrollElement.current.scrollTo({ top, behavior: "smooth" });
-    }, [scroll, songs]);
+        console.log("scrolling to " + top);
+        // request animation frame -> fix for redirect from another page
+        requestAnimationFrame(() => {
+            scrollElement.current?.scrollTo({
+                top,
+                behavior: "smooth"
+            });
+        });
 
-    if (!scrollElement.current) return null;
+    }, [scroll, scrollElement, songs]);
+
+    if (!scrollElement.current) {
+        return <div className={s.songList} ref={listRef}/>;
+    }
 
     return (
         <div className={s.songList} ref={listRef}>

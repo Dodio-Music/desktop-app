@@ -12,7 +12,7 @@ export interface BaseSongEntry {
 }
 
 export interface LocalSongEntry extends BaseSongEntry {
-    createdAt: Date | string;
+    createdAt: string;
     fileName: string;
     fullPath: string;
 }
@@ -39,7 +39,7 @@ export function isRemoteSong(entry: BaseSongEntry): entry is RemoteSongEntry {
 }
 
 export type SongDirectoryResponse =
-    | { success: true, song: LocalSongEntry; }
+    | { success: true, songs: LocalSongEntry[]; }
     | { success: false, error: string };
 
 export const SEGMENT_DURATION = 1;
