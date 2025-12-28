@@ -1,0 +1,47 @@
+.imageOverlay {
+    transition: background-color 0.1s, opacity 0.1s;
+    pointer-events: none;
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(3px);
+    z-index: 10;
+    cursor: zoom-out;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.imageOverlay img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+}
+
+.fullCoverWrapper {
+    padding: 100px;
+    height: 100%;
+    aspect-ratio: 1;
+}
+
+.overlayShown img {
+    animation: 0.22s cubic-bezier(0.2, 0.9, 0.2, 1) show-image;
+}
+
+.overlayShown {
+    pointer-events: all;
+    opacity: 1;
+}
+
+@keyframes show-image {
+    0% {
+        transform: scale(0.6);
+    }
+    100% {
+        transform: scale(1);
+    }
+}

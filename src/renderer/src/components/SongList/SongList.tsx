@@ -7,11 +7,17 @@ import s from "./SongList.module.css";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
 import {AutoSizer, List, ListRowProps, WindowScroller} from "react-virtualized";
 
+interface SongListAutoScroll {
+    scrollToId: string;
+    timestamp: Date;
+}
+
 interface Props<T extends BaseSongEntry> {
     songs: T[];
     slots: SongRowSlot<T>[];
     gridTemplateColumns?: string;
     scrollElement: RefObject<HTMLDivElement | null>;
+    scroll?: SongListAutoScroll;
 }
 
 const ROW_HEIGHT = 66;
@@ -20,7 +26,8 @@ export const SongList = <T extends BaseSongEntry>({
                                                       songs,
                                                       slots,
                                                       gridTemplateColumns = "30px 4.5fr 3fr 1.8fr 50px",
-                                                      scrollElement
+                                                      scrollElement,
+                                                      scroll
                                                   }: Props<T>) => {
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
@@ -32,8 +39,12 @@ export const SongList = <T extends BaseSongEntry>({
     const songsRef = useRef(songs);
     const currentTrackRef = useRef(currentTrack);
 
-    useEffect(() => { songsRef.current = songs; }, [songs]);
-    useEffect(() => { currentTrackRef.current = currentTrack; }, [currentTrack]);
+    useEffect(() => {
+        songsRef.current = songs;
+    }, [songs]);
+    useEffect(() => {
+        currentTrackRef.current = currentTrack;
+    }, [currentTrack]);
 
     const pauseOrLoadSong = useCallback((song: T) => {
         if (song.id === currentTrackRef.current?.id) {
@@ -87,7 +98,17 @@ export const SongList = <T extends BaseSongEntry>({
         );
     }, [currentTrack, gridTemplateColumns, memoSlots, pauseOrLoadSong, selectedRow, setSelectedRowCallback, songs]);
 
-    if(!scrollElement.current) return null;
+    useEffect(() => {
+        if (!scroll || !scrollElement.current) return;
+        const index = songs.findIndex(s => s.id === scroll.scrollToId);
+
+        if (index < 0) return;
+        const HEADER_HEIGHT = 250;
+        const top = index * ROW_HEIGHT - (scrollElement.current.clientHeight / 2) + ROW_HEIGHT / 2 + HEADER_HEIGHT;
+        scrollElement.current.scrollTo({ top, behavior: "smooth" });
+    }, [scroll, songs]);
+
+    if (!scrollElement.current) return null;
 
     return (
         <div className={s.songList} ref={listRef}>

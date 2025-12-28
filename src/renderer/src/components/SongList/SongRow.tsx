@@ -4,6 +4,7 @@ import React, {JSX, useCallback} from "react";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
 import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
+import classNames from "classnames";
 
 interface RowProps<T extends BaseSongEntry> {
     index: number,
@@ -36,8 +37,8 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
     return (
         <div
             data-row={"true"}
-            id={isSelected ? s.activeRow : ""}
-            className={rowClass}
+            id={`song-${song.id}`}
+            className={classNames(rowClass, isSelected && s.activeRow)}
             style={{gridTemplateColumns}}
             onClick={(e) => {
                 e.stopPropagation();

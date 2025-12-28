@@ -20,6 +20,7 @@ export interface CachedSongMetadata {
 }
 
 const cachePath = path.join(app.getPath("userData"), "metadata-cache.json");
+
 interface MetadataCache {
     [id: string]: CachedSongMetadata;
 }
@@ -51,6 +52,8 @@ export const registerSongIndexer = (window: BrowserWindow) => {
     });
 
     ipcMain.handle("songs:setdirectory", () => setSongDirectory());
+
+    ipcMain.handle("songs:get-full-cover", async (_event, fullPath: string) => getFullCover(fullPath));
 };
 
 async function setSongDirectory() {
@@ -87,7 +90,15 @@ async function scanFolder() {
             .map(async f => {
                 const fullPath = path.join(folderPath, f.name);
                 const stat = await fsp.stat(fullPath);
-                return {id: "", needsMetadata: false, mTimeMs: 0, name: f.name, fullPath, createdAt: stat.birthtime, size: stat.size};
+                return {
+                    id: "",
+                    needsMetadata: false,
+                    mTimeMs: 0,
+                    name: f.name,
+                    fullPath,
+                    createdAt: stat.birthtime,
+                    size: stat.size
+                };
             })
     );
 
@@ -118,7 +129,7 @@ async function scanFolder() {
                 fullPath: file.fullPath,
                 duration: 0,
                 picture: undefined,
-                createdAt: file.createdAt,
+                createdAt: file.createdAt
             }
         };
 
@@ -159,50 +170,50 @@ async function scanFolder() {
         list
             .filter(f => f.needsMetadata)
             .map(f => limit(async () => {
-                try {
-                    if (!mainWindow) return;
+                    try {
+                        if (!mainWindow) return;
 
-                    const metadata = await parseFile(f.fullPath);
-                    const common = metadata.common;
+                        const metadata = await parseFile(f.fullPath);
+                        const common = metadata.common;
 
-                    let pictureUrl: string | undefined;
-                    if (common.picture && common.picture.length > 0) {
-                        const pic = common.picture[0];
-                        pictureUrl = await getThumbnail(f.id, pic.data);
+                        let pictureUrl: string | undefined;
+                        if (common.picture && common.picture.length > 0) {
+                            const pic = common.picture[0];
+                            pictureUrl = await getThumbnail(f.id, pic.data);
+                        }
+
+                        const finalMeta: LocalSongEntry = {
+                            id: f.id,
+                            type: "local",
+                            fileName: f.name,
+                            fullPath: f.fullPath,
+                            title: common.title || f.name.substring(0, f.name.lastIndexOf(".")) || f.name,
+                            artists: common.artists || ["Unknown Artist"],
+                            album: common.album || "Unknown Album",
+                            duration: metadata.format.duration ?? 0,
+                            picture: pictureUrl,
+                            createdAt: f.createdAt
+                        };
+
+                        const songDirectoryResponse: SongDirectoryResponse = {
+                            success: true,
+                            song: finalMeta
+                        };
+
+                        metadataCache[f.id] = {
+                            id: f.id,
+                            path: f.fullPath,
+                            mTimeMs: f.mTimeMs,
+                            metadata: finalMeta
+                        };
+
+                        mainWindow.webContents.send("songs:metadata", songDirectoryResponse);
+
+                    } catch (err) {
+                        console.error(`Failed to read metadata for ${f.fullPath}: `, err);
                     }
-
-                    const finalMeta: LocalSongEntry = {
-                        id: f.id,
-                        type: "local",
-                        fileName: f.name,
-                        fullPath: f.fullPath,
-                        title: common.title || f.name.substring(0, f.name.lastIndexOf(".")) || f.name,
-                        artists: common.artists || ["Unknown Artist"],
-                        album: common.album || "Unknown Album",
-                        duration: metadata.format.duration ?? 0,
-                        picture: pictureUrl,
-                        createdAt: f.createdAt
-                    }
-
-                    const songDirectoryResponse: SongDirectoryResponse = {
-                        success: true,
-                        song: finalMeta
-                    }
-
-                    metadataCache[f.id] = {
-                        id: f.id,
-                        path: f.fullPath,
-                        mTimeMs: f.mTimeMs,
-                        metadata: finalMeta
-                    };
-
-                    mainWindow.webContents.send("songs:metadata", songDirectoryResponse);
-
-                } catch (err) {
-                    console.error(`Failed to read metadata for ${f.fullPath}: `, err);
-                }
-            })
-        )
+                })
+            )
     );
 
     mainWindow.webContents.send("songs:scan-done");
@@ -245,4 +256,18 @@ async function computeContentId(fullPath: string): Promise<string> {
         });
         stream.on("error", reject);
     });
+}
+
+async function getFullCover(fullPath: string) {
+    try {
+        const metadata = await parseFile(fullPath);
+        if (!metadata.common.picture?.length) return null;
+
+        const pic = metadata.common.picture[0];
+        const buffer = await sharp(pic.data).png().toBuffer();
+        return `data:image/png;base64,${buffer.toString("base64")}`;
+    } catch (err) {
+        console.error("Failed to extract full cover:", err);
+        return null;
+    }
 }

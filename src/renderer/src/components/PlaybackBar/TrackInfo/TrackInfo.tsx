@@ -1,43 +1,76 @@
 import s from "../PlaybackBar.module.css";
 import placeholder from "../../../../../../resources/img-placeholder-128x128.svg";
 import classNames from "classnames";
-import {isRemoteSong} from "../../../../../shared/TrackInfo";
+import {isLocalSong, isRemoteSong} from "../../../../../shared/TrackInfo";
 import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
-import {useCallback} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
+import OpenableCover from "@renderer/components/OpenableCover/OpenableCover";
 
 const TrackInfo = () => {
     const navigate = useNavigate();
+    const activeTrack = useSelector((state: RootState) => state.nativePlayer.currentTrack);
+    const [fullCover, setFullCover] = useState<string | null>(null);
 
-    const track = useSelector((state: RootState) => state.nativePlayer.currentTrack);
+    useEffect(() => {
+        if (!activeTrack) {
+            setFullCover(null);
+            return;
+        }
+
+        let cancelled = false;
+
+        if(isLocalSong(activeTrack)) {
+            window.api.getFullCover(activeTrack.fullPath)
+                .then(async (dataUrl: string | null) => {
+                    if (!dataUrl || cancelled) return;
+                    setFullCover(dataUrl);
+                });
+        } else if(isRemoteSong(activeTrack) && activeTrack.picture) {
+            setFullCover(activeTrack.picture + "?size=original");
+        }
+
+        return () => {
+            cancelled = true;
+        };
+    }, [activeTrack?.title]);
 
     const handleTitleClick = useCallback(() => {
-        if (!track || !isRemoteSong(track)) return;
+        if (!activeTrack) return;
+        let path: string;
 
-        const path = `/release/${track.releaseId}`;
-        if (window.location.hash === `#${path}`) return;
+        if (isRemoteSong(activeTrack)) path = `/release/${activeTrack.releaseId}`;
+        else path = "/collection/local";
 
-        navigate(path);
-    }, [track, navigate]);
+        const replace = window.location.hash === `#${path}`;
 
-    const coverSrc = track?.picture ? `${track.picture}?size=low` : placeholder;
+        navigate(path, {replace, state: {scroll: {scrollToId: activeTrack.id, timestamp: Date.now()}}});
+    }, [activeTrack, navigate]);
+
+    let thumbnail = placeholder;
+    if (activeTrack && isRemoteSong(activeTrack) && activeTrack.picture) {
+        thumbnail = `${activeTrack.picture}?size=low`;
+    } else if (activeTrack && isLocalSong(activeTrack)) {
+        thumbnail = activeTrack.picture || placeholder;
+    }
 
     return (
         <div className={s.trackInfo}>
-            {track && (
+            {activeTrack && (
                 <>
                     <div className={s.trackInfoCover}>
-                        <img src={coverSrc} alt={"cover"}/>
+                        <OpenableCover thumbnailSrc={thumbnail} fullSrc={fullCover}
+                                       enabled={thumbnail !== placeholder}/>
                     </div>
                     <div className={s.trackInfoMeta}>
-                        <p className={classNames(s.trackName, isRemoteSong(track) ? s.link : "")}
-                           onClick={handleTitleClick}>{track.title}</p>
+                        <p className={classNames(s.trackName, s.link)}
+                           onClick={handleTitleClick}>{activeTrack.title}</p>
                         <p className={s.trackArtists}>
-                            {track.artists.map((a, i) => (
+                            {activeTrack.artists.map((a, i) => (
                                 <span key={a}>
-                                    <span className={isRemoteSong(track) ? s.link : ""}>{a}</span>
-                                    {i < track.artists.length - 1 ? ", " : ""}
+                                    <span className={isRemoteSong(activeTrack) ? s.link : ""}>{a}</span>
+                                    {i < activeTrack.artists.length - 1 ? ", " : ""}
                                 </span>
                             ))}
                         </p>

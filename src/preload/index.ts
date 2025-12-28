@@ -86,6 +86,7 @@ const api = {
         ipcRenderer.on("songs:scan-done", handler);
         return () => ipcRenderer.removeListener("songs:scan-done", handler);
     },
+    getFullCover: async (fullPath: string): Promise<string> => ipcRenderer.invoke("songs:get-full-cover", fullPath),
     loadTrack: (track: LocalSongEntry, contextTracks: BaseSongEntry[]) => ipcRenderer.invoke("player:load-local", track, contextTracks),
     loadTrackRemote: (track: RemoteSongEntry, contextTracks: BaseSongEntry[]) => ipcRenderer.invoke("player:load-remote", track, contextTracks),
     pauseOrResume: () => ipcRenderer.invoke("player:pause-or-resume"),

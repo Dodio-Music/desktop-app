@@ -7,6 +7,7 @@
     width: 230px;
     aspect-ratio: 1;
     border-radius: 8px;
+    overflow: hidden;
 }
 
 .infoWrapper {

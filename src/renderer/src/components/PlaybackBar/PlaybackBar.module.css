@@ -192,10 +192,6 @@
     aspect-ratio: 1;
 }
 
-.trackInfoCover img {
-    object-fit: cover;
-}
-
 .trackName {
     font-size: 1rem;
     color: white;

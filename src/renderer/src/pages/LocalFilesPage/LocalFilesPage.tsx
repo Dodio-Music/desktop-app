@@ -3,8 +3,10 @@ import s from "./LocalFilesPage.module.css";
 import {SongList} from "@renderer/components/SongList/SongList";
 import {LocalSongEntry, SongDirectoryResponse} from "../../../../shared/TrackInfo";
 import {localSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
+import {useLocation} from "react-router-dom";
 
 const LocalFilesPage = () => {
+    const location = useLocation();
     const [songs, setSongs] = useState<LocalSongEntry[]>([]);
     const [error, setError] = useState("");
     const songMapRef = useRef<Map<string, LocalSongEntry>>(new Map());
@@ -77,6 +79,7 @@ const LocalFilesPage = () => {
                     songs={songs}
                     slots={localSongRowSlots}
                     scrollElement={scrollPageRef}
+                    scroll={location.state?.scroll}
                 />
             }
         </div>

@@ -10,6 +10,7 @@ import {remoteSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
 import s from "./ReleaseView.module.css";
 import {formatTime} from "@renderer/util/timeUtils";
 import classNames from "classnames";
+import OpenableCover from "@renderer/components/OpenableCover/OpenableCover";
 
 const ReleaseView = () => {
     const navigate = useNavigate();
@@ -46,7 +47,7 @@ const ReleaseView = () => {
                     <div className={s.headerWrapper}>
                         <div className={s.infoWrapper}>
                             <div className={s.cover}>
-                                <img alt={"cover"} className={s.cover} src={`${release.coverArtUrl}?size=low`}/>
+                                <OpenableCover thumbnailSrc={`${release.coverArtUrl}?size=low`} fullSrc={release.coverArtUrl + "?size=original"}/>
                             </div>
                             <div className={s.releaseInfo}>
                                 <div>
