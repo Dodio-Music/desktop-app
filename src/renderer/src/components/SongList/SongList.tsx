@@ -144,6 +144,7 @@ export const SongList = <T extends BaseSongEntry>({
                             rowRenderer={rowRender}
                             scrollTop={scrollTop}
                             isScrolling={isScrolling}
+                            overscanRowCount={10}
                         />}
                     </AutoSizer>
                 )}
