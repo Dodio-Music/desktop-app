@@ -9,6 +9,8 @@ type Data<In, Out> = { input: In, expected: Out }[];
 
 test('convert seconds to time display', () => {
     expect(secondsToTime(10)).toBe("00:10");
+    expect(secondsToTime(100)).toBe("01:40");
+    expect(secondsToTime(4022)).toBe("01:07:02");
 });
 
 test("convert release dto to remote song entries", () => {
