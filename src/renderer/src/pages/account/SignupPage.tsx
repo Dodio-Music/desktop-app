@@ -25,16 +25,17 @@ const SignupPage = () => {
 
         setButtonClickable(false);
 
-        const err = await window.api.signup(username, email, password);
-        if(err) {
-            setError(err);
+        const resOrError = await window.api.signup(username, email, password);
+        if(typeof resOrError !== "string") {
+            setError(resOrError);
             setButtonClickable(true);
             return;
         }
 
         setButtonClickable(true);
 
-        toast.success("Successfully created account! Please verify your email before logging in.");
+        console.log(resOrError);
+        toast.success(resOrError);
         navigate("/login", {replace: true});
     }
 

@@ -3,7 +3,7 @@ import {ElectronAPI, electronAPI} from "@electron-toolkit/preload";
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {PlayerEvent, PlayerState} from "../shared/PlayerState.js";
 import {BaseSongEntry, LocalSongEntry, RemoteSongEntry, SongDirectoryResponse} from "../shared/TrackInfo.js";
-import {ApiResult, DodioApi, MayError, AxiosMethodArgs} from "../shared/Api.js";
+import {ApiResult, DodioApi, MayError, AxiosMethodArgs, DodioError} from "../shared/Api.js";
 import IpcRenderer = Electron.IpcRenderer;
 import {IAllPreferences} from "../main/preferences.js";
 import {UploadProgress, UploadResponse} from "../main/dashboard.js";
@@ -104,7 +104,7 @@ const api = {
         return ipcRenderer.invoke("api:authRequest", method, ...args) as Promise<ApiResult<T>>;
     },
     login: (login: string, password: string) => ipcRenderer.invoke("api:login", login, password) as Promise<MayError>,
-    signup: (username: string, email: string, password: string) => ipcRenderer.invoke("api:signup", username, email, password) as Promise<MayError>,
+    signup: (username: string, email: string, password: string) => ipcRenderer.invoke("api:signup", username, email, password) as Promise<DodioError | string>,
     logout: () => ipcRenderer.invoke("api:logout") as Promise<MayError>,
     onPlayerEvent: (callback: (event: PlayerEvent) => void) => {
         const listener = (_: IpcRendererEvent, event: PlayerEvent) => callback(event);

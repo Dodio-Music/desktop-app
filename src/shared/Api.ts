@@ -12,7 +12,7 @@ export type AxiosMethodArgs = {
 
 export interface DodioApi {
     login(login: string, password: string): Promise<MayError>;
-    signup(username: string, email: string, password: string): Promise<MayError>;
+    signup(username: string, email: string, password: string): Promise<DodioError | string>;
     logout(): Promise<MayError>;
     authRequest<M extends keyof AxiosMethodArgs, T = unknown>(method: M, ...args: AxiosMethodArgs[M]): Promise<ApiResult<AxiosResponse<T>>>,
 }

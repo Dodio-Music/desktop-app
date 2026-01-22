@@ -170,12 +170,12 @@ export default {
     },
     async signup(username: string, email: string, password: string) {
         try {
-            await instance.post("auth/signup", {
+            const res = await instance.post("auth/signup", {
                 username,
                 email,
                 password
             });
-            return null;
+            return res.data;
         } catch (e) {
             return handleError(e);
         }
