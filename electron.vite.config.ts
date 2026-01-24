@@ -38,6 +38,13 @@ export default defineConfig(({mode}) => {
                 }
             },
             plugins: [react()]
+        },
+        build: {
+            rollupOptions: {
+                external: [
+                    "sharp"
+                ]
+            }
         }
     };
 });
