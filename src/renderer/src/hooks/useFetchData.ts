@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {useAuth} from "@renderer/hooks/reduxHooks";
-import {DodioError} from "../../../shared/Api";
+import {errorToString} from "@renderer/util/errorToString";
 
 type FetchState<T> = {
     data: T | null;
@@ -19,11 +19,12 @@ export default function useFetchData<T>(url: string): FetchState<T> {
         setLoading(true);
         setError(null);
         try {
-            const res = await window.api.authRequest<"get", T>("get", url);
+            setData(null);
+            const res = await window.api.authRequest<T>("get", url);
             if (res.type === "ok") {
                 setData(res.value);
             } else {
-                setError(mapError(res.error));
+                setError(errorToString(res.error));
             }
         } catch (e) {
             console.error("Fetch failed:", e);
@@ -45,13 +46,3 @@ export default function useFetchData<T>(url: string): FetchState<T> {
 
     return { data, loading, error, refetch: fetchData };
 }
-
-const mapError = (err: DodioError) => {
-    switch (err.error) {
-        case "Not Found": return "Endpoint not found. (404)";
-        case "no-login": return "Not logged in!";
-        case "info": return err.arg.message ?? "Info error";
-        case "no-connection": return "Request timed out, please try again later!";
-        default: return "An unknown error occurred!";
-    }
-};

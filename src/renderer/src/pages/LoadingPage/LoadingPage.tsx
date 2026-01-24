@@ -13,9 +13,11 @@ const LoadingPage = () => {
         return () => window.clearTimeout(timer)
     }, []);
 
+    if(!showSpinner) return <></>;
+
     return (
         <div className={s.page}>
-            {showSpinner && <SyncLoader color={"rgba(255,255,255,0.5)"} margin={8}/>}
+            <SyncLoader color={"rgba(255,255,255,0.5)"} margin={8}/>
         </div>
     );
 };

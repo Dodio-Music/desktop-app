@@ -2,10 +2,12 @@ import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 import {SongRow} from "@renderer/components/SongList/SongRow";
 import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../../../shared/TrackInfo";
-import {RefObject, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, {RefObject, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import s from "./SongList.module.css";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
 import {AutoSizer, List, ListRowProps, WindowScroller} from "react-virtualized";
+import {ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import { IoAddOutline } from "react-icons/io5";
 
 interface SongListAutoScroll {
     scrollToId: string;
@@ -32,6 +34,7 @@ export const SongList = <T extends BaseSongEntry>({
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
     const currentTrack = useSelector((root: RootState) => root.nativePlayer.currentTrack);
+    const [contextMenu, setContextMenu] = useState<{ song: T; mouseX: number; mouseY: number; } | null>(null);
 
     const memoSlots = useMemo(() => slots, [slots]);
     const setSelectedRowCallback = useCallback((id?: string) => setSelectedRow(id), []);
@@ -45,6 +48,25 @@ export const SongList = <T extends BaseSongEntry>({
     useEffect(() => {
         currentTrackRef.current = currentTrack;
     }, [currentTrack]);
+
+    const handleContextMenu = (e: React.MouseEvent, song: T) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setSelectedRow(song.id);
+
+        setContextMenu({
+            song,
+            mouseX: e.clientX + 2,
+            mouseY: e.clientY - 6
+        });
+    };
+
+    const handleContextMenuCb = useCallback(
+        (e: React.MouseEvent, song: T) => handleContextMenu(e, song),
+        []
+    );
+
+    const closeMenu = () => setContextMenu(null);
 
     const pauseOrLoadSong = useCallback((song: T) => {
         if (song.id === currentTrackRef.current?.id) {
@@ -62,6 +84,10 @@ export const SongList = <T extends BaseSongEntry>({
             if (!listRef.current) return;
 
             const target = e.target as HTMLElement;
+
+            if ((e.target as HTMLElement).closest('[role="menu"]')) {
+                return;
+            }
 
             if (!listRef.current.contains(target)) {
                 setSelectedRow(undefined);
@@ -93,10 +119,11 @@ export const SongList = <T extends BaseSongEntry>({
                     isSelected={isSelected}
                     setSelectedRow={setSelectedRowCallback}
                     slots={memoSlots}
+                    openContextMenu={handleContextMenuCb}
                 />
             </div>
         );
-    }, [currentTrack, gridTemplateColumns, memoSlots, pauseOrLoadSong, selectedRow, setSelectedRowCallback, songs]);
+    }, [currentTrack, gridTemplateColumns, handleContextMenuCb, memoSlots, pauseOrLoadSong, selectedRow, setSelectedRowCallback, songs]);
 
     useEffect(() => {
         if (!scroll || !scrollElement.current) return;
@@ -149,6 +176,28 @@ export const SongList = <T extends BaseSongEntry>({
                     </AutoSizer>
                 )}
             </WindowScroller>
+            <Menu
+                open={Boolean(contextMenu)}
+                onClose={closeMenu}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                    contextMenu
+                        ? {top: contextMenu.mouseY, left: contextMenu.mouseX}
+                        : undefined
+                }
+                disableAutoFocusItem
+                disableRestoreFocus
+            >
+                <MenuItem>
+                    <ListItemIcon>
+                        <IoAddOutline color={"rgb(255,255,255)"} size={22}/>
+                    </ListItemIcon>
+                    <ListItemText
+                        primary="Add to Playlist"
+                        sx={{color: "rgb(255,255,255)"}}
+                    />
+                </MenuItem>
+            </Menu>
         </div>
     );
 };

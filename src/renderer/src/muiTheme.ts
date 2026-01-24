@@ -5,6 +5,26 @@ export const theme = createTheme({
         mode: "dark",
     },
 
+    components: {
+        MuiTooltip: {
+            styleOverrides: {
+                tooltip: {
+                    backgroundColor: "#373737",
+                    color: "white",
+                    fontWeight: 400,
+                    fontSize: "0.85rem"
+                }
+            }
+        },
+        MuiMenuItem: {
+            styleOverrides: {
+                root: {
+                    paddingRight: "25px",
+                }
+            }
+        }
+    },
+
     typography: {
         fontFamily: `'Inter',
       -apple-system,
@@ -37,4 +57,6 @@ export const theme = createTheme({
             sharp: "cubic-bezier(0.4, 0, 0.6, 1)",
         },
     },
+
+
 });

@@ -1,4 +1,4 @@
-import {AxiosInstance, AxiosResponse} from "axios";
+import {AxiosInstance} from "axios";
 
 export type AxiosMethodArgs = {
     get: Parameters<AxiosInstance["get"]>;
@@ -14,7 +14,10 @@ export interface DodioApi {
     login(login: string, password: string): Promise<MayError>;
     signup(username: string, email: string, password: string): Promise<DodioError | string>;
     logout(): Promise<MayError>;
-    authRequest<M extends keyof AxiosMethodArgs, T = unknown>(method: M, ...args: AxiosMethodArgs[M]): Promise<ApiResult<AxiosResponse<T>>>,
+    authRequest<T = unknown, M extends keyof AxiosMethodArgs = keyof AxiosMethodArgs>(
+        method: M,
+        ...args: AxiosMethodArgs[M]
+    ): Promise<ApiResult<T>>,
 }
 export type InvalidInputKeys = "username" | "email" | "login" | "password" | "password-reset-token";
 export const NoLoginError = {error: "no-login"} satisfies DodioError;
@@ -83,5 +86,14 @@ export interface ReleasePreviewDTO {
 export interface SourceDTO {
     sourceId: string;
     url: string;
-    quality: SourceQuality
+    quality: SourceQuality;
+}
+
+export interface PlaylistPreviewDTO {
+    playlistId: number;
+    playlistName: string;
+    isPublic: boolean;
+    ownerUserName: string;
+    ownerDisplayName: string;
+    songCount: number;
 }

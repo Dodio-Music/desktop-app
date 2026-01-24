@@ -3,7 +3,6 @@
     justify-content: center;
     align-items: center;
     background-color: rgba(0, 0, 0, 0.51);
-    backdrop-filter: blur(2px);
     z-index: 10;
     position: absolute;
     top: 0;
@@ -171,6 +170,7 @@
 
 .accountButton:active {
     filter: brightness(0.7);
+    transform: scale(0.95);
     transition: 0s;
 }
 
@@ -184,62 +184,6 @@
 #delete {
     background-color: #ca1f35;
     color: white;
-}
-
-.confirmationContainer p {
-    font-weight: 400;
-    text-align: center;
-    font-size: 1.1rem;
-}
-
-.confirmationContainer h1 {
-    font-weight: 600;
-    text-align: center;
-    font-size: 2rem;
-    margin-top: -10px;
-    color: white;
-}
-
-.confirmationContainer {
-    width: 600px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    padding: 40px;
-    margin-bottom: 50px;
-    background-color: #1b1b1e;
-    border-radius: 20px;
-}
-
-.confirmationButtons {
-    margin-top: 15px;
-    display: flex;
-    justify-content: space-evenly;
-    flex-direction: row;
-    width: 100%;
-    gap: 15px;
-}
-
-.confirmationButtons > button {
-    width: 100%;
-    padding: 15px;
-    border: none;
-    font-size: 1.1rem;
-    border-radius: 8px;
-    font-weight: 700;
-    transition: 0.2s;
-    cursor: pointer;
-}
-
-.confirmationButtons > button:hover {
-    filter: brightness(0.85);
-}
-
-.confirmationButtons > button:active, .confirmButtonActive {
-    transform: scale(0.96) !important;
-    transition: 0s !important;
-    filter: brightness(0.5) !important;
 }
 
 .deleteCancel {

@@ -100,7 +100,7 @@ const api = {
         ipcRenderer.on("auth:statusChange", handler);
         return () => ipcRenderer.removeListener("auth:statusChange", handler);
     },
-    authRequest<M extends keyof AxiosMethodArgs, T = unknown>(method: M, ...args: AxiosMethodArgs[M]) {
+    authRequest<T = unknown, M extends keyof AxiosMethodArgs = keyof AxiosMethodArgs>(method: M, ...args: AxiosMethodArgs[M]) {
         return ipcRenderer.invoke("api:authRequest", method, ...args) as Promise<ApiResult<T>>;
     },
     login: (login: string, password: string) => ipcRenderer.invoke("api:login", login, password) as Promise<MayError>,

@@ -1,0 +1,72 @@
+.popup_container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.65);
+    z-index: 10;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.popup_inner {
+    max-width: 600px;
+    min-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 40px;
+    background-color: #1b1b1e;
+    border-radius: 15px;
+}
+
+.popup_inner div {
+    width: 100%;
+}
+
+.popup_inner h1 {
+    font-weight: 600;
+    text-align: center;
+    font-size: 2rem;
+    color: white;
+    margin-top: -10px;
+}
+
+.popup_inner p {
+    font-weight: 400;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.confirmation_buttons {
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-evenly;
+    flex-direction: row;
+    width: 100%;
+    gap: 15px;
+}
+
+.confirmation_buttons > button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.confirmation_buttons > button:hover {
+    filter: brightness(0.85);
+}
+
+.confirmation_buttons > button:active, .confirmButtonActive {
+    transform: scale(0.96) !important;
+    transition: 0s !important;
+    filter: brightness(0.5) !important;
+}

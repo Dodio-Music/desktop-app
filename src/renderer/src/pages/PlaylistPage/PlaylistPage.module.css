@@ -1,0 +1,151 @@
+.filterWrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 7px;
+}
+
+.filterWrapper div {
+    background-color: #363636;
+    border-radius: 18px;
+    padding: 7px 13px;
+    cursor: pointer;
+    color: #ffffff;
+    transition: 0.05s;
+}
+
+.filterWrapper div:hover {
+    background-color: #414141;
+}
+
+.filterWrapper div p {
+    font-size: 1rem;
+}
+
+.filterWrapper div.filterActive {
+    background-color: #ffffff;
+    color: black;
+}
+
+.topbar {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.create {
+    padding: 11px;
+    background-color: #363636;
+    border: none;
+    color: white;
+    border-radius: 100px;
+    aspect-ratio: 1;
+    line-height: 1;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.create:hover {
+    background-color: #414141;
+}
+
+.create:active {
+    transition: 0s;
+    transform: scale(0.9);
+    background-color: #292929;
+    color: #cbcbcb;
+}
+
+.finalCreate {
+    width: 100%;
+    border-radius: 10px;
+    border: none;
+    background-color: white;
+    font-weight: 500;
+    font-size: 1.1rem;
+    padding: 15px;
+    transition: 0.1s;
+    cursor: pointer;
+}
+
+.finalCreate:not(:disabled):hover {
+    filter: brightness(0.85);
+}
+
+.finalCreate:not(:disabled):active, .creating {
+    transition: 0s !important;
+    filter: brightness(0.5) !important;
+    transform: scale(0.96) !important;
+}
+
+.finalCreate:disabled {
+    color: #393939;
+    opacity: 0.4;
+    cursor: default;
+    filter: none;
+}
+
+.popup .nameInput {
+    width: 100%;
+    font-size: 1.1rem;
+    padding: 15px;
+    border-radius: 10px;
+    border: none;
+    background-color: #313235;
+    color: white;
+    outline: none;
+}
+
+.popup .titleInfo {
+    color: #b9b9b9;
+    font-size: 0.95rem;
+    text-align: left !important;
+    margin-top: -5px;
+}
+
+.popup {
+    gap: 20px;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.option {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: #ffffff;
+    font-size: 1.1rem;
+}
+
+.horiz {
+    display: flex;
+    width: 100%;
+    font-size: 1.1rem;
+    gap: 3px;
+    align-items: center;
+}
+
+.horiz > div {
+    margin-left: 10px;
+}
+
+.horiz > div {
+    width: fit-content;
+}
+
+.info {
+    padding: 2px;
+    color: rgb(201, 201, 201);
+    transition: 0.1s;
+}
+
+.playlists {
+    margin: 10px -15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+}

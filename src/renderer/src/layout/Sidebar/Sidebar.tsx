@@ -1,6 +1,6 @@
 import s from "./sidebar.module.css";
 import {PiMicrophoneStageBold} from "react-icons/pi";
-import {BiAlbum} from "react-icons/bi";
+import {BiAlbum, BiSolidPlaylist} from "react-icons/bi";
 import {FaRegFolderOpen, FaRegHeart} from "react-icons/fa6";
 import NavButton from "./NavButton/NavButton";
 import React from "react";
@@ -25,6 +25,7 @@ const Sidebar = () => {
             <div className={s.collection}>
                 <NavButton url={"/collection/local"}><FaRegFolderOpen/><span>Local Files</span></NavButton>
                 <NavButton url={"/collection/tracks"}><FaRegHeart/><span>Liked Tracks</span></NavButton>
+                <NavButton url={"/collection/playlists"} id={s.playlist}><BiSolidPlaylist /><span>Playlists</span></NavButton>
                 <NavButton url={"/collection/albums"}><BiAlbum id={s.album}/><span>Liked Albums</span></NavButton>
                 <NavButton url={"/collection/artists"}><PiMicrophoneStageBold id={s.artist}/><span>Followed
                     Artists</span></NavButton>

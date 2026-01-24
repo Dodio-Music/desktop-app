@@ -11,14 +11,13 @@ import {isRemoteSong} from "../../../../shared/TrackInfo";
 import toast from "react-hot-toast";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import {ListItemIcon, ListItemText, Menu, MenuItem} from "@mui/material";
-import Delete from "@mui/icons-material/Delete";
-import ReleaseCard from "@renderer/pages/HomePage/ReleaseCard";
+import Card from "@renderer/components/Card/Card";
+import {MdDelete} from "react-icons/md";
 
 const HomePage = () => {
     const navigate = useNavigate();
     const {data, loading, error, refetch} = useFetchData<ReleasePreviewDTO[]>("/api/release/all");
-    const [menuPos, setMenuPos] = useState<{ mouseX: number; mouseY: number } | null>(null);
-    const [selectedRelease, setSelectedRelease] = useState<ReleasePreviewDTO | null>(null);
+    const [contextMenu, setContextMenu] = useState<{ release: ReleasePreviewDTO; mouseX: number; mouseY: number; } | null>(null);
     const track = useSelector((state: RootState) => state.nativePlayer.currentTrack);
     const userPaused = useSelector((state: RootState) => state.nativePlayer.userPaused);
     const role = useAuth().info.role;
@@ -38,17 +37,17 @@ const HomePage = () => {
         e.preventDefault();
         e.stopPropagation();
 
-        setSelectedRelease(release);
-        setMenuPos({
+        setContextMenu({
+            release,
             mouseX: e.clientX + 2,
             mouseY: e.clientY - 6
         });
     };
 
     const handleDelete = async () => {
-        if (!selectedRelease) return;
+        if (!contextMenu) return;
 
-        const res = await window.api.authRequest("delete", `/admin/release/${selectedRelease.releaseId}`);
+        const res = await window.api.authRequest("delete", `/admin/release/${contextMenu.release.releaseId}`);
 
         if (res.type === "error") {
             toast.error(res.error.error);
@@ -60,10 +59,7 @@ const HomePage = () => {
         closeMenu();
     };
 
-    const closeMenu = () => {
-        setMenuPos(null);
-        setSelectedRelease(null);
-    };
+    const closeMenu = () => setContextMenu(null);
 
     const handleIconClick = useCallback(
         async (e: MouseEvent, releasePrev: ReleasePreviewDTO) => {
@@ -113,34 +109,37 @@ const HomePage = () => {
                         {data.map(t => {
                             const isPlaying = track && isRemoteSong(track) && track.releaseId === t.releaseId && !userPaused;
 
-                            return <ReleaseCard
+                            return <Card
+                                data={t}
                                 onIconClick={handleIconClick}
                                 key={t.releaseName}
-                                release={t}
                                 isPlaying={isPlaying}
                                 onClick={handleClick}
                                 onContextMenu={handleContextMenuCb}
+                                getTitle={(r) => r.releaseName}
+                                getArtists={(r) => r.artists.join(", ")}
+                                getCoverUrl={(r) => r.coverArtUrl}
                             />;
                         })}
                     </div>
             }
             <Menu
-                open={Boolean(menuPos)}
+                open={Boolean(contextMenu)}
                 onClose={closeMenu}
                 anchorReference="anchorPosition"
                 anchorPosition={
-                    menuPos
-                        ? {top: menuPos.mouseY, left: menuPos.mouseX}
+                    contextMenu
+                        ? {top: contextMenu.mouseY, left: contextMenu.mouseX}
                         : undefined
                 }
             >
                 {role === "ADMIN" && (
                     <MenuItem onClick={handleDelete}>
-                        <ListItemIcon sx={{minWidth: 32}}>
-                            <Delete sx={{color: "rgb(255,255,255)"}} fontSize="small"/>
+                        <ListItemIcon>
+                            <MdDelete color={"rgb(255,255,255)"} size={22}/>
                         </ListItemIcon>
                         <ListItemText
-                            primary="Delete release"
+                            primary="Delete Release"
                             sx={{color: "rgb(255,255,255)"}}
                         />
                     </MenuItem>

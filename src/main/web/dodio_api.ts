@@ -68,7 +68,7 @@ function handleError(err: unknown): DodioError {
         if (err.code === "ECONNREFUSED") return {error: "no-connection"} as DodioError;
 
         if (err.response) {
-            if(err.response.status === 401) return {error: "no-login"} as DodioError;
+            if (err.response.status === 401) return {error: "no-login"} as DodioError;
 
             return err.response.data as DodioError;
         }
@@ -103,7 +103,7 @@ export async function refreshAuthToken(): Promise<MayError> {
         return null;
     } catch (err) {
         const dodioErr = handleError(err);
-        if(dodioErr.error === "no-login") {
+        if (dodioErr.error === "no-login") {
             updateAuth({
                 access_token: undefined,
                 access_token_expiry: undefined,
@@ -180,12 +180,18 @@ export default {
             return handleError(e);
         }
     },
-    async authRequest<M extends keyof AxiosMethodArgs, T = unknown>(method: M, ...args: AxiosMethodArgs[M]): Promise<ApiResult<T>> {
+    async authRequest<
+        T = unknown,
+        M extends keyof AxiosMethodArgs = keyof AxiosMethodArgs
+    >(
+        method: M,
+        ...args: AxiosMethodArgs[M]
+    ): Promise<ApiResult<T>> {
         try {
             const result = await (instance[method] as (...p: AxiosMethodArgs[M]) => Promise<AxiosResponse<T>>)(...args);
             return {type: "ok", value: result.data};
         } catch (e) {
-            return { type: "error", error: handleError(e) };
+            return {type: "error", error: handleError(e)};
         }
     }
 } as const satisfies DodioApi;

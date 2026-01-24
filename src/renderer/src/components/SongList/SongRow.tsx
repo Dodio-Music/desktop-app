@@ -1,6 +1,6 @@
 import s from "./SongList.module.css";
-import {BaseSongEntry} from "../../../../shared/TrackInfo";
-import React, {JSX, useCallback} from "react";
+import {BaseSongEntry, isRemoteSong} from "../../../../shared/TrackInfo";
+import React, {JSX, useCallback, MouseEvent} from "react";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
 import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
@@ -15,6 +15,7 @@ interface RowProps<T extends BaseSongEntry> {
     isActive: boolean;
     pauseOrLoadSong: (song: T) => void;
     gridTemplateColumns: string;
+    openContextMenu: (e: MouseEvent, song: T) => void;
 }
 
 export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
@@ -26,6 +27,7 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
                                                                                 pauseOrLoadSong,
                                                                                 slots,
                                                                                 gridTemplateColumns,
+                                                                                openContextMenu
                                                                             }: RowProps<T>) {
     const handlePlay = useCallback((song: T) => pauseOrLoadSong(song), [pauseOrLoadSong]);
     const userPaused = useSelector(
@@ -44,6 +46,7 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
                 e.stopPropagation();
                 setSelectedRow(song.id);
             }}
+            onContextMenu={(e) => isRemoteSong(song) && openContextMenu(e, song)}
             onDoubleClick={(e) => {
                 if ((e.target as HTMLElement).closest("button")) return;
                 handlePlay(song);

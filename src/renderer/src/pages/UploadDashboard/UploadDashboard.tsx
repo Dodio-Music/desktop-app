@@ -54,7 +54,7 @@ const UploadDashboard = () => {
 
     return (
         <div className={"pageWrapper"}>
-            <h1>Track Upload</h1>
+            <h1 className={s.h1}>Track Upload</h1>
             <div className={s.horizontal}>
                 <div className={classNames(s.dragArea, isDragging ? s.dragging : "")}
                      onDrop={handleDrop}
