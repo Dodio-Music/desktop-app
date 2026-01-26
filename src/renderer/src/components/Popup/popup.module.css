@@ -70,3 +70,13 @@
     transition: 0s !important;
     filter: brightness(0.5) !important;
 }
+
+.deleteCancel {
+    background-color: #ffffff;
+    color: black;
+}
+
+.deleteConfirm {
+    background-color: #ca1f35;
+    color: white;
+}

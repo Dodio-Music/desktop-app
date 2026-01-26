@@ -1,5 +1,5 @@
 import s from "./PlaylistPage.module.css";
-import {FormEvent, MouseEvent, useCallback, useState} from "react";
+import {FormEvent, MouseEvent, useCallback, useEffect, useRef, useState} from "react";
 import {FiPlus} from "react-icons/fi";
 import {ListItemIcon, ListItemText, Menu, MenuItem, Tooltip} from "@mui/material";
 import Popup from "@renderer/components/Popup/Popup";
@@ -15,6 +15,8 @@ import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
 import dodo from "../../../../../resources/dodo_whiteondark_512.png";
 import NothingFound from "@renderer/components/NothingFound/NothingFound";
 import { MdDelete } from "react-icons/md";
+import ConfirmPopup from "@renderer/components/Popup/ConfirmPopup";
+import useErrorHandling from "@renderer/hooks/useErrorHandling";
 
 type FilterOption = "" | "OWNED,INVITED" | "LIKED";
 type FilterEntry = { type: FilterOption, label: string };
@@ -29,7 +31,11 @@ const PlaylistPage = () => {
     const [createOpen, setCreateOpen] = useState(false);
     const [playlistName, setPlaylistName] = useState<string>("");
     const [isPublic, setIsPublic] = useState(false);
+    const playlistNameInputRef = useRef<HTMLInputElement>(null);
     const [creationRequestActive, setCreationRequestActive] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [playlistToDelete, setPlaylistToDelete] = useState<PlaylistPreviewDTO | null>(null);
+    const {setError, InvalidInputError, hasError} = useErrorHandling();
     const {
         data,
         loading,
@@ -42,6 +48,12 @@ const PlaylistPage = () => {
         mouseY: number;
     } | null>(null);
 
+    useEffect(() => {
+        if (createOpen) {
+            playlistNameInputRef.current?.focus();
+        }
+    }, [createOpen]);
+
     const onSubmitCreate = async (e: FormEvent) => {
         e.preventDefault();
         if (!playlistName || creationRequestActive) return;
@@ -50,7 +62,8 @@ const PlaylistPage = () => {
 
         const res = await window.api.authRequest<string>("post", "/playlist", {playlistName, public: isPublic});
         if (res.type === "error") {
-            toast.error(errorToString(res.error, {fallbackMessage: "Error while creating playlist!"}));
+            if(res.error.error === "invalid-input") setError(res.error);
+            else toast.error(errorToString(res.error, {fallbackMessage: "Error while creating playlist!"}));
         } else {
             setPlaylistName("");
             setIsPublic(false);
@@ -79,18 +92,19 @@ const PlaylistPage = () => {
     );
 
     const handleDelete = async () => {
-        if (!contextMenu) return;
+        if (!playlistToDelete) return;
 
-        const res = await window.api.authRequest("delete", `/playlist/${contextMenu.playlist.playlistId}`);
+        const res = await window.api.authRequest<string>("delete", `/playlist/${playlistToDelete.playlistId}`);
 
         if (res.type === "error") {
             toast.error(errorToString(res.error));
         } else {
-            toast.success("Playlist deleted");
+            toast.success(res.value);
             refetch();
         }
 
-        closeMenu();
+        setShowDeleteConfirm(false);
+        setPlaylistToDelete(null);
     };
 
     const closeMenu = () => setContextMenu(null);
@@ -131,10 +145,11 @@ const PlaylistPage = () => {
                     </div>
                 }
                 {data && data.length <= 0 &&
-                    <NothingFound text={"You didn't like any playlists yet!"}/>
+                    <NothingFound text={"No playlists here yet. Start by creating one!"}/>
                 }
             </div>
 
+            {/* RIGHT CLICK MENU */}
             <Menu
                 open={Boolean(contextMenu)}
                 onClose={closeMenu}
@@ -145,7 +160,13 @@ const PlaylistPage = () => {
                         : undefined
                 }
             >
-                <MenuItem onClick={handleDelete}>
+                <MenuItem onClick={() => {
+                    if(contextMenu) {
+                        setPlaylistToDelete(contextMenu.playlist);
+                        setShowDeleteConfirm(true);
+                    }
+                    closeMenu();
+                }}>
                     <ListItemIcon>
                         <MdDelete color={"rgb(255,255,255)"} size={22}/>
                     </ListItemIcon>
@@ -157,6 +178,17 @@ const PlaylistPage = () => {
             </Menu>
 
 
+            {/* DELETE PLAYLIST POPUP */}
+            <ConfirmPopup
+                open={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleDelete}
+                loading={loading}
+                title="Are you sure?"
+                message={<>Are you sure you want to delete playlist <strong>{playlistToDelete?.playlistName}</strong>?<br/>This action cannot be undone!</>}
+            />
+
+            {/* CREATE PLAYLIST POPUP */}
             {<Popup
                 open={createOpen}
                 onClose={() => setCreateOpen(false)}
@@ -166,10 +198,11 @@ const PlaylistPage = () => {
             >
                 <h1>Create your Playlist</h1>
                 <div className={s.options}>
-                    <div className={s.option}>
+                    <div className={classNames(s.option, hasError("playlistName") && "error")}>
                         <label>Playlist Name</label>
-                        <input placeholder={"My Playlist #1"} className={s.nameInput} value={playlistName}
+                        <input ref={playlistNameInputRef} placeholder={"My Playlist #1"} className={s.nameInput} value={playlistName}
                                onChange={e => setPlaylistName(e.currentTarget.value)}/>
+                        <InvalidInputError inputKey={"playlistName"}/>
                     </div>
                     <div className={s.option}>
                         <div className={s.horiz}>

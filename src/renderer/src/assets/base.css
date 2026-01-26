@@ -98,8 +98,18 @@ img {
     padding: 30px;
 }
 
-.errorPage {
-    color: #ff9898;
+.error {
+    color: #ff8d8d;
+}
+
+.error input {
+    border: 2px solid #ff8d8d !important;
+}
+
+.error span {
+    padding: 5px;
+    font-size: 0.9rem;
+    color: #ff8d8d;
 }
 
 .pageWrapper > h1 {

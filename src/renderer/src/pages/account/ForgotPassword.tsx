@@ -70,19 +70,19 @@ const ForgotPassword = () => {
             <form className={s.container} onSubmit={event => submitButtonPressed(event)}>
                 <h1 className={s.heading}>Reset Dodio Password</h1>
 
-                <div className={classNames({[s.error]: hasError("username")})}>
+                <div className={classNames({["error"]: hasError("username")})}>
                     <input value={userName} onChange={e => setUserName(e.currentTarget.value)} placeholder={"Email / Username"} autoFocus={true} />
                     <InvalidInputError inputKey="login"/>
                 </div>
 
                 { showTokenAndPasswordField && (
                     <>
-                        <div className={classNames({[s.error]: hasError("password-reset-token")})}>
+                        <div className={classNames({["error"]: hasError("password-reset-token")})}>
                             <input value={resetToken} onChange={e => setResetToken(e.currentTarget.value)} placeholder={"Token"}/>
                             <InvalidInputError inputKey="password-reset-token"/>
                         </div>
 
-                        <div className={classNames({[s.error]: hasError("password")})}>
+                        <div className={classNames({["error"]: hasError("password")})}>
                             <div className={s.passwordWrapper}>
                                 <input value={newPassword} type={showPw ? "text" : "password"} placeholder={"New Password"} onChange={e => setNewPassword(e.currentTarget.value)}/>
                                 <button type={"button"} className={s.eyeButton} onClick={() => setShowPw(v => !v)}>

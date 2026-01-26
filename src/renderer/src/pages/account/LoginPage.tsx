@@ -57,11 +57,11 @@ const LoginPage = () => {
         <div className={s.page} onMouseDown={onExit}>
             <form className={s.container} onSubmit={onLogin}>
                 <h1 className={s.heading}>Log in to Dodio</h1>
-                <div className={classNames({[s.error]: hasError("login")})}>
+                <div className={classNames({["error"]: hasError("login")})}>
                     <input placeholder={"Email / Username"} ref={loginRef} autoFocus={true}/>
                     <InvalidInputError inputKey="login"/>
                 </div>
-                <div className={classNames({[s.error]: hasError("password")})}>
+                <div className={classNames({["error"]: hasError("password")})}>
                     <div className={s.passwordWrapper}>
                         <input ref={pwRef} type={showPw ? "text" : "password"} placeholder={"Password"}/>
                         <button type={"button"} className={s.eyeButton} onClick={() => setShowPw(v => !v)}>

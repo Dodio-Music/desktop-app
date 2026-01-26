@@ -13,10 +13,14 @@ import {useAuth} from "@renderer/hooks/reduxHooks";
 import {ListItemIcon, ListItemText, Menu, MenuItem} from "@mui/material";
 import Card from "@renderer/components/Card/Card";
 import {MdDelete} from "react-icons/md";
+import {errorToString} from "@renderer/util/errorToString";
+import ConfirmPopup from "@renderer/components/Popup/ConfirmPopup";
 
 const HomePage = () => {
     const navigate = useNavigate();
     const {data, loading, error, refetch} = useFetchData<ReleasePreviewDTO[]>("/api/release/all");
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [releaseToDelete, setReleaseToDelete] = useState<ReleasePreviewDTO | null>(null);
     const [contextMenu, setContextMenu] = useState<{ release: ReleasePreviewDTO; mouseX: number; mouseY: number; } | null>(null);
     const track = useSelector((state: RootState) => state.nativePlayer.currentTrack);
     const userPaused = useSelector((state: RootState) => state.nativePlayer.userPaused);
@@ -45,18 +49,19 @@ const HomePage = () => {
     };
 
     const handleDelete = async () => {
-        if (!contextMenu) return;
+        if (!releaseToDelete) return;
 
-        const res = await window.api.authRequest("delete", `/admin/release/${contextMenu.release.releaseId}`);
+        const res = await window.api.authRequest("delete", `/admin/release/${releaseToDelete.releaseId}`);
 
         if (res.type === "error") {
-            toast.error(res.error.error);
+            toast.error(errorToString(res.error));
         } else {
             toast.success("Release deleted");
             refetch();
         }
 
-        closeMenu();
+        setReleaseToDelete(null);
+        setShowDeleteConfirm(false);
     };
 
     const closeMenu = () => setContextMenu(null);
@@ -134,7 +139,14 @@ const HomePage = () => {
                 }
             >
                 {role === "ADMIN" && (
-                    <MenuItem onClick={handleDelete}>
+                    <MenuItem onClick={() => {
+                        if(contextMenu) {
+                            setReleaseToDelete(contextMenu.release);
+                            setShowDeleteConfirm(true);
+                        }
+
+                        closeMenu();
+                    }}>
                         <ListItemIcon>
                             <MdDelete color={"rgb(255,255,255)"} size={22}/>
                         </ListItemIcon>
@@ -145,6 +157,16 @@ const HomePage = () => {
                     </MenuItem>
                 )}
             </Menu>
+
+            {/* DELETE RELEASE POPUP */}
+            <ConfirmPopup
+                open={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleDelete}
+                loading={loading}
+                title="Are you sure?"
+                message={<>Are you sure you want to delete release <strong>{releaseToDelete?.releaseName}</strong> by <strong>{releaseToDelete?.artists.join(", ")}</strong>?<br/>This action cannot be undone!</>}
+            />
         </div>
     );
 };

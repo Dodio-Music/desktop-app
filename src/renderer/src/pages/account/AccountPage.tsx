@@ -4,9 +4,8 @@ import s from "./account.module.css";
 import {IoLogOut} from "react-icons/io5";
 import {useState} from "react";
 import toast from "react-hot-toast";
-import classNames from "classnames";
-import Popup from "@renderer/components/Popup/Popup";
-import ps from "../../components/Popup/popup.module.css";
+import ConfirmPopup from "@renderer/components/Popup/ConfirmPopup";
+import {errorToString} from "@renderer/util/errorToString";
 
 const AccountPage = () => {
     const [showConfirmWindow, setShowConfirmWindow] = useState(false);
@@ -20,7 +19,7 @@ const AccountPage = () => {
             toast.success("Successfully deleted account.");
             window.api.logout().then(() => navigate("/"));
         } else {
-            toast.error("Error while deleting account: " + req.error.error);
+            toast.error(errorToString(req.error));
         }
         setShowConfirmWindow(false);
         setLoading(false);
@@ -42,16 +41,14 @@ const AccountPage = () => {
                 </div>
             </div>
 
-            {<Popup open={showConfirmWindow} onClose={() => setShowConfirmWindow(false)}>
-                <h1>Are you sure?</h1>
-                <p>Are you sure you want to delete your Dodio account?</p>
-                <div className={ps.confirmation_buttons}>
-                    <button className={s.deleteCancel} onClick={() => setShowConfirmWindow(false)}>Cancel</button>
-                    <button className={classNames(s.deleteConfirm, loading && s.confirmButtonActive)}
-                            onClick={() => confirmDelete()}>Delete
-                    </button>
-                </div>
-            </Popup>}
+            <ConfirmPopup
+                open={showConfirmWindow}
+                onClose={() => setShowConfirmWindow(false)}
+                onConfirm={confirmDelete}
+                loading={loading}
+                title="Are you sure?"
+                message="Are you sure you want to delete your Dodio account?"
+            />
         </>
     );
 };

@@ -27,16 +27,6 @@
     flex-direction: column;
 }
 
-.container > div > span {
-    padding: 5px;
-    font-size: 0.9rem;
-    color: #ff8d8d !important;
-}
-
-.error input {
-    border: 2px solid #ff8d8d !important;
-}
-
 .heading {
     color: white;
     font-weight: 600;
@@ -185,14 +175,3 @@
     background-color: #ca1f35;
     color: white;
 }
-
-.deleteCancel {
-    background-color: #ffffff;
-    color: black;
-}
-
-.deleteConfirm {
-    background-color: #ca1f35;
-    color: white;
-}
-
