@@ -19,6 +19,7 @@ import {renderEntityActions} from "@renderer/contextMenus/menuHelper";
 import {useContextMenu} from "@renderer/hooks/useContextMenu";
 import {useConfirm} from "@renderer/hooks/useConfirm";
 import {useAuth} from "@renderer/hooks/reduxHooks";
+import {useNavigate} from "react-router-dom";
 
 type FilterOption = "" | "OWNED,INVITED" | "LIKED";
 type FilterEntry = { type: FilterOption, label: string };
@@ -29,6 +30,7 @@ const filterOptions: FilterEntry[] = [
 ];
 
 const PlaylistPage = () => {
+    const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState<FilterOption>("");
     const [createOpen, setCreateOpen] = useState(false);
     const [playlistName, setPlaylistName] = useState<string>("");
@@ -62,7 +64,7 @@ const PlaylistPage = () => {
         const res = await window.api.authRequest<string>("post", "/playlist", {playlistName, public: isPublic});
         if (res.type === "error") {
             if(res.error.error === "invalid-input") setError(res.error);
-            else toast.error(errorToString(res.error, {fallbackMessage: "Error while creating playlist!"}));
+            else toast.error(errorToString(res.error));
         } else {
             setPlaylistName("");
             setIsPublic(false);
@@ -96,8 +98,7 @@ const PlaylistPage = () => {
                             data.map(playlist =>
                                 <Card key={playlist.playlistId}
                                       data={playlist}
-                                      onClick={() => {
-                                      }}
+                                      onClick={() => navigate(`/playlist/${playlist.playlistId}`)}
                                       isPlaying={false}
                                       onIconClick={() => {
                                       }}

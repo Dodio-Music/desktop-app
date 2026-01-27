@@ -54,7 +54,7 @@ const ReleaseView = () => {
                                     <p className={s.releaseTitle}>{release.releaseName}</p>
                                     <p className={s.artists}>{release.artists.map(((a, i) => <span key={a}><span className={s.link}>{a}</span>{i < release.artists.length - 1 ? ", " : ""}</span>))}</p>
                                 </div>
-                                <p className={s.tracksInfo}>{release.releaseTracks.length} Track{release.releaseTracks.length > 1 && "s"} ({formatTime(albumLengthSeconds)})</p>
+                                <p className={s.tracksInfo}>{release.releaseTracks.length} Track{release.releaseTracks.length !== 1 && "s"} ({formatTime(albumLengthSeconds)})</p>
                             </div>
                         </div>
                     </div>

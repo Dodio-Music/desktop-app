@@ -1,5 +1,5 @@
 import {RemoteSongEntry} from "../../../shared/TrackInfo.js";
-import {ReleaseDTO} from "../../../shared/Api";
+import {PlaylistDTO, ReleaseDTO} from "../../../shared/Api";
 
 export function releaseToSongEntries(rel: ReleaseDTO | null): RemoteSongEntry[] {
     if(!rel) return [];
@@ -17,6 +17,34 @@ export function releaseToSongEntries(rel: ReleaseDTO | null): RemoteSongEntry[] 
             waveformUrl: t.waveformUrl,
             releaseId: rel.releaseId,
             releaseDate: rel.releaseDate,
+            type: "remote",
+            sources: t.sources.map(src => ({
+                id: src.sourceId,
+                url: src.url,
+                quality: src.quality
+            }))
+        };
+    });
+}
+
+export function playlistTracksToSongEntries(playlist: PlaylistDTO | null): RemoteSongEntry[] {
+    if(!playlist) return [];
+
+    console.log(playlist);
+    return playlist.releaseTracks.map(rt => {
+        const t = rt.track;
+        const r = rt.release;
+
+        return {
+            id: t.trackId,
+            title: t.title,
+            artists: t.artists,
+            album: r.releaseName,
+            duration: t.duration,
+            picture: r.coverArtUrl,
+            waveformUrl: t.waveformUrl,
+            releaseId: r.releaseId,
+            releaseDate: r.releaseDate,
             type: "remote",
             sources: t.sources.map(src => ({
                 id: src.sourceId,

@@ -11,7 +11,7 @@ const AccountPage = () => {
     const navigate = useNavigate();
 
     const deleteAccount = async () => {
-        const ok = await confirm({title: "Delete your Account?", body: <>Are you sure you want to <strong>delete</strong> your Dodio account?</>});
+        const ok = await confirm({title: "Delete your Account?", body: <>Are you sure you want to delete <strong>your Dodio account?</strong></>});
 
         if(!ok) return;
 

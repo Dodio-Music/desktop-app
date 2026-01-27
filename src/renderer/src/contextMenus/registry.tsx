@@ -1,5 +1,5 @@
 import {PlaylistPreviewDTO, ReleasePreviewDTO} from "../../../shared/Api";
-import { MdDelete } from "react-icons/md";
+import {MdDelete} from "react-icons/md";
 import {RemoteSongEntry} from "../../../shared/TrackInfo";
 import {IoAddOutline} from "react-icons/io5";
 import {ContextAction} from "@renderer/contextMenus/menuHelper";
@@ -15,9 +15,10 @@ export const playlistActions: ContextAction<PlaylistPreviewDTO>[] = [
         onClick: async (entity, helpers) => {
             const ok = await helpers.confirm?.({
                 title: "Delete Playlist?",
-                body: <>Are you sure you want to delete playlist <strong>{entity.playlistName}</strong>?<br/>This action cannot be undone!</>,
+                body: <>Are you sure you want to delete playlist <strong>{entity.playlistName}</strong>?<br/>This action
+                    cannot be undone!</>
             });
-            if(!ok) return;
+            if (!ok) return;
 
             const res = await window.api.authRequest<string>("delete", `/playlist/${entity.playlistId}`);
 
@@ -40,9 +41,11 @@ export const releaseActions: ContextAction<ReleasePreviewDTO>[] = [
         onClick: (async (entity, helpers) => {
             const ok = await helpers.confirm?.({
                 title: "Delete Release?",
-                body: <>Are you sure you want to delete release <strong>{entity.releaseName}</strong> by <strong>{entity.artists.join(", ")}</strong>?<br/>This action cannot be undone!</>,
+                body: <>Are you sure you want to delete
+                    release <strong>{entity.releaseName}</strong> by <strong>{entity.artists.join(", ")}</strong>?<br/>This
+                    action cannot be undone!</>
             });
-            if(!ok) return;
+            if (!ok) return;
 
             const res = await window.api.authRequest<string>("delete", `/admin/release/${entity.releaseId}`);
 
@@ -62,6 +65,15 @@ export const songActions: ContextAction<RemoteSongEntry>[] = [
         label: "Add to Playlist",
         icon: <IoAddOutline size={22}/>,
         visible: () => true,
-        onClick: () => {toast.success("Not implemented yet!")}
+        onClick: (async () => {
+            // const res = await window.api.authRequest<string>("delete", `/admin/release/${entity.releaseId}`);
+            //
+            // if (res.type === "error") {
+            //     toast.error(errorToString(res.error));
+            // } else {
+            //     toast.success(res.value);
+            //     helpers.refetch?.();
+            // }
+        })
     }
 ];

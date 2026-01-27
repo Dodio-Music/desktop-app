@@ -107,3 +107,42 @@ export const remoteSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
         render: ({song}) => <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
     }
 ];
+
+export const playlistSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
+    playRow<RemoteSongEntry>(),
+    {
+        header: <p>Title</p>,
+        render: ({song, isActive}) => (
+            <div className={s.trackColumn}>
+                <div className={s.trackElement}>
+                    <div className={s.cover}>
+                        <img className={s.img} src={song.picture ?? placeholder} alt="cover" loading={"lazy"}/>
+                    </div>
+                    <div className={s.trackInfo}>
+                        <p className={classNames(s.trackTitle, s.ellipsis, isActive && s.playing)}>{song.title}</p>
+                        <p className={classNames(s.trackArtist, s.ellipsis)}>
+                            {song.artists.map((a, i) => (
+                                <span key={a}>
+                                    <span className={s.link}>{a}</span>
+                                    {i < song.artists.length - 1 ? ", " : ""}
+                                </span>
+                            ))}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        )
+    },
+    {
+        header: <p>Album</p>,
+        render: ({song}) => <p className={classNames(s.trackAlbum, s.ellipsis, s.link)}>{song.album}</p>
+    },
+    {
+        header: <p>Date added</p>,
+        render: () => <p className={classNames(s.timestamp, s.ellipsis)}>{"N/A"}</p>
+    },
+    {
+        header: <p className={s.durationHeader}><WiTime3/></p>,
+        render: ({song}) => <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
+    }
+];

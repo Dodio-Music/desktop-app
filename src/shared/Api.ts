@@ -64,6 +64,7 @@ export interface TrackDTO {
 export interface ReleaseTrackDTO {
     releaseTrackId: string;
     track: TrackDTO;
+    release: ReleaseLightDTO;
 }
 
 export interface ReleaseDTO {
@@ -96,4 +97,26 @@ export interface PlaylistPreviewDTO {
     ownerUserName: string;
     ownerDisplayName: string;
     songCount: number;
+}
+
+export type PlaylistRole = "OWNER" | "EDITOR" | "VIEWER";
+
+export interface ReleaseLightDTO {
+    releaseId: string;
+    releaseName: string;
+    coverArtUrl: string;
+    releaseDate: string;
+}
+
+export interface PlaylistUserDTO {
+    userName: string;
+    displayName: string;
+    role: PlaylistRole;
+}
+
+export interface PlaylistDTO {
+    playlistName: string;
+    isPublic: boolean;
+    releaseTracks: ReleaseTrackDTO[];
+    playlistUsers: PlaylistUserDTO[];
 }

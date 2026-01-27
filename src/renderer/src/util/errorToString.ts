@@ -2,9 +2,6 @@ import {DodioError} from "../../../shared/Api";
 
 export function errorToString(
     error: DodioError,
-    opts?: {
-        fallbackMessage?: string;
-    }
 ) {
 
     switch (error.error) {
@@ -19,7 +16,7 @@ export function errorToString(
         case "Not Found":
             return "Endpoint not found. (404)";
         default: {
-            return opts?.fallbackMessage ?? "An unknown error occurred.";
+            return error.error;
         }
     }
 }

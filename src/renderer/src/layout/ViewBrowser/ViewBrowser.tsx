@@ -15,6 +15,7 @@ import ReleaseView from "@renderer/pages/ReleaseView/ReleaseView";
 import ForgotPassword from "@renderer/pages/account/ForgotPassword";
 import UploadDashboard from "@renderer/pages/UploadDashboard/UploadDashboard";
 import PlaylistPage from "@renderer/pages/PlaylistPage/PlaylistPage";
+import PlaylistView from "@renderer/pages/PlaylistView/PlaylistView";
 
 const ViewBrowser = () => {
     return (
@@ -30,6 +31,7 @@ const ViewBrowser = () => {
                 <Route path={"/collection/artists"} element={<ProtectedRoute><LikedArtistsPage/></ProtectedRoute>}/>
                 <Route path={"/collection/playlists"} element={<ProtectedRoute><PlaylistPage/></ProtectedRoute>}/>
                 <Route path={"/release/:id"} element={<ProtectedRoute><ReleaseView/></ProtectedRoute>}/>
+                <Route path={"/playlist/:id"} element={<ProtectedRoute><PlaylistView/></ProtectedRoute>}/>
                 <Route path={"/login"} element={<LoginPage/>}/>
                 <Route path={"/signup"} element={<SignupPage/>}/>
                 <Route path={"/resetPassword"} element={<ForgotPassword/>}/>
