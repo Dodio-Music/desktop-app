@@ -21,6 +21,8 @@ async function loadAuth(): Promise<IAuthData> {
             refresh_token_expiry: new Date(Date.parse(parsed.refresh_token_expiry)),
             refresh_token: parsed.refresh_token,
             access_token: parsed.access_token,
+            email: parsed.email,
+            username: parsed.username,
             role: parsed.role
         };
     } catch {
@@ -38,7 +40,7 @@ export function updateAuth(new_auth: Partial<IAuthData>) {
             ? "login"
             : "signup";
 
-    authInfoCache = {status: authStatus, role: auth.role};
+    authInfoCache = {status: authStatus, role: auth.role, email: auth.email, username: auth.username};
 
     mainWindow.webContents.send("auth:statusChange", authInfoCache);
 

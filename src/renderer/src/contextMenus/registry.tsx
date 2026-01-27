@@ -11,7 +11,7 @@ export const playlistActions: ContextAction<PlaylistPreviewDTO>[] = [
         id: "delete-playlist",
         label: "Delete Playlist",
         icon: <MdDelete size={22}/>,
-        visible: () => true,
+        visible: (entity, helpers) => entity.ownerUserName === helpers.username,
         onClick: async (entity, helpers) => {
             const ok = await helpers.confirm?.({
                 title: "Delete Playlist?",

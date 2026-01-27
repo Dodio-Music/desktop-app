@@ -23,7 +23,7 @@
     border-radius: 15px;
 }
 
-.popup_inner div {
+.popup_inner > div {
     width: 100%;
 }
 

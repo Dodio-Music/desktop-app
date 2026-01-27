@@ -34,7 +34,6 @@ const SignupPage = () => {
 
         setButtonClickable(true);
 
-        console.log(resOrError);
         toast.success(resOrError);
         navigate("/login", {replace: true});
     }

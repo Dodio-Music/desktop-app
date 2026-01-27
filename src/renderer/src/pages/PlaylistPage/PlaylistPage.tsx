@@ -18,6 +18,7 @@ import useErrorHandling from "@renderer/hooks/useErrorHandling";
 import {renderEntityActions} from "@renderer/contextMenus/menuHelper";
 import {useContextMenu} from "@renderer/hooks/useContextMenu";
 import {useConfirm} from "@renderer/hooks/useConfirm";
+import {useAuth} from "@renderer/hooks/reduxHooks";
 
 type FilterOption = "" | "OWNED,INVITED" | "LIKED";
 type FilterEntry = { type: FilterOption, label: string };
@@ -37,6 +38,7 @@ const PlaylistPage = () => {
     const {setError, InvalidInputError, hasError} = useErrorHandling();
     const confirm = useConfirm();
     const ctx = useContextMenu();
+    const authInfo = useAuth().info;
 
     const {
         data,
@@ -119,7 +121,7 @@ const PlaylistPage = () => {
                       ? {top: ctx.state.mouseY, left: ctx.state.mouseX}
                       : undefined}>
                 {
-                    ctx.state && renderEntityActions(ctx.state.target, ctx.close, {confirm, refetch})
+                    ctx.state && renderEntityActions(ctx.state.target, ctx.close, {confirm, refetch, username: authInfo.username})
                 }
             </Menu>
 

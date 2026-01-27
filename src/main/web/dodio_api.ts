@@ -122,6 +122,7 @@ interface SignInResponse {
     id: number,
     type: string,
     username: string,
+    email: string,
     accessToken: string,
     accessTokenExpirationDate: string,
     refreshToken: string,
@@ -151,7 +152,9 @@ export default {
                 refresh_token: res.data.refreshToken,
                 access_token_expiry: new Date(res.data.accessTokenExpirationDate),
                 refresh_token_expiry: new Date(res.data.refreshTokenExpirationDate),
-                role: res.data.role
+                role: res.data.role,
+                username: res.data.username,
+                email: res.data.email
             });
             return null;
         } catch (e) {

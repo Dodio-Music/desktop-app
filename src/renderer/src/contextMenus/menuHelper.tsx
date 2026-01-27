@@ -19,6 +19,7 @@ export interface ContextActionHelpers {
     confirm?: ConfirmFn;
     refetch?: () => void;
     role?: IRole;
+    username?: string;
 }
 
 const contextRegistry: {
@@ -58,8 +59,12 @@ export function renderEntityActions(
 }
 
 export function renderActions<T>(actions: ContextAction<T>[], data: T, close: () => void, helpers: ContextActionHelpers) {
-    return actions
-        .filter(a => a.visible?.(data, helpers) ?? true)
+    const filteredActions = actions.filter(a => a.visible?.(data, helpers) ?? true);
+    if(filteredActions.length <= 0) {
+        close();
+        return <></>;
+    }
+    return filteredActions
         .map(action => (
         <MenuItem
             key={action.id}

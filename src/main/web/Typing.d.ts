@@ -5,11 +5,15 @@ export interface IAuthData {
     refresh_token?: string,
     refresh_token_expiry?: Date,
     role?: IRole;
+    username?: string;
+    email?: string;
 }
 
 export type IRole = "USER" | "ADMIN";
 export type AuthStatus = "login" | "signup" | "account";
 export interface AuthInfo {
     status: AuthStatus,
-    role?: IRole
+    role?: IRole,
+    username?: string,
+    email?: string
 }
