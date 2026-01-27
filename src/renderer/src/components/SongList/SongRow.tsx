@@ -5,6 +5,7 @@ import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
 import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 import classNames from "classnames";
+import {ContextEntity} from "@renderer/contextMenus/menuHelper";
 
 interface RowProps<T extends BaseSongEntry> {
     index: number,
@@ -15,7 +16,10 @@ interface RowProps<T extends BaseSongEntry> {
     isActive: boolean;
     pauseOrLoadSong: (song: T) => void;
     gridTemplateColumns: string;
-    openContextMenu: (e: MouseEvent, song: T) => void;
+    openContextMenu: (
+        e: MouseEvent,
+        target: ContextEntity,
+    ) => void;
 }
 
 export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
@@ -46,7 +50,7 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
                 e.stopPropagation();
                 setSelectedRow(song.id);
             }}
-            onContextMenu={(e) => isRemoteSong(song) && openContextMenu(e, song)}
+            onContextMenu={(e) => isRemoteSong(song) && openContextMenu(e, {type: "song", data: song})}
             onDoubleClick={(e) => {
                 if ((e.target as HTMLElement).closest("button")) return;
                 handlePlay(song);

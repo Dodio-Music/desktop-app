@@ -7,8 +7,8 @@ interface CardProps<T> {
     data: T;
     isPlaying: boolean | null;
     onClick: (data: T) => void;
-    onContextMenu: (e: MouseEvent, release: T) => void;
-    onIconClick: (e: MouseEvent, release: T) => void;
+    onContextMenu: (e: MouseEvent, item: T) => void;
+    onIconClick: (e: MouseEvent, item: T) => void;
 
     getTitle: (data: T) => string;
     getArtists?: (data: T) => string;

@@ -9,14 +9,17 @@ import {setAuthInfo} from "@renderer/redux/authSlice";
 import {isLocalSong} from "../../shared/TrackInfo";
 import {CssBaseline, ThemeProvider} from "@mui/material";
 import {theme} from "./muiTheme";
+import {ConfirmProvider} from "@renderer/components/Popup/ConfirmContext";
 
 createRoot(document.getElementById("root")!).render(
     <Provider store={store}>
         <StrictMode>
             <ThemeProvider theme={theme}>
                 <HashRouter>
-                    <CssBaseline/>
-                    <App/>
+                    <ConfirmProvider>
+                        <CssBaseline/>
+                        <App/>
+                    </ConfirmProvider>
                 </HashRouter>
             </ThemeProvider>
         </StrictMode>

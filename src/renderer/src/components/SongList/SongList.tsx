@@ -2,12 +2,13 @@ import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 import {SongRow} from "@renderer/components/SongList/SongRow";
 import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../../../shared/TrackInfo";
-import React, {RefObject, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {RefObject, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import s from "./SongList.module.css";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
 import {AutoSizer, List, ListRowProps, WindowScroller} from "react-virtualized";
-import {ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import { IoAddOutline } from "react-icons/io5";
+import {Menu} from "@mui/material";
+import {renderEntityActions} from "@renderer/contextMenus/menuHelper";
+import {useContextMenu} from "@renderer/hooks/useContextMenu";
 
 interface SongListAutoScroll {
     scrollToId: string;
@@ -34,7 +35,7 @@ export const SongList = <T extends BaseSongEntry>({
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
     const currentTrack = useSelector((root: RootState) => root.nativePlayer.currentTrack);
-    const [contextMenu, setContextMenu] = useState<{ song: T; mouseX: number; mouseY: number; } | null>(null);
+    const ctx = useContextMenu();
 
     const memoSlots = useMemo(() => slots, [slots]);
     const setSelectedRowCallback = useCallback((id?: string) => setSelectedRow(id), []);
@@ -48,25 +49,6 @@ export const SongList = <T extends BaseSongEntry>({
     useEffect(() => {
         currentTrackRef.current = currentTrack;
     }, [currentTrack]);
-
-    const handleContextMenu = (e: React.MouseEvent, song: T) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setSelectedRow(song.id);
-
-        setContextMenu({
-            song,
-            mouseX: e.clientX + 2,
-            mouseY: e.clientY - 6
-        });
-    };
-
-    const handleContextMenuCb = useCallback(
-        (e: React.MouseEvent, song: T) => handleContextMenu(e, song),
-        []
-    );
-
-    const closeMenu = () => setContextMenu(null);
 
     const pauseOrLoadSong = useCallback((song: T) => {
         if (song.id === currentTrackRef.current?.id) {
@@ -85,7 +67,7 @@ export const SongList = <T extends BaseSongEntry>({
 
             const target = e.target as HTMLElement;
 
-            if ((e.target as HTMLElement).closest('[role="menu"]')) {
+            if ((e.target as HTMLElement).closest("[role=\"menu\"]")) {
                 return;
             }
 
@@ -119,11 +101,11 @@ export const SongList = <T extends BaseSongEntry>({
                     isSelected={isSelected}
                     setSelectedRow={setSelectedRowCallback}
                     slots={memoSlots}
-                    openContextMenu={handleContextMenuCb}
+                    openContextMenu={ctx.open}
                 />
             </div>
         );
-    }, [currentTrack, gridTemplateColumns, handleContextMenuCb, memoSlots, pauseOrLoadSong, selectedRow, setSelectedRowCallback, songs]);
+    }, [ctx.open, currentTrack?.id, gridTemplateColumns, memoSlots, pauseOrLoadSong, selectedRow, setSelectedRowCallback, songs]);
 
     useEffect(() => {
         if (!scroll || !scrollElement.current) return;
@@ -176,27 +158,18 @@ export const SongList = <T extends BaseSongEntry>({
                     </AutoSizer>
                 )}
             </WindowScroller>
-            <Menu
-                open={Boolean(contextMenu)}
-                onClose={closeMenu}
-                anchorReference="anchorPosition"
-                anchorPosition={
-                    contextMenu
-                        ? {top: contextMenu.mouseY, left: contextMenu.mouseX}
-                        : undefined
-                }
-                disableAutoFocusItem
-                disableRestoreFocus
+            <Menu open={Boolean(ctx.state)}
+                  onClose={ctx.close}
+                  anchorReference={"anchorPosition"}
+                  anchorPosition={ctx.state
+                      ? {top: ctx.state.mouseY, left: ctx.state.mouseX}
+                      : undefined}
+                  disableAutoFocusItem
+                  disableRestoreFocus
             >
-                <MenuItem>
-                    <ListItemIcon>
-                        <IoAddOutline color={"rgb(255,255,255)"} size={22}/>
-                    </ListItemIcon>
-                    <ListItemText
-                        primary="Add to Playlist"
-                        sx={{color: "rgb(255,255,255)"}}
-                    />
-                </MenuItem>
+                {
+                    ctx.state && renderEntityActions(ctx.state.target, ctx.close, {})
+                }
             </Menu>
         </div>
     );
