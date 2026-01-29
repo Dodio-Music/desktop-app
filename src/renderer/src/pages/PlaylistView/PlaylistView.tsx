@@ -26,7 +26,7 @@ const PlaylistView = () => {
         mounted.current = true;
     }, [id]);
 
-    const {data: playlist, loading, error} = useFetchData<PlaylistDTO>(`/playlist/public/${id}/songs`);
+    const {data: playlist, loading, error} = useFetchData<PlaylistDTO>(`/playlist/${id}/songs`);
 
     const songEntries = playlistTracksToSongEntries(playlist);
 

@@ -25,7 +25,7 @@ const ReleaseView = () => {
         mounted.current = true;
     }, [id]);
 
-    const {data: release, loading, error} = useFetchData<ReleaseDTO>(`/api/release/${id}`);
+    const {data: release, loading, error} = useFetchData<ReleaseDTO>(`/release/${id}`);
 
     const songEntries = releaseToSongEntries(release);
 

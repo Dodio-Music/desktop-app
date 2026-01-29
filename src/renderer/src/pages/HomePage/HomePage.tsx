@@ -18,7 +18,7 @@ import {useConfirm} from "@renderer/hooks/useConfirm";
 
 const HomePage = () => {
     const navigate = useNavigate();
-    const {data, loading, error, refetch} = useFetchData<ReleasePreviewDTO[]>("/api/release/all");
+    const {data, loading, error, refetch} = useFetchData<ReleasePreviewDTO[]>("/release");
     const confirm = useConfirm();
     const ctx = useContextMenu();
     const track = useSelector((state: RootState) => state.nativePlayer.currentTrack);
@@ -47,7 +47,7 @@ const HomePage = () => {
                 return;
             }
 
-            const req = await window.api.authRequest("get", `/api/release/${releasePrev.releaseId}`);
+            const req = await window.api.authRequest("get", `/release/${releasePrev.releaseId}`);
             if (req.type === "error") {
                 toast.error("Couldn't load release!");
                 return;
