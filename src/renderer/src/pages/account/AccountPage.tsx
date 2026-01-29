@@ -37,6 +37,10 @@ const AccountPage = () => {
                     <button className={s.accountButton} id={s.delete} onClick={deleteAccount}>
                         <MdDelete size={21}/>Delete Account
                     </button>
+                    <button className={s.accountButton}
+                            onClick={() => window.api.logout().then(() => navigate("/resetPassword"))}><IoLogOut
+                        size={20}/> Reset Password
+                    </button>
                 </div>
             </div>
         </>

@@ -1,10 +1,11 @@
-import {FormEvent, MouseEvent, useState} from 'react';
+import {FormEvent, MouseEvent, useEffect, useState} from 'react';
 import s from "./account.module.css";
 import classNames from "classnames";
 import {IoEyeOffOutline, IoEyeOutline} from "react-icons/io5";
 import {Link, useNavigate} from "react-router-dom";
 import useErrorHandling from "@renderer/hooks/useErrorHandling";
 import toast from "react-hot-toast";
+import {useAuth} from "@renderer/hooks/reduxHooks";
 
 
 const ForgotPassword = () => {
@@ -17,6 +18,13 @@ const ForgotPassword = () => {
     const [userName, setUserName] = useState<string>("");
     const [resetToken, setResetToken] = useState<string>("");
     const [newPassword, setNewPassword] = useState<string>("");
+
+    //show email if user is logged in
+    const {info} = useAuth();
+
+    useEffect(() => {
+        if (info.email) setUserName(info.email);
+    }, []);
 
 
     const onExit = (event: MouseEvent<HTMLDivElement>) => {
