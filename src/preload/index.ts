@@ -125,6 +125,11 @@ const api = {
         const listener = (_: IpcRendererEvent, uploadProgress: UploadProgress) => cb(uploadProgress);
         ipcRenderer.on("dashboard:upload-progress", listener);
         return () => ipcRenderer.removeListener("dashboard:upload-progress", listener);
+    },
+    onToast: (cb: (type: "success" | "error", msg: string) => void) => {
+        const listener = (_: IpcRendererEvent, type: "success" | "error", msg: string) => cb(type, msg);
+        ipcRenderer.on("ui:toast", listener);
+        return () => ipcRenderer.removeListener("ui:toast", listener);
     }
 } satisfies DodioApi & Record<string, unknown>;
 

@@ -84,6 +84,7 @@ const SeekBar = () => {
     }, [currentTime, playbackRunning]);
 
     function getInterpolatedTime() {
+        if (!playbackRunningRef.current || !trackRef.current) return lastIpcTimeRef.current;
         const now = performance.now();
         const elapsed = (now - lastIpcTimestampRef.current) / 1000;
         const t = lastIpcTimeRef.current + elapsed;

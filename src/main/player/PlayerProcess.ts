@@ -471,6 +471,8 @@ export class PlayerProcess {
 
     public setStateUpdates(sendStateUpdates: boolean) {
         this.sendStateUpdates = sendStateUpdates;
+        this.playbackState = "paused";
+        if(this.session) this.session.waitingForData = true;
     }
 
     private notifyState(type?: string) {

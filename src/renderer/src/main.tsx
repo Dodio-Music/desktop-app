@@ -10,6 +10,7 @@ import {isLocalSong} from "../../shared/TrackInfo";
 import {CssBaseline, ThemeProvider} from "@mui/material";
 import {theme} from "./muiTheme";
 import {ConfirmProvider} from "@renderer/components/Popup/ConfirmContext";
+import toast from "react-hot-toast";
 
 createRoot(document.getElementById("root")!).render(
     <Provider store={store}>
@@ -28,6 +29,15 @@ createRoot(document.getElementById("root")!).render(
 
 window.api.onPlayerUpdate((state) => {
     store.dispatch(updatePlayerState(state));
+});
+
+window.api.onToast((type, msg) => {
+    console.log("abc");
+    switch(type) {
+        case "success": toast.success(msg);
+            break;
+        default: toast.error(msg);
+    }
 });
 
 window.api.onPlayerEvent((event) => {

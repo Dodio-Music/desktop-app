@@ -98,7 +98,8 @@ export class PlayerSession {
             waitingForData: true,
             currentTime: 0,
             latency: 0,
-            userPaused: false
+            userPaused: false,
+            playbackRunning: false
         }
         this.mainWindow.webContents.send("player:event", {
             type: "pending-data",
@@ -115,6 +116,10 @@ export class PlayerSession {
         } else if(isRemoteSong(track)) {
             const audio = track.sources.find(s => s.quality === "LOSSLESS");
             if(audio) url = audio.url;
+            else {
+                this.mainWindow.webContents.send("ui:toast", "error", "Invalid Song URL!");
+                throw new Error("Invalid Song URL!");
+            }
         }
 
         let waveformPeaks: Float32Array | null = null;
