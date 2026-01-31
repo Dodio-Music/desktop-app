@@ -87,7 +87,7 @@ const HomePage = () => {
                                 onClick={handleClick}
                                 onContextMenu={(e, data) => ctx.open(e, {type: "release", data})}
                                 getTitle={(r) => r.releaseName}
-                                getArtists={(r) => r.artists.join(", ")}
+                                getArtists={(r) => r.artists}
                                 getCoverUrl={(r) => r.coverArtUrl}
                             />;
                         })}

@@ -98,7 +98,10 @@ export async function refreshAuthToken(): Promise<MayError> {
             });
         updateAuth({
             access_token: res.data.accessToken,
-            access_token_expiry: new Date(res.data.accessTokenExpirationDate)
+            access_token_expiry: new Date(res.data.accessTokenExpirationDate),
+            role: res.data.role,
+            username: res.data.username,
+            email: res.data.email
         });
         return null;
     } catch (err) {
@@ -133,6 +136,9 @@ interface SignInResponse {
 interface RefreshTokenResponse {
     accessToken: string,
     accessTokenExpirationDate: string,
+    username: string,
+    email: string,
+    role: IRole
 }
 
 let isRefreshing = false;

@@ -11,7 +11,7 @@ interface CardProps<T> {
     onIconClick: (e: MouseEvent, item: T) => void;
 
     getTitle: (data: T) => string;
-    getArtists?: (data: T) => string;
+    getArtists?: (data: T) => string[];
     getCoverUrl: (data: T) => string;
 }
 
@@ -28,8 +28,10 @@ function CardComponent<T>({data, isPlaying, onClick, onContextMenu, onIconClick,
                     }
                 </button>
             </div>
-            <p className={`${s.title} ${s.link}`}>{getTitle(data)}</p>
-            {getArtists && <p className={`${s.artist} ${s.link}`}>{getArtists(data)}</p>}
+            <p className={`${s.title}`}>{getTitle(data)}</p>
+            <p className={s.artist}>{Array.isArray(getArtists?.(data)) && getArtists!(data).map((a, i) => (
+                <span key={a}><span className={s.link}>{a}</span>{i < getArtists(data).length - 1 ? ", " : ""}</span>
+            ))}</p>
         </div>
     );
 }

@@ -59,10 +59,18 @@ export async function processUpload(filePath: string, mainWindow: BrowserWindow)
             if (err instanceof HTTPError && err.response) {
                 const body = await err.response.body;
 
+                if(err.response.statusCode === 403) {
+                    resolve({
+                        success: false,
+                        message: "Forbidden! Try logging in again!",
+                        fileName
+                    })
+                }
+
                 resolve({
                     success: false,
                     message: body,
-                    fileName,
+                    fileName
                 });
                 return;
             }
