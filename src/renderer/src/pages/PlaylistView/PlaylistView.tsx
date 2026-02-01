@@ -5,13 +5,13 @@ import useFetchData from "@renderer/hooks/useFetchData";
 import {PlaylistDTO} from "../../../../shared/Api";
 import classNames from "classnames";
 import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
-import OpenableCover from "@renderer/components/OpenableCover/OpenableCover";
 import {formatTime} from "@renderer/util/timeUtils";
 import {SongList} from "@renderer/components/SongList/SongList";
 import {playlistSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
 import s from "./PlaylistView.module.css";
 import dodo from "../../../../../resources/dodo_whiteondark_512.png";
 import {playlistTracksToSongEntries} from "@renderer/util/parseBackendTracks";
+import CoverGrid from "@renderer/components/CoverGrid/CoverGrid";
 
 const PlaylistView = () => {
     const navigate = useNavigate();
@@ -48,7 +48,7 @@ const PlaylistView = () => {
                     <div className={s.headerWrapper}>
                         <div className={s.infoWrapper}>
                             <div className={s.cover}>
-                                <OpenableCover enabled={false} thumbnailSrc={`${dodo}`}/>
+                                <CoverGrid coverArtUrls={playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : [dodo]}/>
                             </div>
                             <div className={s.releaseInfo}>
                                 <div>
@@ -63,7 +63,7 @@ const PlaylistView = () => {
                         scrollElement={scrollPageRef}
                         songs={songEntries}
                         slots={playlistSongRowSlots}
-                        gridTemplateColumns="30px 4fr 3fr 200px 150px"
+                        gridTemplateColumns="30px 4fr 2.5fr 1.5fr 1fr 105px"
                         contextHelpers={{view: "playlist", playlistId: playlist.playlistId, refetch}}
                     />
                 </>

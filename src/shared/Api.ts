@@ -102,6 +102,7 @@ export interface PlaylistPreviewDTO {
     isPublic: boolean;
     owner: UserPublicDTO;
     songCount: number;
+    coverArtUrls: string[];
 }
 
 export type PlaylistRole = "OWNER" | "EDITOR" | "VIEWER";
@@ -132,4 +133,5 @@ export interface PlaylistDTO {
     isPublic: boolean;
     playlistSongs: PlaylistSongDTO[];
     playlistUsers: PlaylistUserDTO[];
+    coverArtUrls: string[];
 }

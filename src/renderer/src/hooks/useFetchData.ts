@@ -24,7 +24,6 @@ export default function useFetchData<T>(url: string): FetchState<T> {
             if (res.type === "ok") {
                 setData(res.value);
             } else {
-                console.log(res.error);
                 setError(errorToString(res.error));
             }
         } catch (e) {

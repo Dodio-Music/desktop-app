@@ -24,7 +24,6 @@
 }
 
 .cover {
-    border-radius: 7px;
     width: 100%;
 }
 
@@ -32,6 +31,8 @@
     width: 100%;
     aspect-ratio: 1;
     position: relative;
+    border-radius: 10px;
+    overflow: hidden;
 }
 
 .title {

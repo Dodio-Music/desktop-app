@@ -47,6 +47,7 @@ export function playlistTracksToSongEntries(playlist: PlaylistDTO | null): Remot
             releaseId: r.releaseId,
             releaseDate: r.releaseDate,
             addedAt: ps.addedAt,
+            addedBy: ps.addedBy,
             type: "remote",
             sources: t.sources.map(src => ({
                 id: src.sourceId,

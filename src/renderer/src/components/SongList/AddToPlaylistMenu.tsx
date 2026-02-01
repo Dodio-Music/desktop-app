@@ -66,7 +66,7 @@ const AddToPlaylistMenu = ({closeParentMenu, song}: AddToPlaylistMenuProps) => {
                 disablePortal={false}
                 sx={{zIndex: 10000}}
                 modifiers={[
-                    {name: "offset", options: {offset: [-4, 4]}}
+                    {name: "offset", options: {offset: [-4, 0]}}
                 ]}
             >
                 <Paper

@@ -58,7 +58,7 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
         >
             {slots.map((slot, i) => (
                 <div key={i} className={s.colWrapper}>
-                    {slot.render({song, isActive, userPaused, index, handlePlay})}
+                    {slot.render({song, isActive, isSelected, userPaused, index, handlePlay, openContextMenu})}
                 </div>
             ))}
         </div>

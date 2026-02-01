@@ -30,7 +30,7 @@ const ROW_HEIGHT = 66;
 export const SongList = <T extends BaseSongEntry>({
                                                       songs,
                                                       slots,
-                                                      gridTemplateColumns = "30px 4.5fr 3fr 1.8fr 50px",
+                                                      gridTemplateColumns = "30px 4.5fr 3fr 1.8fr 105px",
                                                       scrollElement,
                                                       scroll,
                                                       contextHelpers
