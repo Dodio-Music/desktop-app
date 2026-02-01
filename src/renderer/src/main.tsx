@@ -32,7 +32,6 @@ window.api.onPlayerUpdate((state) => {
 });
 
 window.api.onToast((type, msg) => {
-    console.log("abc");
     switch(type) {
         case "success": toast.success(msg);
             break;

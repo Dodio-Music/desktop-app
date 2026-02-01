@@ -84,6 +84,12 @@ export interface ReleasePreviewDTO {
     artists: string[];
 }
 
+export interface UserPublicDTO {
+    username: string;
+    displayName: string;
+    createdAt: Date;
+}
+
 export interface SourceDTO {
     sourceId: string;
     url: string;
@@ -94,8 +100,7 @@ export interface PlaylistPreviewDTO {
     playlistId: number;
     playlistName: string;
     isPublic: boolean;
-    ownerUserName: string;
-    ownerDisplayName: string;
+    owner: UserPublicDTO;
     songCount: number;
 }
 
@@ -109,14 +114,22 @@ export interface ReleaseLightDTO {
 }
 
 export interface PlaylistUserDTO {
-    userName: string;
-    displayName: string;
+    user: UserPublicDTO;
     role: PlaylistRole;
 }
 
+export interface PlaylistSongDTO {
+    playlistSongId: string;
+    addedBy: UserPublicDTO;
+    releaseTrack: ReleaseTrackDTO;
+    position: number;
+    addedAt: Date;
+}
+
 export interface PlaylistDTO {
+    playlistId: number;
     playlistName: string;
     isPublic: boolean;
-    releaseTracks: ReleaseTrackDTO[];
+    playlistSongs: PlaylistSongDTO[];
     playlistUsers: PlaylistUserDTO[];
 }

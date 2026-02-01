@@ -6,9 +6,9 @@ import {RefObject, useCallback, useEffect, useMemo, useRef, useState} from "reac
 import s from "./SongList.module.css";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
 import {AutoSizer, List, ListRowProps, WindowScroller} from "react-virtualized";
-import {Menu} from "@mui/material";
-import {renderEntityActions} from "@renderer/contextMenus/menuHelper";
+import {ContextActionHelpers, renderEntityActions} from "@renderer/contextMenus/menuHelper";
 import {useContextMenu} from "@renderer/hooks/useContextMenu";
+import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
 
 interface SongListAutoScroll {
     scrollToId: string;
@@ -21,6 +21,8 @@ interface Props<T extends BaseSongEntry> {
     gridTemplateColumns?: string;
     scrollElement: RefObject<HTMLDivElement | null>;
     scroll?: SongListAutoScroll;
+
+    contextHelpers?: ContextActionHelpers;
 }
 
 const ROW_HEIGHT = 66;
@@ -30,7 +32,8 @@ export const SongList = <T extends BaseSongEntry>({
                                                       slots,
                                                       gridTemplateColumns = "30px 4.5fr 3fr 1.8fr 50px",
                                                       scrollElement,
-                                                      scroll
+                                                      scroll,
+                                                      contextHelpers
                                                   }: Props<T>) => {
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
@@ -156,19 +159,9 @@ export const SongList = <T extends BaseSongEntry>({
                     </AutoSizer>
                 )}
             </WindowScroller>
-            <Menu open={Boolean(ctx.state)}
-                  onClose={ctx.close}
-                  anchorReference={"anchorPosition"}
-                  anchorPosition={ctx.state
-                      ? {top: ctx.state.mouseY, left: ctx.state.mouseX}
-                      : undefined}
-                  disableAutoFocusItem
-                  disableRestoreFocus
-            >
-                {
-                    ctx.state && renderEntityActions(ctx.state.target, ctx.close, {})
-                }
-            </Menu>
+            <ContextMenu ctx={ctx}>
+                {ctx.state && renderEntityActions(ctx.state.target, ctx.close, contextHelpers ?? {})}
+            </ContextMenu>
         </div>
     );
 };

@@ -16,10 +16,17 @@ export const theme = createTheme({
                 }
             }
         },
+        MuiMenu: {
+            styleOverrides: {
+                list: {
+                    padding: "4px"
+                }
+            }
+        },
         MuiMenuItem: {
             styleOverrides: {
                 root: {
-                    paddingRight: "25px",
+                    padding: "8px 14px"
                 }
             }
         }

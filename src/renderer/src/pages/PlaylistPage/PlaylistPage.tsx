@@ -1,7 +1,7 @@
 import s from "./PlaylistPage.module.css";
 import {FormEvent, useEffect, useRef, useState} from "react";
 import {FiPlus} from "react-icons/fi";
-import {Menu, Tooltip} from "@mui/material";
+import {Tooltip} from "@mui/material";
 import Popup from "@renderer/components/Popup/Popup";
 import Switch from "react-switch";
 import {RiInformation2Fill} from "react-icons/ri";
@@ -20,6 +20,7 @@ import {useContextMenu} from "@renderer/hooks/useContextMenu";
 import {useConfirm} from "@renderer/hooks/useConfirm";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import {useNavigate} from "react-router-dom";
+import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
 
 type FilterOption = "" | "OWNED,INVITED" | "LIKED";
 type FilterEntry = { type: FilterOption, label: string };
@@ -105,7 +106,7 @@ const PlaylistPage = () => {
                                       onContextMenu={(e, data) => ctx.open(e, {type: "playlist", data})}
                                       getTitle={p => p.playlistName}
                                       getCoverUrl={() => dodo}
-                                      getArtists={c => c.ownerDisplayName}/>
+                                      getArtists={c => [c.owner.displayName]}/>
                             )
                         }
                     </div>
@@ -115,16 +116,11 @@ const PlaylistPage = () => {
                 }
             </div>
 
-            <Menu open={Boolean(ctx.state)}
-                  onClose={ctx.close}
-                  anchorReference={"anchorPosition"}
-                  anchorPosition={ctx.state
-                      ? {top: ctx.state.mouseY, left: ctx.state.mouseX}
-                      : undefined}>
+            <ContextMenu ctx={ctx}>
                 {
                     ctx.state && renderEntityActions(ctx.state.target, ctx.close, {confirm, refetch, username: authInfo.username})
                 }
-            </Menu>
+            </ContextMenu>
 
             {/* CREATE PLAYLIST POPUP */}
             {<Popup

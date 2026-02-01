@@ -15,11 +15,11 @@ export default function useFetchData<T>(url: string): FetchState<T> {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchData = useCallback(async () => {
+    const fetchData = useCallback(async (resetOnFetch: boolean = true) => {
         setLoading(true);
         setError(null);
         try {
-            setData(null);
+            if(resetOnFetch) setData(null);
             const res = await window.api.authRequest<T>("get", url);
             if (res.type === "ok") {
                 setData(res.value);
@@ -45,5 +45,5 @@ export default function useFetchData<T>(url: string): FetchState<T> {
 
     }, [authInfo, fetchData]);
 
-    return { data, loading, error, refetch: fetchData };
+    return { data, loading, error, refetch: () => fetchData(false) };
 }

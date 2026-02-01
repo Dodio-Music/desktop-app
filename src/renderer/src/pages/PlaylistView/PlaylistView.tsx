@@ -26,24 +26,24 @@ const PlaylistView = () => {
         mounted.current = true;
     }, [id]);
 
-    const {data: playlist, loading, error} = useFetchData<PlaylistDTO>(`/playlist/${id}/songs`);
+    const {data: playlist, loading, error, refetch} = useFetchData<PlaylistDTO>(`/playlist/${id}/songs`);
 
     const songEntries = playlistTracksToSongEntries(playlist);
 
-    const albumLengthSeconds = playlist?.releaseTracks.map(r => r.track.duration).reduce((partialSum, a) => partialSum + a, 0) ?? 0;
+    const albumLengthSeconds = playlist?.playlistSongs.map(r => r.releaseTrack.track.duration).reduce((partialSum, a) => partialSum + a, 0) ?? 0;
 
     return (
         <div
             className={`pageWrapper pageWrapperFullHeight ${classNames(s.pageWrapper)}`}
             ref={scrollPageRef}
         >
-            {loading && <LoadingPage />}
+            {!playlist && loading && <LoadingPage />}
 
             {!loading && error && (
                 <p className="errorPage">{error}</p>
             )}
 
-            {!loading && playlist && (
+            {playlist && (
                 <>
                     <div className={s.headerWrapper}>
                         <div className={s.infoWrapper}>
@@ -53,9 +53,9 @@ const PlaylistView = () => {
                             <div className={s.releaseInfo}>
                                 <div>
                                     <p className={s.releaseTitle}>{playlist.playlistName}</p>
-                                    <p className={s.artists}>{<span className={s.link}>{playlist.playlistUsers.find(u => u.role === "OWNER")?.displayName}</span>}</p>
+                                    <p className={s.artists}>{<span className={s.link}>{playlist.playlistUsers.find(u => u.role === "OWNER")?.user.displayName}</span>}</p>
                                 </div>
-                                <p className={s.tracksInfo}>{playlist.releaseTracks.length} Track{playlist.releaseTracks.length !== 1 && "s"} ({formatTime(albumLengthSeconds)})</p>
+                                <p className={s.tracksInfo}>{playlist.playlistSongs.length} Track{playlist.playlistSongs.length !== 1 && "s"} ({formatTime(albumLengthSeconds)})</p>
                             </div>
                         </div>
                     </div>
@@ -64,6 +64,7 @@ const PlaylistView = () => {
                         songs={songEntries}
                         slots={playlistSongRowSlots}
                         gridTemplateColumns="30px 4fr 3fr 200px 150px"
+                        contextHelpers={{view: "playlist", playlistId: playlist.playlistId, refetch}}
                     />
                 </>
             )}

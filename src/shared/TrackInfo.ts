@@ -22,6 +22,8 @@ export interface RemoteSongEntry extends BaseSongEntry {
     waveformUrl: string | null;
     releaseDate: string;
     releaseId: string;
+    releaseTrackId: string;
+    addedAt?: Date;
 }
 
 export interface SongSource {

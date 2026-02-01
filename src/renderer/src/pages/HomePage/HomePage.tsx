@@ -10,11 +10,11 @@ import {RootState} from "@renderer/redux/store";
 import {isRemoteSong} from "../../../../shared/TrackInfo";
 import toast from "react-hot-toast";
 import {useAuth} from "@renderer/hooks/reduxHooks";
-import {Menu} from "@mui/material";
 import Card from "@renderer/components/Card/Card";
 import {useContextMenu} from "@renderer/hooks/useContextMenu";
 import {renderEntityActions} from "@renderer/contextMenus/menuHelper";
 import {useConfirm} from "@renderer/hooks/useConfirm";
+import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -93,17 +93,11 @@ const HomePage = () => {
                         })}
                     </div>
             }
-
-            <Menu open={Boolean(ctx.state)}
-                  onClose={ctx.close}
-                  anchorReference={"anchorPosition"}
-                  anchorPosition={ctx.state
-                      ? {top: ctx.state.mouseY, left: ctx.state.mouseX}
-                      : undefined}>
+            <ContextMenu ctx={ctx}>
                 {
-                   ctx.state && renderEntityActions(ctx.state.target, ctx.close, {confirm, refetch, role})
+                    ctx.state && renderEntityActions(ctx.state.target, ctx.close, {confirm, refetch, role})
                 }
-            </Menu>
+            </ContextMenu>
         </div>
     );
 };

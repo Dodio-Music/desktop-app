@@ -138,8 +138,8 @@ export const playlistSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
         render: ({song}) => <p className={classNames(s.trackAlbum, s.ellipsis, s.link)}>{song.album}</p>
     },
     {
-        header: <p>Date added</p>,
-        render: () => <p className={classNames(s.timestamp, s.ellipsis)}>{"N/A"}</p>
+        header: <p>Added at</p>,
+        render: ({song}) => <p className={classNames(s.timestamp, s.ellipsis)}>{song.addedAt && format(song.addedAt)}</p>
     },
     {
         header: <p className={s.durationHeader}><WiTime3/></p>,

@@ -17,6 +17,7 @@ export function releaseToSongEntries(rel: ReleaseDTO | null): RemoteSongEntry[] 
             waveformUrl: t.waveformUrl,
             releaseId: rel.releaseId,
             releaseDate: rel.releaseDate,
+            releaseTrackId: rt.releaseTrackId,
             type: "remote",
             sources: t.sources.map(src => ({
                 id: src.sourceId,
@@ -30,21 +31,22 @@ export function releaseToSongEntries(rel: ReleaseDTO | null): RemoteSongEntry[] 
 export function playlistTracksToSongEntries(playlist: PlaylistDTO | null): RemoteSongEntry[] {
     if(!playlist) return [];
 
-    console.log(playlist);
-    return playlist.releaseTracks.map(rt => {
-        const t = rt.track;
-        const r = rt.release;
+    return playlist.playlistSongs.map(ps => {
+        const t = ps.releaseTrack.track;
+        const r = ps.releaseTrack.release;
 
         return {
-            id: t.trackId,
+            id: ps.playlistSongId,
             title: t.title,
             artists: t.artists,
             album: r.releaseName,
             duration: t.duration,
             picture: r.coverArtUrl,
             waveformUrl: t.waveformUrl,
+            releaseTrackId: ps.releaseTrack.releaseTrackId,
             releaseId: r.releaseId,
             releaseDate: r.releaseDate,
+            addedAt: ps.addedAt,
             type: "remote",
             sources: t.sources.map(src => ({
                 id: src.sourceId,
