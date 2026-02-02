@@ -9,6 +9,8 @@
     bottom: 0;
     left: 0;
     right: 0;
+    opacity: 0;
+    transition: opacity 0.1s;
 }
 
 .popup_inner {
@@ -21,6 +23,10 @@
     padding: 40px;
     background-color: #1b1b1e;
     border-radius: 15px;
+}
+
+.popup_shown {
+    opacity: 1;
 }
 
 .popup_inner > div {
@@ -80,3 +86,13 @@
     background-color: #ca1f35;
     color: white;
 }
+
+@keyframes show-image {
+    0% {
+        transform: scale(0.6);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+

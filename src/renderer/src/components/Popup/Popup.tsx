@@ -1,4 +1,4 @@
-import {ReactNode, MouseEvent, ElementType, ComponentPropsWithoutRef} from "react";
+import {ReactNode, MouseEvent, ElementType, ComponentPropsWithoutRef, useEffect} from "react";
 import classNames from "classnames";
 import {createPortal} from "react-dom";
 import s from "./popup.module.css";
@@ -12,16 +12,25 @@ type PopupProps<T extends ElementType> = {
 } & Omit<ComponentPropsWithoutRef<T>, "as" | "children" | "className">;
 
 const Popup = <T extends ElementType = "div">({
-                   open,
-                   onClose,
-                   children,
-                   className,
-                   as,
-                   ...rest
-               }: PopupProps<T>) => {
-    if (!open) return null;
-
+                                                  open,
+                                                  onClose,
+                                                  children,
+                                                  className,
+                                                  as,
+                                                  ...rest
+                                              }: PopupProps<T>) => {
     const Component = as ?? "div";
+
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onClose();
+            }
+        };
+
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [onClose]);
 
     const onBackdropMouseDown = (e: MouseEvent<HTMLDivElement>) => {
         if (e.target === e.currentTarget) {
@@ -29,17 +38,15 @@ const Popup = <T extends ElementType = "div">({
         }
     };
 
-    return (
-        createPortal(
-            <div className={s.popup_container} onMouseDown={onBackdropMouseDown}>
-                <Component className={classNames(s.popup_inner, className)}
-                     {...rest}
-                >
-                    {children}
-                </Component>
-            </div>,
-            document.body
-        )
+    return createPortal(
+        <div className={classNames(s.popup_container, open && s.popup_shown)} onMouseDown={onBackdropMouseDown} style={{ pointerEvents: open ? "auto" : "none" }}>
+            <Component className={classNames(s.popup_inner, className)}
+                 {...rest}
+            >
+                {children}
+            </Component>
+        </div>,
+        document.body
     );
 };
 

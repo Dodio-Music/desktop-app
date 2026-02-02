@@ -131,6 +131,7 @@ export interface PlaylistDTO {
     playlistId: number;
     playlistName: string;
     isPublic: boolean;
+    owner: UserPublicDTO;
     playlistSongs: PlaylistSongDTO[];
     playlistUsers: PlaylistUserDTO[];
     coverArtUrls: string[];

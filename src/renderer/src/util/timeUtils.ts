@@ -20,3 +20,18 @@ export function formatTime(seconds: number): string {
     const secs = totalSeconds % 60;
     return `${minutes.toString().padStart(1, "0")}:${secs.toString().padStart(2, "0")}`;
 }
+
+export function formatDurationHuman(seconds: number): string {
+    const total = Math.floor(seconds);
+
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const secs = total % 60;
+
+    if (hours > 0) {
+        return `${hours} hr${hours !== 1 ? "s" : ""} ${minutes} min`;
+    } else {
+        return `${minutes} min ${secs} sec`;
+    }
+}
+
