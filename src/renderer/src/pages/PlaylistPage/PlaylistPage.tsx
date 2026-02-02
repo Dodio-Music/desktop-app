@@ -92,7 +92,7 @@ const PlaylistPage = () => {
                     </div>
                 </div>
                 {error && <p>{error}</p>}
-                {loading && <LoadingPage/>}
+                {loading && !data && <LoadingPage/>}
                 {data && data.length > 0 &&
                     <div className={s.playlists}>
                         {

@@ -112,7 +112,7 @@ img {
     color: #ff8d8d;
 }
 
-.pageWrapper > h1 {
+.pageWrapper h1 {
     color: #ffffff;
     font-size: 2.4rem;
     font-weight: 600;

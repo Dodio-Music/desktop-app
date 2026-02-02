@@ -10,8 +10,9 @@
     flex-direction: column;
     transition: 0.1s background-color;
     cursor: pointer;
-    border-radius: 7px;
+    border-radius: 5px;
     padding: 15px;
+    height: fit-content;
     position: relative;
 }
 
@@ -94,4 +95,36 @@
 
 .pauseIcon {
     transform: scale(1.1);
+}
+
+
+/* SKELETON */
+
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: #2a2a2a;
+    border-radius: 6px;
+    min-height: 12px;
+    color: transparent;
+}
+
+.skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.08),
+        transparent
+    );
+    animation: shimmer 1.3s infinite;
+}
+
+@keyframes shimmer {
+    to {
+        transform: translateX(100%);
+    }
 }
