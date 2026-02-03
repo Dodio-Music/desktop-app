@@ -1,6 +1,6 @@
 import s from "./SongList.module.css";
 import {BaseSongEntry, isRemoteSong} from "../../../../shared/TrackInfo";
-import React, {JSX, useCallback, MouseEvent} from "react";
+import React, {JSX, useCallback, MouseEvent, useRef} from "react";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
 import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
@@ -21,6 +21,7 @@ interface RowProps<T extends BaseSongEntry> {
         e: MouseEvent,
         target: ContextEntity
     ) => void;
+    onDragStart?: (id: string, index: number) => void;
 }
 
 export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
@@ -33,9 +34,12 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
                                                                                 slots,
                                                                                 gridTemplateColumns,
                                                                                 openContextMenu,
-                                                                                navigate
+                                                                                navigate,
+                                                                                onDragStart
                                                                             }: RowProps<T>) {
     const handlePlay = useCallback((song: T) => pauseOrLoadSong(song), [pauseOrLoadSong]);
+    const pointerDownRef = useRef<{x: number, y: number} | null>(null);
+
     const userPaused = useSelector(
         (root: RootState) =>
             isActive ? root.nativePlayer.userPaused : null
@@ -44,6 +48,28 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
     const rowClass = `${s.songRow} ${s.grid}`;
     return (
         <div
+            onPointerDown={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.closest(`button, a, input, .no-drag, .${s.link}`)) return;
+
+                pointerDownRef.current = { x: e.clientX, y: e.clientY };
+                setSelectedRow(song.id);
+
+                (e.target as HTMLElement).setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={(e) => {
+                if (!pointerDownRef.current) return;
+                const dy = e.clientY - pointerDownRef.current.y;
+
+                if (Math.abs(dy) > 33) {
+                    onDragStart?.(song.id, index);
+                    pointerDownRef.current = null;
+                }
+            }}
+            onPointerUp={(e) => {
+                pointerDownRef.current = null;
+                (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+            }}
             data-row={"true"}
             id={`song-${song.id}`}
             className={classNames(rowClass, isSelected && s.activeRow)}

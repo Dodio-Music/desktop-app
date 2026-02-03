@@ -2,7 +2,7 @@ import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 import {SongRow} from "@renderer/components/SongList/SongRow";
 import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../../../shared/TrackInfo";
-import {RefObject, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState} from "react";
 import s from "./SongList.module.css";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
 import {AutoSizer, List, ListRowProps, WindowScroller} from "react-virtualized";
@@ -22,8 +22,8 @@ interface Props<T extends BaseSongEntry> {
     scrollElement: RefObject<HTMLDivElement | null>;
     scroll?: SongListAutoScroll;
     navigate?: (path: string) => void;
-
     contextHelpers?: ContextActionHelpers;
+    enableDrag?: boolean;
 }
 
 const ROW_HEIGHT = 66;
@@ -35,18 +35,94 @@ export const SongList = <T extends BaseSongEntry>({
                                                       scrollElement,
                                                       scroll,
                                                       contextHelpers,
-                                                      navigate
+                                                      navigate,
+                                                      enableDrag = false
                                                   }: Props<T>) => {
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
     const currentTrack = useSelector((root: RootState) => root.nativePlayer.currentTrack);
     const ctx = useContextMenu();
 
-    const memoSlots = useMemo(() => slots, [slots]);
     const setSelectedRowCallback = useCallback((id?: string) => setSelectedRow(id), []);
 
     const songsRef = useRef(songs);
     const currentTrackRef = useRef(currentTrack);
+
+    const [draggingId, setDraggingId] = useState<string | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const dragStartIndexRef = useRef<number | null>(null);
+    const listOffsetTopRef = useRef(0);
+
+    const getIndexFromClientY = (clientY: number) => {
+        if (!scrollElement.current) return null;
+
+        const y = clientY -
+            scrollElement.current.getBoundingClientRect().top +
+            scrollElement.current.scrollTop -
+            listOffsetTopRef.current;
+
+        const rawIndex = (y - ROW_HEIGHT / 2) / ROW_HEIGHT;
+        return Math.max(0, Math.min(songs.length, Math.floor(rawIndex)));
+    };
+
+    useLayoutEffect(() => {
+        if (!listRef.current || !scrollElement.current) return;
+
+        const listRect = listRef.current.getBoundingClientRect();
+        const scrollRect = scrollElement.current.getBoundingClientRect();
+
+        listOffsetTopRef.current =
+            listRect.top - scrollRect.top + scrollElement.current.scrollTop;
+    }, []);
+
+    const handlePointerUp = async () => {
+        window.removeEventListener("pointermove", handlePointerMoveRAF);
+        window.removeEventListener("pointerup", handlePointerUp);
+
+        if (
+            draggingId &&
+            dragOverIndex !== null &&
+            dragStartIndexRef.current !== null &&
+            dragOverIndex !== dragStartIndexRef.current
+        ) {
+            // await window.api.authRequest("post", "/playlist/reorder", {
+            //     playlistId: contextHelpers?.playlistId,
+            //     from: dragStartIndexRef.current,
+            //     to: dragOverIndex
+            // });
+            //
+            // contextHelpers?.refetch?.();
+            console.log("aal " + dragStartIndexRef.current, dragOverIndex);
+        }
+
+        setDraggingId(null);
+        setDragOverIndex(null);
+        dragStartIndexRef.current = null;
+    };
+
+    let ticking = false;
+    let latestClientY = 0;
+    const handlePointerMoveRAF = (e: PointerEvent) => {
+        latestClientY = e.clientY;
+        if (!ticking) {
+            ticking = true;
+            window.requestAnimationFrame(() => {
+                const idx = getIndexFromClientY(latestClientY);
+                if (idx !== null) setDragOverIndex(idx);
+                ticking = false;
+            });
+        }
+    };
+
+    const handleDragStart = useCallback((id: string, index: number) => {
+        if (!enableDrag) return;
+
+        dragStartIndexRef.current = index;
+        setDraggingId(id);
+
+        window.addEventListener("pointermove", handlePointerMoveRAF);
+        window.addEventListener("pointerup", handlePointerUp);
+    }, []);
 
     useEffect(() => {
         songsRef.current = songs;
@@ -105,13 +181,14 @@ export const SongList = <T extends BaseSongEntry>({
                     isActive={isActive}
                     isSelected={isSelected}
                     setSelectedRow={setSelectedRowCallback}
-                    slots={memoSlots}
+                    slots={slots}
                     openContextMenu={ctx.open}
                     navigate={navigate}
+                    onDragStart={enableDrag ? handleDragStart : undefined}
                 />
             </div>
         );
-    }, [ctx.open, currentTrack?.id, gridTemplateColumns, memoSlots, pauseOrLoadSong, selectedRow, setSelectedRowCallback, songs]);
+    }, [songs, currentTrack?.id, selectedRow, gridTemplateColumns, pauseOrLoadSong, setSelectedRowCallback, slots, ctx.open, navigate, enableDrag, handleDragStart]);
 
     useEffect(() => {
         if (!scroll || !scrollElement.current) return;
@@ -120,14 +197,10 @@ export const SongList = <T extends BaseSongEntry>({
         if (index < 0) return;
         const HEADER_HEIGHT = 250;
         const top = index * ROW_HEIGHT - (scrollElement.current.clientHeight / 2) + ROW_HEIGHT / 2 + HEADER_HEIGHT;
-        // request animation frame -> fix for redirect from another page
-        requestAnimationFrame(() => {
-            scrollElement.current?.scrollTo({
-                top,
-                behavior: "smooth"
-            });
+        scrollElement.current?.scrollTo({
+            top,
+            behavior: "smooth"
         });
-
     }, [scroll, scrollElement, songs]);
 
     if (!scrollElement.current) {
@@ -135,7 +208,7 @@ export const SongList = <T extends BaseSongEntry>({
     }
 
     return (
-        <div className={s.songList} ref={listRef}>
+        <div className={`${s.songList} ${draggingId ? "dragging" : ""}`} ref={listRef}>
             <div className={`${s.headRow} ${s.grid}`} style={{gridTemplateColumns}}>
                 {slots.map((slot, i) => (
                     <div key={i} className={s.colWrapper}>
@@ -147,7 +220,7 @@ export const SongList = <T extends BaseSongEntry>({
             <WindowScroller scrollElement={scrollElement.current} style={{outline: "none"}}>
                 {({height, isScrolling, scrollTop}) => (
                     <AutoSizer disableHeight={true} style={{outline: "none"}}>
-                        {({width}) => <List
+                        {({width}) => <><List
                             style={{outline: "none"}}
                             autoHeight={true}
                             height={height}
@@ -158,7 +231,14 @@ export const SongList = <T extends BaseSongEntry>({
                             scrollTop={scrollTop}
                             isScrolling={isScrolling}
                             overscanRowCount={10}
-                        />}
+                        />
+                            {enableDrag && draggingId !== null && dragOverIndex !== null && (
+                                <div
+                                    className={s.dropIndicator}
+                                    style={{top: dragOverIndex * ROW_HEIGHT}}
+                                />
+                            )}
+                        </>}
                     </AutoSizer>
                 )}
             </WindowScroller>

@@ -147,7 +147,7 @@ export const playlistSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
     },
     {
         header: <p>Album</p>,
-        render: ({song, navigate}) => <p onClick={navigate ? () => navigate(`/release/${song.releaseId}`) : undefined} className={classNames(s.trackAlbum, s.ellipsis, s.link)}>{song.album}</p>
+        render: ({song, navigate}) => <p onClick={navigate ? () => navigate(`/release/${song.releaseId}`) : undefined} className={classNames(s.trackAlbum, s.ellipsis, s.link)}><span className={s.textInner}>{song.album}</span></p>
     },
     {
         header: <p>Added</p>,
@@ -164,7 +164,7 @@ export const playlistSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
         header: <p className={s.durationHeader}><WiTime3/></p>,
         render: ({song, isSelected, openContextMenu}) => <div className={s.lastColumn}>
             <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
-            <HiOutlineDotsHorizontal onClick={(e) => openContextMenu(e, {type: "song", data: song})} size={24} className={classNames(s.menu, isSelected && s.showOptions)} />
+            <HiOutlineDotsHorizontal onClick={(e) => openContextMenu(e, {type: "song", data: song})} size={24} className={classNames(s.menu, isSelected && s.showOptions, "no-drag")} />
         </div>
     }
 ];

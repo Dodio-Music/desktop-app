@@ -134,3 +134,9 @@ button:has(svg) {
 button:focus {
     outline: none;
 }
+
+.dragging {
+    pointer-events: none;
+    transition: none !important;
+    background-color: inherit !important;
+}

@@ -17,6 +17,7 @@ import {MdOutlineEdit} from "react-icons/md";
 import {LuUsers} from "react-icons/lu";
 import PlaylistInitPopup from "@renderer/components/Popup/CreatePlaylist/PlaylistInitPopup";
 import {useRequiredParam} from "@renderer/hooks/useRequiredParam";
+import {useAuth} from "@renderer/hooks/reduxHooks";
 
 const PlaylistView = () => {
     const id = useRequiredParam("id");
@@ -28,6 +29,10 @@ const PlaylistView = () => {
     const {data: playlist, loading, error, refetch} = useFetchData<PlaylistDTO>(`/playlist/${id}/songs`);
     const songEntries = playlistTracksToSongEntries(playlist);
     const albumLengthSeconds = playlist?.playlistSongs.map(r => r.releaseTrack.track.duration).reduce((partialSum, a) => partialSum + a, 0) ?? 0;
+
+    const info = useAuth().info;
+    const playlistUser = (playlist?.playlistUsers.find(p => p.user.username === info.username));
+    const canReorder = playlistUser?.role === "OWNER" || playlistUser?.role === "EDITOR";
 
     return (
         <div
@@ -71,6 +76,7 @@ const PlaylistView = () => {
                         gridTemplateColumns="30px 4fr 2.5fr 1.5fr 1fr 105px"
                         contextHelpers={{view: "playlist", playlistId: playlist.playlistId, refetch}}
                         navigate={navigate}
+                        enableDrag={canReorder}
                     />
                 </>
             )}
