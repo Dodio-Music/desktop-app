@@ -17,6 +17,7 @@ export interface SongRowSlotProps<T> {
     index: number;
     handlePlay: (song: T) => void;
     isSelected: boolean;
+    navigate?: (path: string) => void;
     openContextMenu: (
         e: MouseEvent,
         target: ContextEntity,
@@ -146,7 +147,7 @@ export const playlistSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
     },
     {
         header: <p>Album</p>,
-        render: ({song}) => <p className={classNames(s.trackAlbum, s.ellipsis, s.link)}>{song.album}</p>
+        render: ({song, navigate}) => <p onClick={navigate ? () => navigate(`/release/${song.releaseId}`) : undefined} className={classNames(s.trackAlbum, s.ellipsis, s.link)}>{song.album}</p>
     },
     {
         header: <p>Added</p>,

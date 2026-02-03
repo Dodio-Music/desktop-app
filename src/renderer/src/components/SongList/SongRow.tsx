@@ -16,9 +16,10 @@ interface RowProps<T extends BaseSongEntry> {
     isActive: boolean;
     pauseOrLoadSong: (song: T) => void;
     gridTemplateColumns: string;
+    navigate?: (path: string) => void;
     openContextMenu: (
         e: MouseEvent,
-        target: ContextEntity,
+        target: ContextEntity
     ) => void;
 }
 
@@ -31,7 +32,8 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
                                                                                 pauseOrLoadSong,
                                                                                 slots,
                                                                                 gridTemplateColumns,
-                                                                                openContextMenu
+                                                                                openContextMenu,
+                                                                                navigate
                                                                             }: RowProps<T>) {
     const handlePlay = useCallback((song: T) => pauseOrLoadSong(song), [pauseOrLoadSong]);
     const userPaused = useSelector(
@@ -58,7 +60,16 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
         >
             {slots.map((slot, i) => (
                 <div key={i} className={s.colWrapper}>
-                    {slot.render({song, isActive, isSelected, userPaused, index, handlePlay, openContextMenu})}
+                    {slot.render({
+                        song,
+                        isActive,
+                        isSelected,
+                        userPaused,
+                        index,
+                        handlePlay,
+                        openContextMenu,
+                        navigate
+                    })}
                 </div>
             ))}
         </div>

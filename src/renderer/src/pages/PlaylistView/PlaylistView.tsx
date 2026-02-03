@@ -1,6 +1,5 @@
-import {useNavigate, useParams} from "react-router-dom";
-import {useEffect, useRef, useState} from "react";
-import toast from "react-hot-toast";
+import {useNavigate} from "react-router-dom";
+import {useRef, useState} from "react";
 import useFetchData from "@renderer/hooks/useFetchData";
 import {PlaylistDTO} from "../../../../shared/Api";
 import classNames from "classnames";
@@ -17,26 +16,17 @@ import {GoDotFill} from "react-icons/go";
 import {MdOutlineEdit} from "react-icons/md";
 import {LuUsers} from "react-icons/lu";
 import PlaylistInitPopup from "@renderer/components/Popup/CreatePlaylist/PlaylistInitPopup";
+import {useRequiredParam} from "@renderer/hooks/useRequiredParam";
 
 const PlaylistView = () => {
-    const [updateOpen, setUpdateOpen] = useState(false);
+    const id = useRequiredParam("id");
 
-    const navigate = useNavigate();
-    const {id} = useParams();
-    const mounted = useRef(false);
     const scrollPageRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        if (id || mounted.current) return;
-        toast.error("No ID provided for ReleasePage!");
-        navigate(-1);
-        mounted.current = true;
-    }, [id]);
-
+    const [updateOpen, setUpdateOpen] = useState(false);
     const {data: playlist, loading, error, refetch} = useFetchData<PlaylistDTO>(`/playlist/${id}/songs`);
-
     const songEntries = playlistTracksToSongEntries(playlist);
-
     const albumLengthSeconds = playlist?.playlistSongs.map(r => r.releaseTrack.track.duration).reduce((partialSum, a) => partialSum + a, 0) ?? 0;
 
     return (
@@ -80,6 +70,7 @@ const PlaylistView = () => {
                         slots={playlistSongRowSlots}
                         gridTemplateColumns="30px 4fr 2.5fr 1.5fr 1fr 105px"
                         contextHelpers={{view: "playlist", playlistId: playlist.playlistId, refetch}}
+                        navigate={navigate}
                     />
                 </>
             )}

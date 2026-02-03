@@ -21,6 +21,7 @@ interface Props<T extends BaseSongEntry> {
     gridTemplateColumns?: string;
     scrollElement: RefObject<HTMLDivElement | null>;
     scroll?: SongListAutoScroll;
+    navigate?: (path: string) => void;
 
     contextHelpers?: ContextActionHelpers;
 }
@@ -33,7 +34,8 @@ export const SongList = <T extends BaseSongEntry>({
                                                       gridTemplateColumns = "30px 4.5fr 3fr 1.8fr 105px",
                                                       scrollElement,
                                                       scroll,
-                                                      contextHelpers
+                                                      contextHelpers,
+                                                      navigate
                                                   }: Props<T>) => {
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
@@ -105,6 +107,7 @@ export const SongList = <T extends BaseSongEntry>({
                     setSelectedRow={setSelectedRowCallback}
                     slots={memoSlots}
                     openContextMenu={ctx.open}
+                    navigate={navigate}
                 />
             </div>
         );
