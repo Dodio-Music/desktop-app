@@ -75,8 +75,12 @@ const PlaylistView = () => {
                         slots={playlistSongRowSlots}
                         gridTemplateColumns="30px 4fr 2.5fr 1.5fr 1fr 105px"
                         contextHelpers={{view: "playlist", playlistId: playlist.playlistId, refetch}}
-                        navigate={navigate}
-                        enableDrag={canReorder}
+                        helpers={{
+                            navigate,
+                            enableDrag: canReorder,
+                            playlistId: playlist.playlistId,
+                            refresh: refetch
+                        }}
                     />
                 </>
             )}

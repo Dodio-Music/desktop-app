@@ -9,10 +9,19 @@ import {AutoSizer, List, ListRowProps, WindowScroller} from "react-virtualized";
 import {ContextActionHelpers, renderEntityActions} from "@renderer/contextMenus/menuHelper";
 import {useContextMenu} from "@renderer/hooks/useContextMenu";
 import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
+import {errorToString} from "@renderer/util/errorToString";
+import toast from "react-hot-toast";
 
 interface SongListAutoScroll {
     scrollToId: string;
     timestamp: Date;
+}
+
+interface SongListHelpers {
+    enableDrag?: boolean;
+    playlistId?: number;
+    navigate?: (path: string) => void;
+    refresh?: () => void;
 }
 
 interface Props<T extends BaseSongEntry> {
@@ -23,7 +32,7 @@ interface Props<T extends BaseSongEntry> {
     scroll?: SongListAutoScroll;
     navigate?: (path: string) => void;
     contextHelpers?: ContextActionHelpers;
-    enableDrag?: boolean;
+    helpers?: SongListHelpers;
 }
 
 const ROW_HEIGHT = 66;
@@ -36,7 +45,7 @@ export const SongList = <T extends BaseSongEntry>({
                                                       scroll,
                                                       contextHelpers,
                                                       navigate,
-                                                      enableDrag = false
+                                                      helpers
                                                   }: Props<T>) => {
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
@@ -48,8 +57,10 @@ export const SongList = <T extends BaseSongEntry>({
     const songsRef = useRef(songs);
     const currentTrackRef = useRef(currentTrack);
 
-    const [draggingId, setDraggingId] = useState<string | null>(null);
-    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const draggingIdRef = useRef<string | null>(null);
+    const dragOverIndexRef = useRef<number | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragOverIndexUI, setDragOverIndexUI] = useState<number | null>(null);
     const dragStartIndexRef = useRef<number | null>(null);
     const listOffsetTopRef = useRef(0);
 
@@ -79,49 +90,74 @@ export const SongList = <T extends BaseSongEntry>({
         window.removeEventListener("pointermove", handlePointerMoveRAF);
         window.removeEventListener("pointerup", handlePointerUp);
 
-        if (
-            draggingId &&
-            dragOverIndex !== null &&
-            dragStartIndexRef.current !== null &&
-            dragOverIndex !== dragStartIndexRef.current
-        ) {
-            // await window.api.authRequest("post", "/playlist/reorder", {
-            //     playlistId: contextHelpers?.playlistId,
-            //     from: dragStartIndexRef.current,
-            //     to: dragOverIndex
-            // });
-            //
-            // contextHelpers?.refetch?.();
-            console.log("aal " + dragStartIndexRef.current, dragOverIndex);
+        const draggingId = draggingIdRef.current;
+        const end = dragOverIndexRef.current;
+        const start = dragStartIndexRef.current;
+        const list = songsRef.current;
+
+        if (draggingId && end !== null && start !== null && helpers?.playlistId) {
+            const beforeRaw = end - 1;
+            const afterRaw = end;
+
+            if (start !== beforeRaw && start !== afterRaw) {
+                const before = list[beforeRaw]?.id ?? null;
+                const after = list[afterRaw]?.id ?? null;
+                const moved = list[start].id;
+
+                const res = await window.api.authRequest<string>("post", `/playlist/${helpers.playlistId}/song/reorder`, {
+                    playlistSongId: moved,
+                    leftSongId: before,
+                    rightSongId: after
+                });
+                if (res.type === "ok") {
+                    helpers.refresh?.();
+                } else {
+                    toast.error(errorToString(res.error));
+                }
+            }
         }
 
-        setDraggingId(null);
-        setDragOverIndex(null);
+        draggingIdRef.current = null;
+        dragOverIndexRef.current = null;
         dragStartIndexRef.current = null;
+        setIsDragging(false);
+        setDragOverIndexUI(null);
     };
 
-    let ticking = false;
-    let latestClientY = 0;
+    const tickingRef = useRef(false);
+    const latestClientYRef = useRef(0);
     const handlePointerMoveRAF = (e: PointerEvent) => {
-        latestClientY = e.clientY;
-        if (!ticking) {
-            ticking = true;
+        latestClientYRef.current = e.clientY;
+        if (!tickingRef.current) {
+            tickingRef.current = true;
             window.requestAnimationFrame(() => {
-                const idx = getIndexFromClientY(latestClientY);
-                if (idx !== null) setDragOverIndex(idx);
-                ticking = false;
+                const idx = getIndexFromClientY(latestClientYRef.current);
+                if (idx !== null) {
+                    dragOverIndexRef.current = idx;
+                    setDragOverIndexUI(idx);
+                }
+                tickingRef.current = false;
             });
         }
     };
 
     const handleDragStart = useCallback((id: string, index: number) => {
-        if (!enableDrag) return;
+        if (!helpers?.enableDrag) return;
 
         dragStartIndexRef.current = index;
-        setDraggingId(id);
+        draggingIdRef.current = id;
+
+        setIsDragging(true);
 
         window.addEventListener("pointermove", handlePointerMoveRAF);
         window.addEventListener("pointerup", handlePointerUp);
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            window.removeEventListener("pointermove", handlePointerMoveRAF);
+            window.removeEventListener("pointerup", handlePointerUp);
+        };
     }, []);
 
     useEffect(() => {
@@ -184,11 +220,11 @@ export const SongList = <T extends BaseSongEntry>({
                     slots={slots}
                     openContextMenu={ctx.open}
                     navigate={navigate}
-                    onDragStart={enableDrag ? handleDragStart : undefined}
+                    onDragStart={helpers?.enableDrag ? handleDragStart : undefined}
                 />
             </div>
         );
-    }, [songs, currentTrack?.id, selectedRow, gridTemplateColumns, pauseOrLoadSong, setSelectedRowCallback, slots, ctx.open, navigate, enableDrag, handleDragStart]);
+    }, [songs, currentTrack?.id, selectedRow, gridTemplateColumns, pauseOrLoadSong, setSelectedRowCallback, slots, ctx.open, navigate, helpers, handleDragStart]);
 
     useEffect(() => {
         if (!scroll || !scrollElement.current) return;
@@ -208,7 +244,7 @@ export const SongList = <T extends BaseSongEntry>({
     }
 
     return (
-        <div className={`${s.songList} ${draggingId ? "dragging" : ""}`} ref={listRef}>
+        <div className={`${s.songList} ${isDragging ? "dragging" : ""}`} ref={listRef}>
             <div className={`${s.headRow} ${s.grid}`} style={{gridTemplateColumns}}>
                 {slots.map((slot, i) => (
                     <div key={i} className={s.colWrapper}>
@@ -232,10 +268,10 @@ export const SongList = <T extends BaseSongEntry>({
                             isScrolling={isScrolling}
                             overscanRowCount={10}
                         />
-                            {enableDrag && draggingId !== null && dragOverIndex !== null && (
+                            {helpers?.enableDrag && isDragging && dragOverIndexUI !== null && (
                                 <div
                                     className={s.dropIndicator}
-                                    style={{top: dragOverIndex * ROW_HEIGHT}}
+                                    style={{top: dragOverIndexUI * ROW_HEIGHT}}
                                 />
                             )}
                         </>}
