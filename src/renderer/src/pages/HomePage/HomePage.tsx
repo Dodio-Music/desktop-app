@@ -90,7 +90,7 @@ const HomePage = () => {
                     onToggle={() => setexpandSection(prev => ({...prev, releases: !prev.releases}))}
                 />
             </div>
-            <div className={classNames(s.scroller, expandSection.releases && s.scrollerShow)}>
+            <div className={classNames(s.scroller, expandSection.releases && s.scrollerShow, errorReleases && s.scrollerError)}>
                 {errorReleases && !dataReleases ?
                     <div className={s.error}>
                         <p>{`Error: ${errorReleases}`}</p>
@@ -126,7 +126,7 @@ const HomePage = () => {
                     onToggle={() => setexpandSection(prev => ({...prev, playlists: !prev.playlists}))}
                 />
             </div>
-            <div className={classNames(s.scroller, expandSection.playlists && s.scrollerShow)}>
+            <div className={classNames(s.scroller, expandSection.playlists && s.scrollerShow, errorPlaylists && s.scrollerError)}>
                 {errorPlaylists && !dataPlaylists ?
                     <div className={s.error}>
                         <p>{`Error: ${errorPlaylists}`}</p>
