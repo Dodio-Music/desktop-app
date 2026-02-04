@@ -1,5 +1,5 @@
 import {useNavigate} from "react-router-dom";
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import useFetchData from "@renderer/hooks/useFetchData";
 import {PlaylistDTO} from "../../../../shared/Api";
 import classNames from "classnames";
@@ -18,6 +18,10 @@ import {LuUsers} from "react-icons/lu";
 import PlaylistInitPopup from "@renderer/components/Popup/CreatePlaylist/PlaylistInitPopup";
 import {useRequiredParam} from "@renderer/hooks/useRequiredParam";
 import {useAuth} from "@renderer/hooks/reduxHooks";
+import {useDispatch, useSelector} from "react-redux";
+import {setPlaylist} from "@renderer/redux/playlistSlice";
+import {subscribeToPlaylist} from "@renderer/ws/stompClient";
+import {RootState} from "@renderer/redux/store";
 
 const PlaylistView = () => {
     const id = useRequiredParam("id");
@@ -27,12 +31,34 @@ const PlaylistView = () => {
 
     const [updateOpen, setUpdateOpen] = useState(false);
     const {data: playlist, loading, error, refetch} = useFetchData<PlaylistDTO>(`/playlist/${id}/songs`);
-    const songEntries = playlistTracksToSongEntries(playlist);
     const albumLengthSeconds = playlist?.playlistSongs.map(r => r.releaseTrack.track.duration).reduce((partialSum, a) => partialSum + a, 0) ?? 0;
 
     const info = useAuth().info;
     const playlistUser = (playlist?.playlistUsers.find(p => p.user.username === info.username));
     const canReorder = playlistUser?.role === "OWNER" || playlistUser?.role === "EDITOR";
+
+    const dispatch = useDispatch();
+    const orderedIds = useSelector(
+        (s: RootState) => s.playlistSlice.songs.map(x => x.playlistSongId)
+    );
+
+    const songEntries = playlistTracksToSongEntries(playlist, orderedIds);
+
+    useEffect(() => {
+        if (!playlist) return;
+
+        dispatch(setPlaylist({
+            playlistId: playlist.playlistId,
+            songs: playlist.playlistSongs.map((s, i) => ({
+                playlistSongId: s.playlistSongId,
+                position: s.position ?? i
+            }))
+        }));
+
+        const sub = subscribeToPlaylist(playlist.playlistId);
+
+        return () => sub?.unsubscribe();
+    }, [playlist?.playlistId]);
 
     return (
         <div

@@ -109,9 +109,7 @@ export const SongList = <T extends BaseSongEntry>({
                     leftSongId: before,
                     rightSongId: after
                 });
-                if (res.type === "ok") {
-                    helpers.refresh?.();
-                } else {
+                if (res.type === "error") {
                     toast.error(errorToString(res.error));
                 }
             }

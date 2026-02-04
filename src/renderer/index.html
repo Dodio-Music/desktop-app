@@ -15,6 +15,7 @@
             script-src 'self';
             img-src 'self' data: safe-file: https:;
             style-src 'self' 'unsafe-inline';
+            connect-src 'self' ws://localhost:8085 wss://api.dodio.at;
     "
     />
     <link rel="stylesheet" href="src/index.css"/>

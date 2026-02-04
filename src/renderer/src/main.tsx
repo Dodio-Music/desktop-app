@@ -11,6 +11,7 @@ import {CssBaseline, ThemeProvider} from "@mui/material";
 import {theme} from "./muiTheme";
 import {ConfirmProvider} from "@renderer/components/Popup/ConfirmContext";
 import toast from "react-hot-toast";
+import {connectStomp} from "@renderer/ws/stompClient";
 
 createRoot(document.getElementById("root")!).render(
     <Provider store={store}>
@@ -64,5 +65,7 @@ window.api.onPlayerEvent((event) => {
 window.api.onAuthUpdate((info) => {
     store.dispatch(setAuthInfo(info));
 });
+
+connectStomp();
 
 window.api.ready();
