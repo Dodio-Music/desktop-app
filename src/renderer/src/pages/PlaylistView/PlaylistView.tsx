@@ -53,7 +53,7 @@ const PlaylistView = () => {
         const sub = subscribeToPlaylist(playlist.playlistId);
 
         return () => sub?.unsubscribe();
-    }, [playlist?.playlistId]);
+    }, [dispatch, playlist]);
 
     return (
         <div

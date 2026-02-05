@@ -28,36 +28,6 @@ export function releaseToSongEntries(rel: ReleaseDTO | null): RemoteSongEntry[] 
     });
 }
 
-// export function playlistTracksToSongEntries(playlist: PlaylistDTO | null): RemoteSongEntry[] {
-//     if(!playlist) return [];
-//
-//     return playlist.playlistSongs.map(ps => {
-//         const t = ps.releaseTrack.track;
-//         const r = ps.releaseTrack.release;
-//
-//         return {
-//             id: ps.playlistSongId,
-//             title: t.title,
-//             artists: t.artists,
-//             album: r.releaseName,
-//             duration: t.duration,
-//             picture: r.coverArtUrl,
-//             waveformUrl: t.waveformUrl,
-//             releaseTrackId: ps.releaseTrack.releaseTrackId,
-//             releaseId: r.releaseId,
-//             releaseDate: r.releaseDate,
-//             addedAt: ps.addedAt,
-//             addedBy: ps.addedBy,
-//             type: "remote",
-//             sources: t.sources.map(src => ({
-//                 id: src.sourceId,
-//                 url: src.url,
-//                 quality: src.quality
-//             }))
-//         };
-//     });
-// }
-
 export function playlistTracksToSongEntries(
     playlist: PlaylistDTO | null,
     orderedIds?: string[]

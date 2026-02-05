@@ -63,8 +63,13 @@ export const SongList = <T extends BaseSongEntry>({
     const [dragOverIndexUI, setDragOverIndexUI] = useState<number | null>(null);
     const dragStartIndexRef = useRef<number | null>(null);
     const listOffsetTopRef = useRef(0);
+    const helpersRef = useRef(helpers);
 
-    const getIndexFromClientY = (clientY: number) => {
+    useEffect(() => {
+        helpersRef.current = helpers;
+    }, [helpers]);
+
+    const getIndexFromClientY = useCallback((clientY: number) => {
         if (!scrollElement.current) return null;
 
         const y = clientY -
@@ -73,8 +78,8 @@ export const SongList = <T extends BaseSongEntry>({
             listOffsetTopRef.current;
 
         const rawIndex = (y - ROW_HEIGHT / 2) / ROW_HEIGHT;
-        return Math.max(0, Math.min(songs.length, Math.floor(rawIndex)));
-    };
+        return Math.max(0, Math.min(songsRef.current.length, Math.floor(rawIndex)));
+    }, []);
 
     useLayoutEffect(() => {
         if (!listRef.current || !scrollElement.current) return;
@@ -86,7 +91,7 @@ export const SongList = <T extends BaseSongEntry>({
             listRect.top - scrollRect.top + scrollElement.current.scrollTop;
     }, []);
 
-    const handlePointerUp = async () => {
+    const handlePointerUp = useCallback(async () => {
         window.removeEventListener("pointermove", handlePointerMoveRAF);
         window.removeEventListener("pointerup", handlePointerUp);
 
@@ -94,8 +99,9 @@ export const SongList = <T extends BaseSongEntry>({
         const end = dragOverIndexRef.current;
         const start = dragStartIndexRef.current;
         const list = songsRef.current;
+        const playlistId = helpersRef.current?.playlistId;
 
-        if (draggingId && end !== null && start !== null && helpers?.playlistId) {
+        if (draggingId && end !== null && start !== null && playlistId) {
             const beforeRaw = end - 1;
             const afterRaw = end;
 
@@ -104,7 +110,7 @@ export const SongList = <T extends BaseSongEntry>({
                 const after = list[afterRaw]?.id ?? null;
                 const moved = list[start].id;
 
-                const res = await window.api.authRequest<string>("post", `/playlist/${helpers.playlistId}/song/reorder`, {
+                const res = await window.api.authRequest<string>("post", `/playlist/${playlistId}/song/reorder`, {
                     playlistSongId: moved,
                     leftSongId: before,
                     rightSongId: after
@@ -120,11 +126,11 @@ export const SongList = <T extends BaseSongEntry>({
         dragStartIndexRef.current = null;
         setIsDragging(false);
         setDragOverIndexUI(null);
-    };
+    }, []);
 
     const tickingRef = useRef(false);
     const latestClientYRef = useRef(0);
-    const handlePointerMoveRAF = (e: PointerEvent) => {
+    const handlePointerMoveRAF = useCallback((e: PointerEvent) => {
         latestClientYRef.current = e.clientY;
         if (!tickingRef.current) {
             tickingRef.current = true;
@@ -137,10 +143,10 @@ export const SongList = <T extends BaseSongEntry>({
                 tickingRef.current = false;
             });
         }
-    };
+    }, []);
 
     const handleDragStart = useCallback((id: string, index: number) => {
-        if (!helpers?.enableDrag) return;
+        if (!helpersRef.current?.enableDrag) return;
 
         dragStartIndexRef.current = index;
         draggingIdRef.current = id;
@@ -218,11 +224,11 @@ export const SongList = <T extends BaseSongEntry>({
                     slots={slots}
                     openContextMenu={ctx.open}
                     navigate={navigate}
-                    onDragStart={helpers?.enableDrag ? handleDragStart : undefined}
+                    onDragStart={helpersRef.current?.enableDrag ? handleDragStart : undefined}
                 />
             </div>
         );
-    }, [songs, currentTrack?.id, selectedRow, gridTemplateColumns, pauseOrLoadSong, setSelectedRowCallback, slots, ctx.open, navigate, helpers, handleDragStart]);
+    }, [songs, currentTrack?.id, selectedRow, gridTemplateColumns, pauseOrLoadSong, setSelectedRowCallback, slots, ctx.open, navigate, handleDragStart]);
 
     useEffect(() => {
         if (!scroll || !scrollElement.current) return;
@@ -266,7 +272,7 @@ export const SongList = <T extends BaseSongEntry>({
                             isScrolling={isScrolling}
                             overscanRowCount={10}
                         />
-                            {helpers?.enableDrag && isDragging && dragOverIndexUI !== null && (
+                            {helpersRef.current?.enableDrag && isDragging && dragOverIndexUI !== null && (
                                 <div
                                     className={s.dropIndicator}
                                     style={{top: dragOverIndexUI * ROW_HEIGHT}}

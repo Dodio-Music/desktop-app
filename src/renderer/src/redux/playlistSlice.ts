@@ -20,7 +20,6 @@ const playlistSlice = createSlice({
     initialState,
     reducers: {
         applyPlaylistOrder(state, action: PayloadAction<PlaylistOrderSnapshotEvent>) {
-            console.log(action);
             if (state.playlistId !== action.payload.playlistId) return;
             state.orderedIds = action.payload.orderedIds;
         },
