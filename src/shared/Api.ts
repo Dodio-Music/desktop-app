@@ -136,3 +136,14 @@ export interface PlaylistDTO {
     playlistUsers: PlaylistUserDTO[];
     coverArtUrls: string[];
 }
+
+export interface PlaylistNotificationDTO {
+    playlistPreview: PlaylistPreviewDTO;
+    inviter: UserPublicDTO;
+    inviteToken: string;
+    createdAt: Date;
+}
+
+export interface NotificationDTO {
+    playlistNotifications: PlaylistNotificationDTO[];
+}

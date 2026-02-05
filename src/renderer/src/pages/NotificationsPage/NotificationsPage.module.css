@@ -1,0 +1,112 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.notiContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 10px;
+}
+
+.noti {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    padding: 20px;
+    transition: 0.1s;
+    border-radius: 5px;
+}
+
+.left {
+    display: flex;
+    justify-content: flex-start;
+    gap: 17px;
+}
+
+.cover {
+    width: 170px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.playlistMeta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 5px;
+    gap: 13px;
+    line-height: 1;
+}
+
+.title {
+    font-size: 1.4rem;
+}
+
+.topRight {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.buttons button {
+    justify-self: center;
+    width: 200px;
+    font-size: 1rem;
+    padding: 13px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    transition: 0.1s;
+    cursor: pointer;
+}
+
+.buttons button:hover {
+    background-color: #c9c9c9;
+}
+
+.buttons button:active {
+    transition: 0s;
+    background-color: #979797;
+    transform: scale(0.98);
+}
+
+.right {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+}
+
+.spaceBetween {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.time {
+    color: rgb(153, 153, 153);
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.seperator {
+    background-color: #323232;
+    height: 3px;
+    margin: 5px -15px 15px -15px;
+}
+
+.owner {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.meta {
+    font-size: 1.1rem;
+}

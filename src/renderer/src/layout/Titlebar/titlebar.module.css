@@ -100,19 +100,14 @@
     transform: rotate(180deg);
 }
 
-.settings {
-    -webkit-app-region: no-drag;
-    cursor: pointer;
-}
-
-.icon {
+.logo {
     display: flex;
     align-items: center;
     height: 100%;
     padding: 13px;
 }
 
-.admin {
+.item {
     -webkit-app-region: no-drag;
     background: none;
     border: none;
@@ -121,7 +116,15 @@
     transition: color 0.2s, transform 0.2s;
 }
 
-.admin:hover {
+.item:hover {
     color: var(--color-accent-hover);
 }
 
+.item:hover {
+    transform: scale(1.07);
+}
+
+.item:active {
+    transition: 0s;
+    transform: scale(0.95);
+}

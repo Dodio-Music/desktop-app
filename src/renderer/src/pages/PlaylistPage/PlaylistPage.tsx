@@ -15,6 +15,7 @@ import {useAuth} from "@renderer/hooks/reduxHooks";
 import {useNavigate} from "react-router-dom";
 import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
 import PlaylistInitPopup from "@renderer/components/Popup/CreatePlaylist/PlaylistInitPopup";
+import FilterBar from "@renderer/components/FilterBar/FilterBar";
 
 type FilterOption = "" | "OWNED,INVITED" | "LIKED";
 type FilterEntry = { type: FilterOption, label: string };
@@ -45,13 +46,11 @@ const PlaylistPage = () => {
                 <div className={s.topbar}>
                     <button className={s.create} onClick={() => setCreateOpen(true)}><Tooltip
                         title={"Create New Playlist"}><FiPlus size={26}/></Tooltip></button>
-                    <div className={s.filterWrapper}>
-                        {filterOptions.map(entry => {
-                            return <div key={entry.type} onClick={() => setActiveFilter(entry.type)}
-                                        className={entry.type === activeFilter ? s.filterActive : ""}>
-                                <p>{entry.label}</p></div>;
-                        })}
-                    </div>
+                    <FilterBar
+                        options={filterOptions}
+                        value={activeFilter}
+                        onChange={setActiveFilter}
+                    />
                 </div>
                 {error && <p>{error}</p>}
                 {loading && !data && <LoadingPage/>}
