@@ -95,6 +95,7 @@ const api = {
         return () => ipcRenderer.removeListener("preferences:update", handler);
     },
     showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory"),
+    getAuthInitialRedux: () => ipcRenderer.invoke("auth:get-initial-redux"),
     onAuthUpdate: (cb: (status: AuthInfo) => void) => {
         const handler = (_: unknown, status: AuthInfo) => cb(status);
         ipcRenderer.on("auth:statusChange", handler);
@@ -119,7 +120,7 @@ const api = {
     nextTrack: () => ipcRenderer.invoke("player:next"),
     previousTrack: () => ipcRenderer.invoke("player:previous"),
     cycleRepeatMode: () => ipcRenderer.invoke("player:repeat-mode"),
-    ready: () => ipcRenderer.invoke("renderer:ready"),
+    getPlayerInitialRedux: () => ipcRenderer.invoke("player:get-initial-redux"),
     uploadFile: (file: File): Promise<UploadResponse> => ipcRenderer.invoke("dashboard:upload", webUtils.getPathForFile(file)),
     onProgress: (cb: (progress: UploadProgress) => void) => {
         const listener = (_: IpcRendererEvent, uploadProgress: UploadProgress) => cb(uploadProgress);

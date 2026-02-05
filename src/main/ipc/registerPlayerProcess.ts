@@ -116,6 +116,6 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow, initialPrefs
     });
 };
 
-export const registerPlayerProcessStartup = () => {
-    queue.notifyInitial();
-}
+ipcMain.handle("player:get-initial-redux", () => {
+    return queue.getInitialRedux();
+});

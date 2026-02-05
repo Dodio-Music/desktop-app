@@ -13,20 +13,29 @@ import {ConfirmProvider} from "@renderer/components/Popup/ConfirmContext";
 import toast from "react-hot-toast";
 import {connectStomp} from "@renderer/ws/stompClient";
 
-createRoot(document.getElementById("root")!).render(
-    <Provider store={store}>
-        <StrictMode>
-            <ThemeProvider theme={theme}>
-                <HashRouter>
-                    <ConfirmProvider>
-                        <CssBaseline/>
-                        <App/>
-                    </ConfirmProvider>
-                </HashRouter>
-            </ThemeProvider>
-        </StrictMode>
-    </Provider>
-);
+async function bootstrap() {
+    const auth = await window.api.getAuthInitialRedux();
+    if (auth) store.dispatch(setAuthInfo(auth));
+    const player = await window.api.getPlayerInitialRedux();
+    if(player) store.dispatch(setRepeatMode(player.repeatMode));
+
+    createRoot(document.getElementById("root")!).render(
+        <Provider store={store}>
+            <StrictMode>
+                <ThemeProvider theme={theme}>
+                    <HashRouter>
+                        <ConfirmProvider>
+                            <CssBaseline/>
+                            <App/>
+                        </ConfirmProvider>
+                    </HashRouter>
+                </ThemeProvider>
+            </StrictMode>
+        </Provider>
+    );
+}
+
+void bootstrap();
 
 window.api.onPlayerUpdate((state) => {
     store.dispatch(updatePlayerState(state));
@@ -67,5 +76,3 @@ window.api.onAuthUpdate((info) => {
 });
 
 connectStomp();
-
-window.api.ready();
