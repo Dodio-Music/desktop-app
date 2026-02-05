@@ -38,9 +38,7 @@ const PlaylistView = () => {
     const canReorder = playlistUser?.role === "OWNER" || playlistUser?.role === "EDITOR";
 
     const dispatch = useDispatch();
-    const orderedIds = useSelector(
-        (s: RootState) => s.playlistSlice.songs.map(x => x.playlistSongId)
-    );
+    const orderedIds = useSelector((s: RootState) => s.playlistSlice.orderedIds);
 
     const songEntries = playlistTracksToSongEntries(playlist, orderedIds);
 
@@ -49,10 +47,7 @@ const PlaylistView = () => {
 
         dispatch(setPlaylist({
             playlistId: playlist.playlistId,
-            songs: playlist.playlistSongs.map((s, i) => ({
-                playlistSongId: s.playlistSongId,
-                position: s.position ?? i
-            }))
+            orderedIds: playlist.playlistSongs.map(v => v.playlistSongId)
         }));
 
         const sub = subscribeToPlaylist(playlist.playlistId);

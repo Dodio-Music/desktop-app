@@ -1,23 +1,18 @@
 import {createSlice, PayloadAction} from "@reduxjs/toolkit";
 
-interface PlaylistSongOrder {
-    playlistSongId: string;
-    position: number;
-}
-
 interface PlaylistOrderSnapshotEvent {
     playlistId: number
-    songs: PlaylistSongOrder[];
+    orderedIds: string[];
 }
 
 export interface PlaylistState {
     playlistId: number | null;
-    songs: PlaylistSongOrder[];
+    orderedIds: string[];
 }
 
 const initialState: PlaylistState = {
     playlistId: null,
-    songs: []
+    orderedIds: []
 };
 
 const playlistSlice = createSlice({
@@ -25,26 +20,13 @@ const playlistSlice = createSlice({
     initialState,
     reducers: {
         applyPlaylistOrder(state, action: PayloadAction<PlaylistOrderSnapshotEvent>) {
-            const { playlistId, songs } = action.payload;
-
-            if (state.playlistId !== playlistId) return;
-
-            const orderMap = new Map(
-                songs.map(s => [s.playlistSongId, s.position])
-            );
-
-            for (const song of state.songs) {
-                const pos = orderMap.get(song.playlistSongId);
-                if (pos !== undefined) {
-                    song.position = pos;
-                }
-            }
-
-            state.songs.sort((a, b) => a.position - b.position);
+            console.log(action);
+            if (state.playlistId !== action.payload.playlistId) return;
+            state.orderedIds = action.payload.orderedIds;
         },
         setPlaylist(state, action: PayloadAction<PlaylistOrderSnapshotEvent>) {
             state.playlistId = action.payload.playlistId;
-            state.songs = action.payload.songs;
+            state.orderedIds = action.payload.orderedIds;
         }
     },
 });
