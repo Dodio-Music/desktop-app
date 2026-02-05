@@ -1,6 +1,6 @@
 import {Client, StompSubscription} from "@stomp/stompjs";
 import {store} from "@renderer/redux/store";
-import {applyPlaylistOrder} from "@renderer/redux/playlistSlice";
+import {applyPlaylistUpdate, PlaylistUpdateEvent} from "@renderer/redux/playlistSlice";
 
 let client: Client | null = null;
 
@@ -31,8 +31,8 @@ export function subscribeToPlaylist(playlistId: number) {
     currentPlaylistSub = client.subscribe(
         `/topic/playlists/${playlistId}`,
         (msg) => {
-            const event = JSON.parse(msg.body);
-            store.dispatch(applyPlaylistOrder(event));
+            const event: PlaylistUpdateEvent = JSON.parse(msg.body);
+            store.dispatch(applyPlaylistUpdate(event));
         }
     );
 

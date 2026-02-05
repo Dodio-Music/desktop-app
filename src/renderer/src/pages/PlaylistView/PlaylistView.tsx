@@ -1,5 +1,5 @@
 import {useNavigate} from "react-router-dom";
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import useFetchData from "@renderer/hooks/useFetchData";
 import {PlaylistDTO} from "../../../../shared/Api";
 import classNames from "classnames";
@@ -25,35 +25,47 @@ import {RootState} from "@renderer/redux/store";
 
 const PlaylistView = () => {
     const id = useRequiredParam("id");
-
     const scrollPageRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
     const [updateOpen, setUpdateOpen] = useState(false);
     const {data: playlist, loading, error, refetch} = useFetchData<PlaylistDTO>(`/playlist/${id}/songs`);
-    const albumLengthSeconds = playlist?.playlistSongs.map(r => r.releaseTrack.track.duration).reduce((partialSum, a) => partialSum + a, 0) ?? 0;
-
-    const info = useAuth().info;
-    const playlistUser = (playlist?.playlistUsers.find(p => p.user.username === info.username));
-    const canReorder = playlistUser?.role === "OWNER" || playlistUser?.role === "EDITOR";
 
     const dispatch = useDispatch();
-    const orderedIds = useSelector((s: RootState) => s.playlistSlice.orderedIds);
-
-    const songEntries = playlistTracksToSongEntries(playlist, orderedIds);
+    const { orderedIds, songs } = useSelector((state: RootState) => state.playlistSlice);
+    const info = useAuth().info;
 
     useEffect(() => {
         if (!playlist) return;
 
+        const songsMap = Object.fromEntries(
+            playlist.playlistSongs.map(ps => [ps.playlistSongId, ps])
+        );
+
         dispatch(setPlaylist({
             playlistId: playlist.playlistId,
-            orderedIds: playlist.playlistSongs.map(v => v.playlistSongId)
+            orderedIds: playlist.playlistSongs.map(ps => ps.playlistSongId),
+            songs: songsMap
         }));
 
         const sub = subscribeToPlaylist(playlist.playlistId);
-
         return () => sub?.unsubscribe();
     }, [dispatch, playlist]);
+
+    const albumLengthSeconds = useMemo(() => {
+        if (!orderedIds || !songs) return 0;
+        return orderedIds
+            .map(id => songs[id]?.releaseTrack.track.duration ?? 0)
+            .reduce((sum, d) => sum + d, 0);
+    }, [orderedIds, songs]);
+
+    const playlistUser = (playlist?.playlistUsers.find(p => p.user.username === info.username));
+    const canReorder = playlistUser?.role === "OWNER" || playlistUser?.role === "EDITOR";
+
+    const songEntries = useMemo(() => {
+        if (!orderedIds || !songs) return [];
+        return playlistTracksToSongEntries(orderedIds, songs);
+    }, [orderedIds, songs]);
 
     return (
         <div
@@ -95,7 +107,7 @@ const PlaylistView = () => {
                         songs={songEntries}
                         slots={playlistSongRowSlots}
                         gridTemplateColumns="30px 4fr 2.5fr 1.5fr 1fr 105px"
-                        contextHelpers={{view: "playlist", playlistId: playlist.playlistId, refetch}}
+                        contextHelpers={{view: "playlist", playlistId: playlist.playlistId}}
                         helpers={{
                             navigate,
                             enableDrag: canReorder,

@@ -1,8 +1,8 @@
 import {RemoteSongEntry} from "../../../shared/TrackInfo.js";
-import {PlaylistDTO, ReleaseDTO} from "../../../shared/Api";
+import {PlaylistSongDTO, ReleaseDTO} from "../../../shared/Api";
 
 export function releaseToSongEntries(rel: ReleaseDTO | null): RemoteSongEntry[] {
-    if(!rel) return [];
+    if (!rel) return [];
 
     return rel.releaseTracks.map(rt => {
         const t = rt.track;
@@ -28,44 +28,33 @@ export function releaseToSongEntries(rel: ReleaseDTO | null): RemoteSongEntry[] 
     });
 }
 
-export function playlistTracksToSongEntries(
-    playlist: PlaylistDTO | null,
-    orderedIds?: string[]
-): RemoteSongEntry[] {
-    if (!playlist) return [];
+export function playlistTracksToSongEntries(orderedIds: string[], songsMap: Record<string, PlaylistSongDTO>): RemoteSongEntry[] {
+    return orderedIds.map(id => songsMap[id])
+        .filter(Boolean)
+        .map(ps => {
+            const t = ps!.releaseTrack.track;
+            const r = ps!.releaseTrack.release;
 
-    const songMap = new Map(
-        playlist.playlistSongs.map(ps => [ps.playlistSongId, ps])
-    );
-
-    const ordered = orderedIds
-        ? orderedIds.map(id => songMap.get(id)).filter(Boolean)
-        : playlist.playlistSongs;
-
-    return ordered.map(ps => {
-        const t = ps!.releaseTrack.track;
-        const r = ps!.releaseTrack.release;
-
-        return {
-            id: ps!.playlistSongId,
-            title: t.title,
-            artists: t.artists,
-            album: r.releaseName,
-            duration: t.duration,
-            picture: r.coverArtUrl,
-            waveformUrl: t.waveformUrl,
-            releaseTrackId: ps!.releaseTrack.releaseTrackId,
-            releaseId: r.releaseId,
-            releaseDate: r.releaseDate,
-            addedAt: ps!.addedAt,
-            addedBy: ps!.addedBy,
-            type: "remote",
-            sources: t.sources.map(src => ({
-                id: src.sourceId,
-                url: src.url,
-                quality: src.quality
-            }))
-        };
-    });
+            return {
+                id: ps!.playlistSongId,
+                title: t.title,
+                artists: t.artists,
+                album: r.releaseName,
+                duration: t.duration,
+                picture: r.coverArtUrl,
+                waveformUrl: t.waveformUrl,
+                releaseTrackId: ps!.releaseTrack.releaseTrackId,
+                releaseId: r.releaseId,
+                releaseDate: r.releaseDate,
+                addedAt: ps!.addedAt,
+                addedBy: ps!.addedBy,
+                type: "remote",
+                sources: t.sources.map(src => ({
+                    id: src.sourceId,
+                    url: src.url,
+                    quality: src.quality
+                }))
+            };
+        });
 }
 

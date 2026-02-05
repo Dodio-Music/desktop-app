@@ -78,8 +78,6 @@ export const songActions: ContextAction<RemoteSongEntry>[] = [
 
             if (res.type === "error") {
                 toast.error(errorToString(res.error));
-            } else {
-                helpers.refetch?.();
             }
         }
     },
