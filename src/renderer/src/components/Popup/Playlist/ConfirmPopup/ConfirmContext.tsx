@@ -1,5 +1,5 @@
 import {FC, ReactNode, useCallback, useState} from "react";
-import ConfirmPopup from "@renderer/components/Popup/ConfirmPopup";
+import ConfirmPopup from "@renderer/components/Popup/Playlist/ConfirmPopup/ConfirmPopup";
 import {ConfirmContext, ConfirmFn, ConfirmOptions} from "@renderer/hooks/useConfirm";
 
 export const ConfirmProvider: FC<{ children: ReactNode }> = ({children}) => {

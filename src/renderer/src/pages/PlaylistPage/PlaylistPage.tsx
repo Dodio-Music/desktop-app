@@ -14,7 +14,7 @@ import {useConfirm} from "@renderer/hooks/useConfirm";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import {useNavigate} from "react-router-dom";
 import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
-import PlaylistInitPopup from "@renderer/components/Popup/CreatePlaylist/PlaylistInitPopup";
+import PlaylistInitPopup from "@renderer/components/Popup/Playlist/PlaylistInitPopup";
 import FilterBar from "@renderer/components/FilterBar/FilterBar";
 
 type FilterOption = "" | "OWNED,INVITED" | "LIKED";

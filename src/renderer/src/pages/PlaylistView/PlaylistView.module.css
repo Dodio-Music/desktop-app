@@ -106,3 +106,10 @@
     transition: 0s;
     transform: scale(0.97);
 }
+
+.disabled, .disabled:hover, .disabled:active {
+    cursor: default !important;
+    filter: brightness(0.5);
+    color: var(--secondary) !important;
+    transform: none !important;
+}

@@ -25,7 +25,7 @@ const AddToPlaylistMenu = ({closeParentMenu, song}: AddToPlaylistMenuProps) => {
         if (hoveringParent && playlists.length === 0 && !loading) {
             const fetchPlaylists = async () => {
                 setLoading(true);
-                const data = await window.api.authRequest<PlaylistPreviewDTO[]>("get", "/playlist/library");
+                const data = await window.api.authRequest<PlaylistPreviewDTO[]>("get", "/playlist/library/by-permission?permissions=ADD_SONG");
                 if (data.type === "error") {
                     toast.error(errorToString(data.error));
                 } else {

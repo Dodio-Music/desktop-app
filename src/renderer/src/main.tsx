@@ -9,7 +9,7 @@ import {setAuthInfo} from "@renderer/redux/authSlice";
 import {isLocalSong} from "../../shared/TrackInfo";
 import {CssBaseline, ThemeProvider} from "@mui/material";
 import {theme} from "./muiTheme";
-import {ConfirmProvider} from "@renderer/components/Popup/ConfirmContext";
+import {ConfirmProvider} from "@renderer/components/Popup/Playlist/ConfirmPopup/ConfirmContext";
 import toast from "react-hot-toast";
 import {connectStomp} from "@renderer/ws/stompClient";
 

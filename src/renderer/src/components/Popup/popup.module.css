@@ -47,46 +47,6 @@
     font-size: 1.1rem;
 }
 
-.confirmation_buttons {
-    margin-top: 5px;
-    display: flex;
-    justify-content: space-evenly;
-    flex-direction: row;
-    width: 100%;
-    gap: 15px;
-}
-
-.confirmation_buttons > button {
-    width: 100%;
-    padding: 15px;
-    border: none;
-    font-size: 1.1rem;
-    border-radius: 8px;
-    font-weight: 700;
-    transition: 0.2s;
-    cursor: pointer;
-}
-
-.confirmation_buttons > button:hover {
-    filter: brightness(0.85);
-}
-
-.confirmation_buttons > button:active, .confirmButtonActive {
-    transform: scale(0.96) !important;
-    transition: 0s !important;
-    filter: brightness(0.5) !important;
-}
-
-.deleteCancel {
-    background-color: #ffffff;
-    color: black;
-}
-
-.deleteConfirm {
-    background-color: #ca1f35;
-    color: white;
-}
-
 @keyframes show-image {
     0% {
         transform: scale(0.6);

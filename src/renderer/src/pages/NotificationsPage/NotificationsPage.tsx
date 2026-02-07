@@ -31,8 +31,8 @@ const NotificationsPage = () => {
 
     if (loading) return <LoadingPage/>;
 
-    const acceptInvite = async (inviteToken: string) => {
-        const res = await window.api.authRequest<string>("post", `/playlist/user/join?inviteToken=${inviteToken}`);
+    const respondToInvite = async (inviteToken: string, accept: boolean) => {
+        const res = await window.api.authRequest<string>("post", "/playlist/user/invite/respond", {inviteToken, accept});
 
         if(res.type === "error") {
             toast.error(errorToString(res.error));
@@ -70,8 +70,8 @@ const NotificationsPage = () => {
                         </div>
                         <div className={s.right}>
                             <div className={s.buttons}>
-                                <button className={s.accept} onClick={() => acceptInvite(n.inviteToken)}>Accept</button>
-                                <button className={s.ignore}>Ignore</button>
+                                <button className={s.accept} onClick={() => respondToInvite(n.inviteToken, true)}>Accept</button>
+                                <button className={s.ignore} onClick={() => respondToInvite(n.inviteToken, false)}>Ignore</button>
                             </div>
                         </div>
                     </div>
