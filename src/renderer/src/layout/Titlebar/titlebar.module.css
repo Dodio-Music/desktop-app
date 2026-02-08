@@ -27,7 +27,7 @@
 }
 
 .buttons button {
-    transition: 0.1s background-color;
+    transition: 0.1s;
     font-size: 16px;
     display: flex;
     justify-content: center;
@@ -41,14 +41,14 @@
     -webkit-app-region: no-drag;
 }
 
-.buttons button:hover {
-    /*background-color: rgb(60, 60, 60);*/
+.buttons button:hover, .buttons button:active {
+    background-color: rgb(27, 27, 27);
     color: var(--color-accent-hover);
 }
 
 .buttons button:active {
-    transition: 0s background-color;
-    background-color: rgb(103, 103, 103);
+    transition: 0s;
+    background-color: rgb(58, 58, 58);
 }
 
 #exit:hover {
@@ -87,19 +87,6 @@
     font-size: 0.85rem;
 }
 
-.settingsContainer {
-    display: flex;
-    font-size: 25px;
-    align-items: center;
-    transition: color 0.4s, transform 0.4s;
-    line-height: 1;
-}
-
-.settingsContainer:hover {
-    color: var(--color-accent-hover);
-    transform: rotate(180deg);
-}
-
 .logo {
     display: flex;
     align-items: center;
@@ -108,12 +95,16 @@
 }
 
 .item {
+    display: flex;
+    font-size: 25px;
+    align-items: center;
     -webkit-app-region: no-drag;
     background: none;
     border: none;
     color: white;
     cursor: pointer;
     transition: color 0.2s, transform 0.2s;
+    line-height: 1;
 }
 
 .item:hover {
@@ -127,4 +118,20 @@
 .item:active {
     transition: 0s;
     transform: scale(0.95);
+}
+
+#settings path {
+    stroke-width: 36;
+}
+
+#settingsContainer {
+    transition: color 0.2s, transform 0.4s;
+}
+
+#settingsContainer:hover {
+    transform: rotate(180deg);
+}
+
+#notif {
+    stroke-width: 6;
 }
