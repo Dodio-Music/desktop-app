@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import {useState, useEffect, useCallback, useRef} from "react";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import {errorToString} from "@renderer/util/errorToString";
 
@@ -14,6 +14,8 @@ export default function useFetchData<T>(url: string): FetchState<T> {
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const hasFetchedRef = useRef(false);
 
     const fetchData = useCallback(async (resetOnFetch: boolean = true) => {
         setLoading(true);
@@ -40,8 +42,10 @@ export default function useFetchData<T>(url: string): FetchState<T> {
             return;
         }
 
-        void fetchData();
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
 
+        void fetchData();
     }, [authInfo, fetchData]);
 
     return { data, loading, error, refetch: () => fetchData(false) };

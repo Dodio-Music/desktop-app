@@ -11,7 +11,7 @@ import {useShortcuts} from "@renderer/hooks/useShortcuts";
 import {ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
 import {useRef, useState} from "react";
 import CollapsedSidebar from "@renderer/layout/Sidebar/CollapsedSidebar";
-
+import RealtimeNotificationBridge from "@renderer/components/Bridge/RealtimeNotificationBridge";
 
 function App() {
     const zoomFactor = useZoom();
@@ -23,9 +23,10 @@ function App() {
 
     return (
         <>
+            <RealtimeNotificationBridge/>
             <Toaster
                 position="bottom-center"
-                containerStyle={{marginBottom: "100px"}}
+                containerStyle={{marginBottom: "100px", marginTop: "60px"}}
                 toastOptions={{
                     style: {
                         backgroundColor: "rgb(50,50,50)",

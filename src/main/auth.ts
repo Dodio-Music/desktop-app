@@ -40,7 +40,7 @@ export function updateAuth(new_auth: Partial<IAuthData>) {
             ? "login"
             : "signup";
 
-    authInfoCache = {status: authStatus, role: auth.role, email: auth.email, username: auth.username};
+    authInfoCache = {accessToken: auth.access_token ?? "", status: authStatus, role: auth.role, email: auth.email, username: auth.username};
 
     mainWindow.webContents.send("auth:statusChange", authInfoCache);
 

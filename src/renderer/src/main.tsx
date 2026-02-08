@@ -11,7 +11,6 @@ import {CssBaseline, ThemeProvider} from "@mui/material";
 import {theme} from "./muiTheme";
 import {ConfirmProvider} from "@renderer/components/Popup/Playlist/ConfirmPopup/ConfirmContext";
 import toast from "react-hot-toast";
-import {connectStomp} from "@renderer/ws/stompClient";
 
 async function bootstrap() {
     const auth = await window.api.getAuthInitialRedux();
@@ -74,5 +73,3 @@ window.api.onPlayerEvent((event) => {
 window.api.onAuthUpdate((info) => {
     store.dispatch(setAuthInfo(info));
 });
-
-connectStomp();

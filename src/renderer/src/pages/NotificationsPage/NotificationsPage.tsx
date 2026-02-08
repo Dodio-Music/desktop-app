@@ -1,15 +1,17 @@
 import s from "./NotificationsPage.module.css";
 import FilterBar from "@renderer/components/FilterBar/FilterBar";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import classNames from "classnames";
 import useFetchData from "@renderer/hooks/useFetchData";
-import {NotificationDTO} from "../../../../shared/Api";
+import {NotificationDTO, PlaylistNotificationDTO} from "../../../../shared/Api";
 import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
 import CoverGrid from "@renderer/components/CoverGrid/CoverGrid";
 import {format} from "timeago.js";
 import {songCountPlural} from "@renderer/util/playlistUtils";
 import {errorToString} from "@renderer/util/errorToString";
 import toast from "react-hot-toast";
+import {onNotification} from "@renderer/ws/stompClient";
+import {useNavigate} from "react-router-dom";
 
 type FilterOption = "" | "INVITES" | "RELEASES";
 type FilterEntry = { type: FilterOption, label: string };
@@ -20,6 +22,7 @@ const filterOptions: FilterEntry[] = [
 ];
 
 const NotificationsPage = () => {
+    const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState<FilterOption>("");
 
     const {
@@ -29,15 +32,21 @@ const NotificationsPage = () => {
         refetch
     } = useFetchData<NotificationDTO>(`/notification/all?include=${activeFilter}`);
 
+    useEffect(() => {
+        const off = onNotification(() => refetch());
+        return () => {off()};
+    }, [refetch]);
+
     if (loading) return <LoadingPage/>;
 
-    const respondToInvite = async (inviteToken: string, accept: boolean) => {
-        const res = await window.api.authRequest<string>("post", "/playlist/user/invite/respond", {inviteToken, accept});
+    const respondToInvite = async (notificationDTO: PlaylistNotificationDTO, accept: boolean) => {
+        const res = await window.api.authRequest<string>("post", "/playlist/user/invite/respond", {inviteToken: notificationDTO.inviteToken, accept});
 
         if(res.type === "error") {
             toast.error(errorToString(res.error));
         } else {
             toast.success(res.value);
+            if(accept) navigate(`/playlist/${notificationDTO.playlistPreview.playlistId}`);
         }
 
         refetch();
@@ -70,8 +79,8 @@ const NotificationsPage = () => {
                         </div>
                         <div className={s.right}>
                             <div className={s.buttons}>
-                                <button className={s.accept} onClick={() => respondToInvite(n.inviteToken, true)}>Accept</button>
-                                <button className={s.ignore} onClick={() => respondToInvite(n.inviteToken, false)}>Ignore</button>
+                                <button className={s.accept} onClick={() => respondToInvite(n, true)}>Accept</button>
+                                <button className={s.ignore} onClick={() => respondToInvite(n, false)}>Ignore</button>
                             </div>
                         </div>
                     </div>
