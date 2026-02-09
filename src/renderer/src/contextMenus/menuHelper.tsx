@@ -1,7 +1,13 @@
 import {ListItemIcon, ListItemText, MenuItem} from "@mui/material";
 import {ReactNode} from "react";
-import {PlaylistPreviewDTO, PlaylistRole, PlaylistUserDTO, ReleasePreviewDTO} from "../../../shared/Api";
-import {playlistActions, playlistUserActions, releaseActions, songActions} from "@renderer/contextMenus/registry";
+import {PlaylistDTO, PlaylistPreviewDTO, PlaylistRole, PlaylistUserDTO, ReleasePreviewDTO} from "../../../shared/Api";
+import {
+    playlistActions,
+    playlistPreviewActions,
+    playlistUserActions,
+    releaseActions,
+    songActions
+} from "@renderer/contextMenus/registry";
 import {IRole} from "../../../main/web/Typing";
 import {ConfirmFn} from "@renderer/hooks/useConfirm";
 import {RemoteSongEntry} from "../../../shared/TrackInfo";
@@ -9,7 +15,8 @@ import AddToPlaylistMenu from "@renderer/components/SongList/AddToPlaylistMenu";
 
 export type ContextEntity =
     | { type: "release"; data: ReleasePreviewDTO }
-    | { type: "playlist"; data: PlaylistPreviewDTO }
+    | { type: "playlistPreview"; data: PlaylistPreviewDTO }
+    | { type: "playlist"; data: PlaylistDTO }
     | { type: "song"; data: RemoteSongEntry }
     | { type: "playlistUser"; data: PlaylistUserDTO };
 
@@ -26,6 +33,7 @@ export interface ContextActionHelpers {
     view?: "playlist" | "release" | "library";
     playlistId?: number;
     currentUserPlaylistRole?: PlaylistRole;
+    navigate?: (path: string, replace: boolean) => void;
 }
 
 const contextRegistry: {
@@ -33,6 +41,7 @@ const contextRegistry: {
         Extract<ContextEntity, { type: K }>["data"]>
 } = {
     release: {actions: releaseActions},
+    playlistPreview: {actions: playlistPreviewActions},
     playlist: {actions: playlistActions},
     song: {actions: songActions},
     playlistUser: {actions: playlistUserActions}

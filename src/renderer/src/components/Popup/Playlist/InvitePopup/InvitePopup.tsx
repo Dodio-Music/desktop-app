@@ -9,6 +9,7 @@ import userIcon from "@renderer/../../../resources/dodo_whiteondark_256.png";
 import {Tooltip} from "@mui/material";
 import {FaUserPlus} from "react-icons/fa6";
 import classNames from "classnames";
+import useErrorHandling from "@renderer/hooks/useErrorHandling";
 
 interface InvitePopupProps {
     open: boolean;
@@ -47,20 +48,22 @@ function highlight(text: string, query: string): JSX.Element {
 const InvitePopup: FC<InvitePopupProps> = ({open, onClose, playlistUserUsernames, playlistId}) => {
     const [query, setQuery] = useState("");
     const debouncedQuery = useDebounce(query, 300);
+    const {setError, InvalidInputError} = useErrorHandling();
 
-    const [results, setResults] = useState<{user: UserPublicDTO, invited: boolean}[]>([]);
+    const [results, setResults] = useState<{ user: UserPublicDTO, invited: boolean }[]>([]);
 
     const inviteUser = async (username: string) => {
-        const req = await window.api.authRequest<string>("post", "/playlist/user/invite", {playlistId: playlistId, inviteeUsername: username})
-        if(req.type === "ok") {
+        const req = await window.api.authRequest<string>("post", "/playlist/user/invite", {
+            playlistId: playlistId,
+            inviteeUsername: username
+        });
+        if (req.type === "ok") {
             toast.success(req.value);
-            fetchUsers(debouncedQuery);
+            void fetchUsers(debouncedQuery);
         } else {
             toast.error(errorToString(req.error));
         }
-
-
-    }
+    };
 
     const fetchUsers = async (q: string) => {
         const res = await window.api.authRequest<InviteSearchResponse>(
@@ -69,16 +72,20 @@ const InvitePopup: FC<InvitePopupProps> = ({open, onClose, playlistUserUsernames
         );
 
         if (res.type !== "ok") {
-            toast.error(errorToString(res.error));
+            setResults([]);
+            if (res.error.error === "invalid-input") setError(res.error);
+            else toast.error(errorToString(res.error));
             return;
         }
+
+        setError(null);
 
         const invitedSet = new Set(res.value.invitedUsers.map(u => u.username));
 
         setResults(
             res.value.users.map(user => ({
                 user,
-                invited: invitedSet.has(user.username),
+                invited: invitedSet.has(user.username)
             }))
         );
     };
@@ -96,6 +103,7 @@ const InvitePopup: FC<InvitePopupProps> = ({open, onClose, playlistUserUsernames
                 <label className={s.searchLabel}>Search for user</label>
                 <input onChange={(e) => setQuery(e.currentTarget.value)} placeholder={"Search..."}
                        className={s.search}/>
+                <InvalidInputError inputKey="search"/>
             </div>
             <div className={s.searchResultsWrapper}>
                 <p className={s.found}>{results.length} result{results.length !== 1 && "s"} found.</p>
@@ -120,7 +128,8 @@ const InvitePopup: FC<InvitePopupProps> = ({open, onClose, playlistUserUsernames
                                     {
                                         !(isMember || u.invited) &&
                                         <Tooltip placement={"right"} title={"Invite User"}>
-                                            <button className={s.invite} onClick={() => inviteUser(u.user.username)}><FaUserPlus/></button>
+                                            <button className={s.invite} onClick={() => inviteUser(u.user.username)}>
+                                                <FaUserPlus/></button>
                                         </Tooltip>
                                     }
                                 </div>

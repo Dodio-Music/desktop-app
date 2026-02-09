@@ -1,32 +1,67 @@
-import {PlaylistPreviewDTO, PlaylistUserDTO, ReleasePreviewDTO} from "../../../shared/Api";
+import {PlaylistDTO, PlaylistPreviewDTO, PlaylistUserDTO, ReleasePreviewDTO} from "../../../shared/Api";
 import {MdDelete, MdOutlineBlock, MdOutlinePlaylistAdd, MdOutlinePlaylistPlay} from "react-icons/md";
 import {RemoteSongEntry} from "../../../shared/TrackInfo";
-import {ContextAction} from "@renderer/contextMenus/menuHelper";
+import {ContextAction, ContextActionHelpers} from "@renderer/contextMenus/menuHelper";
 import toast from "react-hot-toast";
 import {errorToString} from "@renderer/util/errorToString";
 import {PiPencilSimpleBold, PiPencilSimpleSlashBold} from "react-icons/pi";
+import { IoMdExit } from "react-icons/io";
 
-export const playlistActions: ContextAction<PlaylistPreviewDTO>[] = [
+const deletePlaylistAction = async (entity: PlaylistPreviewDTO | PlaylistDTO, helpers: ContextActionHelpers) => {
+    const ok = await helpers.confirm?.({
+        title: "Delete Playlist?",
+        body: <>Are you sure you want to delete playlist <strong>{entity.playlistName}</strong>?<br/>This action
+            cannot be undone!</>
+    });
+    if (!ok) return false;
+
+    const res = await window.api.authRequest<string>("delete", `/playlist/${entity.playlistId}`);
+
+    if (res.type === "error") {
+        toast.error(errorToString(res.error));
+        return false;
+    } else {
+        toast.success(res.value);
+        return true;
+    }
+}
+
+export const playlistPreviewActions: ContextAction<PlaylistPreviewDTO>[] = [
     {
         id: "delete-playlist",
         label: "Delete Playlist",
         icon: <MdDelete size={22}/>,
         visible: (entity, helpers) => entity.owner.username === helpers.username,
         onClick: async (entity, helpers) => {
-            const ok = await helpers.confirm?.({
-                title: "Delete Playlist?",
-                body: <>Are you sure you want to delete playlist <strong>{entity.playlistName}</strong>?<br/>This action
-                    cannot be undone!</>
-            });
-            if (!ok) return;
+            await deletePlaylistAction(entity, helpers);
+            helpers.refetch?.();
+        }
+    }
+];
 
-            const res = await window.api.authRequest<string>("delete", `/playlist/${entity.playlistId}`);
-
+export const playlistActions: ContextAction<PlaylistDTO>[] = [
+    {
+        id: "delete-playlist",
+        label: "Delete Playlist",
+        icon: <MdDelete size={22}/>,
+        visible: (_, helpers) => helpers.currentUserPlaylistRole === "OWNER",
+        onClick: async (entity, helpers) => {
+            await deletePlaylistAction(entity, helpers);
+            helpers.navigate?.("/collection/playlists", true);
+        }
+    },
+    {
+        id: "leave-playlist",
+        label: "Leave Playlist",
+        icon: <IoMdExit size={22} />,
+        visible: (_, helpers) => helpers.currentUserPlaylistRole === "VIEWER" || helpers.currentUserPlaylistRole === "EDITOR",
+        onClick: async (entity, helpers) => {
+            const res = await window.api.authRequest<string>("delete", `/playlist/${entity.playlistId}/leave`);
             if (res.type === "error") {
                 toast.error(errorToString(res.error));
             } else {
                 toast.success(res.value);
-                helpers.refetch?.();
+                helpers.navigate?.("/collection/playlists", true);
             }
         }
     }

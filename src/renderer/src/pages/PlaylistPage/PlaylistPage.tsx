@@ -64,7 +64,7 @@ const PlaylistPage = () => {
                                       isPlaying={false}
                                       onIconClick={() => {
                                       }}
-                                      onContextMenu={(e, data) => ctx.open(e, {type: "playlist", data})}
+                                      onContextMenu={(e, data) => ctx.open(e, {type: "playlistPreview", data})}
                                       getTitle={p => p.playlistName}
                                       getArtists={c => [c.owner.displayName]}
                                       getCoverUrl={() => dodo}

@@ -25,11 +25,18 @@ import {RootState} from "@renderer/redux/store";
 import {Tooltip} from "@mui/material";
 import InvitePopup from "@renderer/components/Popup/Playlist/InvitePopup/InvitePopup";
 import MembersPopup from "@renderer/components/Popup/Playlist/MembersPopup/MembersPopup";
+import {BsThreeDots} from "react-icons/bs";
+import {useContextMenu} from "@renderer/hooks/useContextMenu";
+import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
+import {renderEntityActions} from "@renderer/contextMenus/menuHelper";
+import {useConfirm} from "@renderer/hooks/useConfirm";
 
 const PlaylistView = () => {
     const id = useRequiredParam("id");
     const scrollPageRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const ctx = useContextMenu();
+    const confirm = useConfirm();
 
     const [updateOpen, setUpdateOpen] = useState(false);
     const [addMembersOpen, setAddMembersOpen] = useState(false);
@@ -59,7 +66,7 @@ const PlaylistView = () => {
         return () => {
             subSongs?.unsubscribe();
             subDetails?.unsubscribe();
-        }
+        };
     }, [dispatch, playlist]);
 
     const albumLengthSeconds = useMemo(() => {
@@ -121,12 +128,26 @@ const PlaylistView = () => {
                                     </Tooltip>
                                     <Tooltip
                                         title={canEdit ? "Edit Playlist" : "You aren't allowed to change the playlist!"}>
-                                        <button className={!canEdit ? s.disabled : ""}><MdOutlineEdit
-                                            style={{transform: "scale(1.1)"}}
-                                            onClick={() => {
-                                                if (!canEdit) return;
-                                                setUpdateOpen(true);
-                                            }}/></button>
+                                        <button className={!canEdit ? s.disabled : ""}
+                                                onClick={() => {
+                                                    if (!canEdit) return;
+                                                    setUpdateOpen(true);
+                                                }}
+                                        >
+                                            <MdOutlineEdit style={{transform: "scale(1.1)"}}/>
+                                        </button>
+                                    </Tooltip>
+                                    <Tooltip
+                                        title={"More options"}>
+                                        <button onClick={(e) => {
+                                            e.stopPropagation();
+                                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                            ctx.open(e, {
+                                                type: "playlist",
+                                                data: playlist
+                                            }, {clientX: rect.right - rect.width - 70, clientY: rect.bottom + 10});
+                                        }}>
+                                            <BsThreeDots/></button>
                                     </Tooltip>
                                 </div>
                             </div>
@@ -137,7 +158,11 @@ const PlaylistView = () => {
                         songs={songEntries}
                         slots={playlistSongRowSlots}
                         gridTemplateColumns="30px 4fr 2.5fr 1.5fr 1fr 105px"
-                        contextHelpers={{view: "playlist", playlistId: playlist.playlistId, currentUserPlaylistRole: userRole ?? undefined}}
+                        contextHelpers={{
+                            view: "playlist",
+                            playlistId: playlist.playlistId,
+                            currentUserPlaylistRole: userRole ?? undefined
+                        }}
                         helpers={{
                             navigate,
                             enableDrag: canReorder,
@@ -145,19 +170,15 @@ const PlaylistView = () => {
                             refresh: refetch
                         }}
                     />
-                </>
-            )}
 
-            <PlaylistInitPopup open={updateOpen} close={() => setUpdateOpen(false)} refetch={refetch}
-                               title={"Update your Playlist"}
-                               onSubmit={(data) => window.api.authRequest<string>("patch", "/playlist", data)}
-                               playlistId={playlist?.playlistId}
-                               initialName={playlist?.playlistName}
-                               initialPublic={playlist?.isPublic}
-                               submitLabel={"Update Playlist"}/>
+                    <PlaylistInitPopup open={updateOpen} close={() => setUpdateOpen(false)} refetch={refetch}
+                                       title={"Update your Playlist"}
+                                       onSubmit={(data) => window.api.authRequest<string>("patch", "/playlist", data)}
+                                       playlistId={playlist?.playlistId}
+                                       initialName={playlist?.playlistName}
+                                       initialPublic={playlist?.isPublic}
+                                       submitLabel={"Update Playlist"}/>
 
-            {playlist &&
-                <>
                     <InvitePopup open={addMembersOpen} onClose={() => setAddMembersOpen(false)}
                                  playlistUserUsernames={playlist?.playlistUsers.map(u => u.user.username)}
                                  playlistId={playlist?.playlistId}
@@ -166,8 +187,19 @@ const PlaylistView = () => {
                     <MembersPopup open={membersOpen} onClose={() => setMembersOpen(false)}
                                   playlistUsers={playlist.playlistUsers} currentUser={playlistUser}
                                   playlistId={playlist.playlistId} refetchPlaylist={refetch}/>
+
+                    <ContextMenu ctx={ctx}>
+                        {
+                            ctx.state && renderEntityActions(ctx.state.target, ctx.close, {
+                                playlistId: playlist.playlistId,
+                                navigate: (path, replace) => navigate(path, {replace}),
+                                currentUserPlaylistRole: userRole ?? undefined,
+                                confirm
+                            })
+                        }
+                    </ContextMenu>
                 </>
-            }
+            )}
         </div>
     );
 };
