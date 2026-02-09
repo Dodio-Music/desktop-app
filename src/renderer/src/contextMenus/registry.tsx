@@ -71,7 +71,7 @@ export const songActions: ContextAction<RemoteSongEntry>[] = [
         id: "remove-from-playlist",
         label: "Remove from playlist",
         icon: <MdDelete size={22} />,
-        visible: (_, helpers) => helpers.view === "playlist",
+        visible: (_, helpers) => helpers.view === "playlist" && helpers.currentUserPlaylistRole !== "VIEWER",
         onClick: async (song, helpers) => {
             if (!helpers.playlistId) return;
 

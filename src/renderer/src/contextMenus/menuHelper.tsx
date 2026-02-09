@@ -1,6 +1,6 @@
 import {ListItemIcon, ListItemText, MenuItem} from "@mui/material";
 import {ReactNode} from "react";
-import {PlaylistPreviewDTO, PlaylistUserDTO, ReleasePreviewDTO} from "../../../shared/Api";
+import {PlaylistPreviewDTO, PlaylistRole, PlaylistUserDTO, ReleasePreviewDTO} from "../../../shared/Api";
 import {playlistActions, playlistUserActions, releaseActions, songActions} from "@renderer/contextMenus/registry";
 import {IRole} from "../../../main/web/Typing";
 import {ConfirmFn} from "@renderer/hooks/useConfirm";
@@ -25,6 +25,7 @@ export interface ContextActionHelpers {
 
     view?: "playlist" | "release" | "library";
     playlistId?: number;
+    currentUserPlaylistRole?: PlaylistRole;
 }
 
 const contextRegistry: {

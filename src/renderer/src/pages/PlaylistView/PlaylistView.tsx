@@ -137,7 +137,7 @@ const PlaylistView = () => {
                         songs={songEntries}
                         slots={playlistSongRowSlots}
                         gridTemplateColumns="30px 4fr 2.5fr 1.5fr 1fr 105px"
-                        contextHelpers={{view: "playlist", playlistId: playlist.playlistId}}
+                        contextHelpers={{view: "playlist", playlistId: playlist.playlistId, currentUserPlaylistRole: userRole ?? undefined}}
                         helpers={{
                             navigate,
                             enableDrag: canReorder,
