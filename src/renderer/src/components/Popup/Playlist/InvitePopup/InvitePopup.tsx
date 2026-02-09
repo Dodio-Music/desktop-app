@@ -2,7 +2,7 @@ import {FC, JSX, useEffect, useState} from "react";
 import Popup from "@renderer/components/Popup/Popup";
 import s from "./InvitePopup.module.css";
 import {useDebounce} from "@uidotdev/usehooks";
-import {UserPublicDTO} from "../../../../../../shared/Api";
+import {InviteSearchResponse, UserPublicDTO} from "../../../../../../shared/Api";
 import {errorToString} from "@renderer/util/errorToString";
 import toast from "react-hot-toast";
 import userIcon from "@renderer/../../../resources/dodo_whiteondark_256.png";
@@ -15,7 +15,6 @@ interface InvitePopupProps {
     onClose: () => void;
     playlistId: number;
     playlistUserUsernames: string[];
-    currentUserUsername?: string;
 }
 
 function highlight(text: string, query: string): JSX.Element {
@@ -45,45 +44,49 @@ function highlight(text: string, query: string): JSX.Element {
     );
 }
 
-const InvitePopup: FC<InvitePopupProps> = ({open, onClose, currentUserUsername, playlistUserUsernames, playlistId}) => {
+const InvitePopup: FC<InvitePopupProps> = ({open, onClose, playlistUserUsernames, playlistId}) => {
     const [query, setQuery] = useState("");
     const debouncedQuery = useDebounce(query, 300);
 
-    const [results, setResults] = useState<UserPublicDTO[]>([]);
+    const [results, setResults] = useState<{user: UserPublicDTO, invited: boolean}[]>([]);
 
     const inviteUser = async (username: string) => {
         const req = await window.api.authRequest<string>("post", "/playlist/user/invite", {playlistId: playlistId, inviteeUsername: username})
         if(req.type === "ok") {
             toast.success(req.value);
+            fetchUsers(debouncedQuery);
         } else {
             toast.error(errorToString(req.error));
         }
+
+
     }
+
+    const fetchUsers = async (q: string) => {
+        const res = await window.api.authRequest<InviteSearchResponse>(
+            "get",
+            `/account/search?q=${encodeURIComponent(q)}&playlistId=${playlistId}`
+        );
+
+        if (res.type !== "ok") {
+            toast.error(errorToString(res.error));
+            return;
+        }
+
+        const invitedSet = new Set(res.value.invitedUsers.map(u => u.username));
+
+        setResults(
+            res.value.users.map(user => ({
+                user,
+                invited: invitedSet.has(user.username),
+            }))
+        );
+    };
 
     useEffect(() => {
         if (!open) return;
 
-        let cancelled = false;
-        (async () => {
-
-            const res = await window.api.authRequest<UserPublicDTO[]>(
-                "get",
-                `/account/search?searchString=${encodeURIComponent(debouncedQuery)}`
-            );
-
-            if (cancelled) return;
-
-            if (res.type === "ok") {
-                const filteredResults = res.value.filter(u => u.username !== currentUserUsername);
-                setResults(filteredResults);
-            } else {
-                toast.error(errorToString(res.error));
-            }
-        })();
-
-        return () => {
-            cancelled = true;
-        };
+        void fetchUsers(debouncedQuery);
     }, [debouncedQuery, open]);
 
     return (
@@ -98,26 +101,26 @@ const InvitePopup: FC<InvitePopupProps> = ({open, onClose, currentUserUsername, 
                 <p className={s.found}>{results.length} result{results.length !== 1 && "s"} found.</p>
                 <div className={s.searchResults}>
                     {results.map(u => {
-                        const isMember = playlistUserUsernames?.includes(u.username) ?? false;
+                        const isMember = playlistUserUsernames?.includes(u.user.username) ?? false;
 
                         return (
-                            <Tooltip key={u.username} placement={"top"}
-                                     title={isMember ? "User is already a member of this playlist." : ""}>
+                            <Tooltip key={u.user.username} placement={"top"}
+                                     title={isMember ? "User is already a member of this playlist." : u.invited ? "You already invited this user to this playlist." : ""}>
                                 <div
-                                    className={classNames(s.userCard, isMember && s.alreadyMember)}>
+                                    className={classNames(s.userCard, (isMember || u.invited) && s.alreadyMember)}>
                                     <img alt={"User"} src={userIcon}/>
                                     <div className={s.cardMeta}>
                                         <p id={s.displayName}>
-                                            {highlight(u.displayName, debouncedQuery)}
+                                            {highlight(u.user.displayName, debouncedQuery)}
                                         </p>
                                         <p id={s.userName}>
-                                            @{highlight(u.username, debouncedQuery)}
+                                            @{highlight(u.user.username, debouncedQuery)}
                                         </p>
                                     </div>
                                     {
-                                        !isMember &&
+                                        !(isMember || u.invited) &&
                                         <Tooltip placement={"right"} title={"Invite User"}>
-                                            <button className={s.invite} onClick={() => inviteUser(u.username)}><FaUserPlus/></button>
+                                            <button className={s.invite} onClick={() => inviteUser(u.user.username)}><FaUserPlus/></button>
                                         </Tooltip>
                                     }
                                 </div>

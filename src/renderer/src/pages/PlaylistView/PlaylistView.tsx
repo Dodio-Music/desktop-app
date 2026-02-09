@@ -154,7 +154,6 @@ const PlaylistView = () => {
             {playlist &&
                 <>
                     <InvitePopup open={addMembersOpen} onClose={() => setAddMembersOpen(false)}
-                                 currentUserUsername={playlistUser?.user.username}
                                  playlistUserUsernames={playlist?.playlistUsers.map(u => u.user.username)}
                                  playlistId={playlist?.playlistId}
                     />

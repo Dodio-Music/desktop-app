@@ -147,3 +147,8 @@ export interface PlaylistNotificationDTO {
 export interface NotificationDTO {
     playlistNotifications: PlaylistNotificationDTO[];
 }
+
+export interface InviteSearchResponse {
+    users: UserPublicDTO[];
+    invitedUsers: UserPublicDTO[];
+}
