@@ -20,6 +20,9 @@ export const theme = createTheme({
             styleOverrides: {
                 list: {
                     padding: "4px"
+                },
+                paper: {
+                    boxShadow: "0 0 10px 2px rgba(0, 0, 0, 0.3)"
                 }
             }
         },

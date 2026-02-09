@@ -20,7 +20,7 @@ import {useRequiredParam} from "@renderer/hooks/useRequiredParam";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import {useDispatch, useSelector} from "react-redux";
 import {setPlaylist} from "@renderer/redux/playlistSlice";
-import {subscribeToPlaylist} from "@renderer/ws/stompClient";
+import {subscribeToPlaylistDetails, subscribeToPlaylistSongs} from "@renderer/ws/stompClient";
 import {RootState} from "@renderer/redux/store";
 import {Tooltip} from "@mui/material";
 import InvitePopup from "@renderer/components/Popup/Playlist/InvitePopup/InvitePopup";
@@ -37,7 +37,7 @@ const PlaylistView = () => {
     const {data: playlist, loading, error, refetch} = useFetchData<PlaylistDTO>(`/playlist/${id}/songs`);
 
     const dispatch = useDispatch();
-    const {orderedIds, songs} = useSelector((state: RootState) => state.playlistSlice);
+    const {orderedIds, songs, userRole} = useSelector((state: RootState) => state.playlistSlice);
     const info = useAuth().info;
 
     useEffect(() => {
@@ -50,11 +50,16 @@ const PlaylistView = () => {
         dispatch(setPlaylist({
             playlistId: playlist.playlistId,
             orderedIds: playlist.playlistSongs.map(ps => ps.playlistSongId),
-            songs: songsMap
+            songs: songsMap,
+            role: playlist?.playlistUsers.find(p => p.user.username === info.username)?.role ?? null
         }));
 
-        const sub = subscribeToPlaylist(playlist.playlistId);
-        return () => sub?.unsubscribe();
+        const subSongs = subscribeToPlaylistSongs(playlist.playlistId);
+        const subDetails = subscribeToPlaylistDetails(playlist.playlistId);
+        return () => {
+            subSongs?.unsubscribe();
+            subDetails?.unsubscribe();
+        }
     }, [dispatch, playlist]);
 
     const albumLengthSeconds = useMemo(() => {
@@ -65,9 +70,9 @@ const PlaylistView = () => {
     }, [orderedIds, songs]);
 
     const playlistUser = (playlist?.playlistUsers.find(p => p.user.username === info.username));
-    const canReorder = playlistUser?.role === "OWNER" || playlistUser?.role === "EDITOR";
-    const canEdit = playlistUser?.role === "OWNER";
-    const canInvite = playlistUser?.role === "OWNER";
+    const canReorder = userRole === "OWNER" || userRole === "EDITOR";
+    const canEdit = userRole === "OWNER";
+    const canInvite = userRole === "OWNER";
 
     const songEntries = useMemo(() => {
         if (!orderedIds || !songs) return [];
@@ -158,7 +163,9 @@ const PlaylistView = () => {
                                  playlistId={playlist?.playlistId}
                     />
 
-                    <MembersPopup open={membersOpen} onClose={() => setMembersOpen(false)} playlistUsers={playlist.playlistUsers}/>
+                    <MembersPopup open={membersOpen} onClose={() => setMembersOpen(false)}
+                                  playlistUsers={playlist.playlistUsers} currentUser={playlistUser}
+                                  playlistId={playlist.playlistId} refetchPlaylist={refetch}/>
                 </>
             }
         </div>

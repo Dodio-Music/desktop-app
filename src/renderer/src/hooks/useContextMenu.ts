@@ -13,21 +13,22 @@ export type ContextMenuHandle = {
     close: () => void;
 }
 
-export function useContextMenu() {
+export function useContextMenu(closeCallback?: () => void) {
     const [state, setState] = useState<ContextMenuState>(null);
 
     return {
         state,
-        open(e: MouseEvent, target: ContextEntity) {
+        open(e: MouseEvent, target: ContextEntity, pos?: {clientX: number, clientY: number}) {
             e.preventDefault();
             setState({
                 target,
-                mouseX: e.clientX,
-                mouseY: e.clientY
+                mouseX: pos ? pos.clientX : e.clientX,
+                mouseY: pos ? pos.clientY : e.clientY
             });
         },
         close() {
             setState(null);
+            closeCallback?.();
         }
     };
 }

@@ -1,9 +1,10 @@
-import {PlaylistPreviewDTO, ReleasePreviewDTO} from "../../../shared/Api";
-import {MdDelete, MdOutlinePlaylistAdd, MdOutlinePlaylistPlay} from "react-icons/md";
+import {PlaylistPreviewDTO, PlaylistUserDTO, ReleasePreviewDTO} from "../../../shared/Api";
+import {MdDelete, MdOutlineBlock, MdOutlinePlaylistAdd, MdOutlinePlaylistPlay} from "react-icons/md";
 import {RemoteSongEntry} from "../../../shared/TrackInfo";
 import {ContextAction} from "@renderer/contextMenus/menuHelper";
 import toast from "react-hot-toast";
 import {errorToString} from "@renderer/util/errorToString";
+import {PiPencilSimpleBold, PiPencilSimpleSlashBold} from "react-icons/pi";
 
 export const playlistActions: ContextAction<PlaylistPreviewDTO>[] = [
     {
@@ -97,6 +98,62 @@ export const songActions: ContextAction<RemoteSongEntry>[] = [
         visible: () => true,
         onClick: (async () => {
             toast.error("Not implemented yet.")
+        })
+    }
+];
+
+export const playlistUserActions: ContextAction<PlaylistUserDTO>[] = [
+    {
+        id: "promote",
+        label: "Promote to Editor",
+        icon: <PiPencilSimpleBold size={22} />,
+        visible: (entity) => entity.role === "VIEWER",
+        onClick: (async (entity, helpers) => {
+            if (!helpers.playlistId) return;
+
+            const payload = {username: entity.user.username, role: "EDITOR"};
+            const res = await window.api.authRequest<string>("put", `/playlist/${helpers.playlistId}/user/role`, payload);
+            if (res.type === "error") {
+                toast.error(errorToString(res.error));
+            } else {
+                toast.success(res.value);
+                helpers.refetch?.();
+            }
+        })
+    },
+    {
+        id: "demote",
+        label: "Demote to Viewer",
+        icon: <PiPencilSimpleSlashBold size={22} />,
+        visible: (entity) => entity.role === "EDITOR",
+        onClick: (async (entity, helpers) => {
+            if (!helpers.playlistId) return;
+
+            const payload = {username: entity.user.username, role: "VIEWER"};
+            const res = await window.api.authRequest<string>("put", `/playlist/${helpers.playlistId}/user/role`, payload);
+            if (res.type === "error") {
+                toast.error(errorToString(res.error));
+            } else {
+                toast.success(res.value);
+                helpers.refetch?.();
+            }
+        })
+    },
+    {
+        id: "kick",
+        label: "Kick Member",
+        icon: <MdOutlineBlock size={22} />,
+        visible: () => true,
+        onClick: (async (entity, helpers) => {
+            if (!helpers.playlistId) return;
+
+            const res = await window.api.authRequest<string>("delete", `/playlist/${helpers.playlistId}/users/${entity.user.username}`);
+            if (res.type === "error") {
+                toast.error(errorToString(res.error));
+            } else {
+                toast.success(res.value);
+                helpers.refetch?.();
+            }
         })
     }
 ];

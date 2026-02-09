@@ -1,6 +1,12 @@
 import {Client, StompSubscription} from "@stomp/stompjs";
 import {store} from "@renderer/redux/store";
-import {applyPlaylistUpdate, PlaylistUpdateEvent} from "@renderer/redux/playlistSlice";
+import {
+    applyPlaylistRoleUpdate,
+    applyPlaylistSongUpdate,
+    PlaylistSongUpdateEvent, PlaylistUpdateEvent
+} from "@renderer/redux/playlistSlice";
+import toast from "react-hot-toast";
+import {toCapitalized} from "@renderer/util/playlistUtils";
 
 let client: Client | null = null;
 let activeT = "";
@@ -35,26 +41,47 @@ export function connectStomp() {
     client.activate();
 }
 
-let currentPlaylistSub: StompSubscription | null = null;
+let currentPlaylistSongsSub: StompSubscription | null = null;
+let currentPlaylistDetailsSub: StompSubscription | null = null;
 let currentNotificationSub: StompSubscription | null = null;
 
-export function subscribeToPlaylist(playlistId: number) {
+export function subscribeToPlaylistSongs(playlistId: number) {
     if (!client || !client.connected) return;
 
-    currentPlaylistSub?.unsubscribe();
+    currentPlaylistSongsSub?.unsubscribe();
 
-    currentPlaylistSub = client.subscribe(
-        `/user/queue/playlists`,
+    currentPlaylistSongsSub = client.subscribe(
+        `/user/queue/playlist/songs`,
         (msg) => {
-            const event: PlaylistUpdateEvent = JSON.parse(msg.body);
+            const event: PlaylistSongUpdateEvent = JSON.parse(msg.body);
 
             if (event.playlistId === playlistId) {
-                store.dispatch(applyPlaylistUpdate(event));
+                store.dispatch(applyPlaylistSongUpdate(event));
             }
         }
     );
 
-    return currentPlaylistSub;
+    return currentPlaylistSongsSub;
+}
+
+export function subscribeToPlaylistDetails(playlistId: number) {
+    if (!client || !client.connected) return;
+
+    currentPlaylistDetailsSub?.unsubscribe();
+
+    currentPlaylistDetailsSub = client.subscribe(
+        `/user/queue/playlist/details`,
+        (msg) => {
+            const event: PlaylistUpdateEvent = JSON.parse(msg.body);
+
+            if (event.playlistId === playlistId) {
+                store.dispatch(applyPlaylistRoleUpdate(event.userRole));
+                toast.success("The playlist owner just changed your member role to " + toCapitalized(event.userRole) + ".");
+            }
+        }
+    );
+
+    return currentPlaylistDetailsSub;
 }
 
 export function subscribeToNotifications() {

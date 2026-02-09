@@ -1,7 +1,7 @@
 import {ListItemIcon, ListItemText, MenuItem} from "@mui/material";
 import {ReactNode} from "react";
-import {PlaylistPreviewDTO, ReleasePreviewDTO} from "../../../shared/Api";
-import {playlistActions, releaseActions, songActions} from "@renderer/contextMenus/registry";
+import {PlaylistPreviewDTO, PlaylistUserDTO, ReleasePreviewDTO} from "../../../shared/Api";
+import {playlistActions, playlistUserActions, releaseActions, songActions} from "@renderer/contextMenus/registry";
 import {IRole} from "../../../main/web/Typing";
 import {ConfirmFn} from "@renderer/hooks/useConfirm";
 import {RemoteSongEntry} from "../../../shared/TrackInfo";
@@ -10,7 +10,8 @@ import AddToPlaylistMenu from "@renderer/components/SongList/AddToPlaylistMenu";
 export type ContextEntity =
     | { type: "release"; data: ReleasePreviewDTO }
     | { type: "playlist"; data: PlaylistPreviewDTO }
-    | { type: "song"; data: RemoteSongEntry };
+    | { type: "song"; data: RemoteSongEntry }
+    | { type: "playlistUser"; data: PlaylistUserDTO };
 
 interface ContextRegistryEntry<T> {
     actions: ContextAction<T>[];
@@ -32,7 +33,8 @@ const contextRegistry: {
 } = {
     release: {actions: releaseActions},
     playlist: {actions: playlistActions},
-    song: {actions: songActions}
+    song: {actions: songActions},
+    playlistUser: {actions: playlistUserActions}
 };
 
 export interface ContextAction<T> {
