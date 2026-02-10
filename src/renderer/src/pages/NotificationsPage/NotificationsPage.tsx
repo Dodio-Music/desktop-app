@@ -10,12 +10,12 @@ import {format} from "timeago.js";
 import {songCountPlural} from "@renderer/util/playlistUtils";
 import {errorToString} from "@renderer/util/errorToString";
 import toast from "react-hot-toast";
-import {onNotification} from "@renderer/ws/stompClient";
 import {useNavigate} from "react-router-dom";
 import {useDispatch} from "react-redux";
 import {AppDispatch} from "@renderer/redux/store";
 import {setNotifications} from "@renderer/redux/notificationsSlice";
 import dodo from "../../../../../resources/dodo_whiteondark_512.png";
+import {onNotification} from "@renderer/stomp/notifications";
 
 type FilterOption = "" | "INVITES" | "RELEASES";
 type FilterEntry = { type: FilterOption, label: string };
@@ -41,7 +41,6 @@ const NotificationsPage = () => {
         if(data) {
             dispatch(setNotifications(data.unreadNotifications));
         }
-        console.log(data);
     }, [data, dispatch]);
 
     useEffect(() => {

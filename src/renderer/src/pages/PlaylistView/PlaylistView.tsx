@@ -20,7 +20,7 @@ import {useRequiredParam} from "@renderer/hooks/useRequiredParam";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import {useDispatch, useSelector} from "react-redux";
 import {setPlaylist} from "@renderer/redux/playlistSlice";
-import {subscribeToPlaylistDetails, subscribeToPlaylistSongs} from "@renderer/ws/stompClient";
+import {subscribeToPlaylistDetails, subscribeToPlaylistSongs} from "@renderer/stomp/stompClient";
 import {RootState} from "@renderer/redux/store";
 import {Tooltip} from "@mui/material";
 import InvitePopup from "@renderer/components/Popup/Playlist/InvitePopup/InvitePopup";
@@ -61,11 +61,11 @@ const PlaylistView = () => {
             role: playlist?.playlistUsers.find(p => p.user.username === info.username)?.role ?? null
         }));
 
-        const subSongs = subscribeToPlaylistSongs(playlist.playlistId, playlist.isPublic);
-        const subDetails = subscribeToPlaylistDetails(playlist.playlistId);
+        const unsubSongs = subscribeToPlaylistSongs(playlist.playlistId, playlist.isPublic);
+        const unsubDetails = subscribeToPlaylistDetails(playlist.playlistId);
         return () => {
-            subSongs?.unsubscribe();
-            subDetails?.unsubscribe();
+            unsubSongs?.();
+            unsubDetails?.();
         };
     }, [dispatch, playlist]);
 

@@ -104,6 +104,7 @@ const api = {
     authRequest<T = unknown, M extends keyof AxiosMethodArgs = keyof AxiosMethodArgs>(method: M, ...args: AxiosMethodArgs[M]) {
         return ipcRenderer.invoke("api:authRequest", method, ...args) as Promise<ApiResult<T>>;
     },
+    refreshAccessToken: async (): Promise<MayError> => ipcRenderer.invoke("auth:refresh"),
     login: (login: string, password: string) => ipcRenderer.invoke("api:login", login, password) as Promise<MayError>,
     signup: (username: string, email: string, password: string) => ipcRenderer.invoke("api:signup", username, email, password) as Promise<DodioError | string>,
     logout: () => ipcRenderer.invoke("api:logout") as Promise<MayError>,
