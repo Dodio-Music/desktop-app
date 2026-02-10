@@ -1,5 +1,5 @@
 import {SourceType} from "./PlayerState.js";
-import {SourceQuality} from "./Api.js";
+import {SourceQuality, UserPublicDTO} from "./Api.js";
 
 export interface BaseSongEntry {
     id: string;
@@ -22,6 +22,10 @@ export interface RemoteSongEntry extends BaseSongEntry {
     waveformUrl: string | null;
     releaseDate: string;
     releaseId: string;
+    releaseTrackId: string;
+
+    addedAt?: Date;
+    addedBy?: UserPublicDTO;
 }
 
 export interface SongSource {

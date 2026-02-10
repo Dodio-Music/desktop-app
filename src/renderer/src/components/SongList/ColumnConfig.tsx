@@ -2,11 +2,13 @@ import {BaseSongEntry, LocalSongEntry, RemoteSongEntry} from "../../../../shared
 import {format} from "timeago.js";
 import {secondsToTime} from "@renderer/util/timeUtils";
 import {WiTime3} from "react-icons/wi";
-import {ReactNode} from "react";
+import {MouseEvent, ReactNode} from "react";
 import s from "./SongList.module.css";
 import classNames from "classnames";
-import {FaPause, FaPlay} from "react-icons/fa6";
+import {FaPause, FaPlay, FaRegCircleUser} from "react-icons/fa6";
 import placeholder from "../../../../../resources/img-placeholder-128x128.svg";
+import {HiOutlineDotsHorizontal} from "react-icons/hi";
+import {ContextEntity} from "@renderer/contextMenus/menuHelper";
 
 export interface SongRowSlotProps<T> {
     song: T;
@@ -14,6 +16,12 @@ export interface SongRowSlotProps<T> {
     userPaused: boolean | null;
     index: number;
     handlePlay: (song: T) => void;
+    isSelected: boolean;
+    navigate?: (path: string) => void;
+    openContextMenu: (
+        e: MouseEvent,
+        target: ContextEntity,
+    ) => void;
 }
 
 export interface SongRowSlot<T> {
@@ -72,7 +80,7 @@ export const localSongRowSlots: SongRowSlot<LocalSongEntry>[] = [
     },
     {
         header: <p className={s.durationHeader}><WiTime3/></p>,
-        render: ({song}) => <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
+        render: ({song}) => <p className={classNames(s.trackDuration, s.rightPad)}>{secondsToTime(song.duration ?? 0)}</p>
     }
 ];
 
@@ -104,7 +112,10 @@ export const remoteSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
     },
     {
         header: <p className={s.durationHeader}><WiTime3/></p>,
-        render: ({song}) => <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
+        render: ({song, isSelected, openContextMenu}) => <div className={s.lastColumn}>
+            <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
+            <HiOutlineDotsHorizontal onClick={(e) => openContextMenu(e, {type: "song", data: song})} size={24} className={classNames(s.menu, isSelected && s.showOptions)} />
+        </div>
     }
 ];
 
@@ -116,7 +127,8 @@ export const playlistSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
             <div className={s.trackColumn}>
                 <div className={s.trackElement}>
                     <div className={s.cover}>
-                        <img className={s.img} src={song.picture ?? placeholder} alt="cover" loading={"lazy"}/>
+                        <img className={s.img} src={song.picture ? song.picture + "?size=thumb" : placeholder}
+                             alt="cover" loading={"lazy"}/>
                     </div>
                     <div className={s.trackInfo}>
                         <p className={classNames(s.trackTitle, s.ellipsis, isActive && s.playing)}>{song.title}</p>
@@ -135,14 +147,24 @@ export const playlistSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
     },
     {
         header: <p>Album</p>,
-        render: ({song}) => <p className={classNames(s.trackAlbum, s.ellipsis, s.link)}>{song.album}</p>
+        render: ({song, navigate}) => <p onClick={navigate ? () => navigate(`/release/${song.releaseId}`) : undefined} className={classNames(s.trackAlbum, s.ellipsis, s.link)}><span className={s.textInner}>{song.album}</span></p>
     },
     {
-        header: <p>Date added</p>,
-        render: () => <p className={classNames(s.timestamp, s.ellipsis)}>{"N/A"}</p>
+        header: <p>Added</p>,
+        render: ({song}) => <p
+            className={classNames(s.timestamp, s.ellipsis)}>{song.addedAt && format(song.addedAt)}</p>
+    },
+    {
+        header: <p>Added by</p>,
+        render: ({song}) => <div className={s.addedBy}><FaRegCircleUser/><p
+            className={classNames(s.ellipsis)}>{song.addedBy &&
+            <span className={s.link}>{song.addedBy.displayName}</span>}</p></div>
     },
     {
         header: <p className={s.durationHeader}><WiTime3/></p>,
-        render: ({song}) => <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
+        render: ({song, isSelected, openContextMenu}) => <div className={s.lastColumn}>
+            <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
+            <HiOutlineDotsHorizontal onClick={(e) => openContextMenu(e, {type: "song", data: song})} size={24} className={classNames(s.menu, isSelected && s.showOptions, "no-drag")} />
+        </div>
     }
 ];

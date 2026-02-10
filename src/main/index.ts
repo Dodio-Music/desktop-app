@@ -1,11 +1,11 @@
 import { electronApp, optimizer } from "@electron-toolkit/utils";
-import {app, BrowserWindow, protocol, net, ipcMain} from "electron";
+import {app, BrowserWindow, protocol, net} from "electron";
 import { registerMagnifierIPC } from "./ipc/registerMagnifier.js";
-import {registerPlayerProcessIPC, registerPlayerProcessStartup} from "./ipc/registerPlayerProcess.js";
+import {registerPlayerProcessIPC} from "./ipc/registerPlayerProcess.js";
 import { registerWindowControlsIPC } from "./ipc/registerWindowControls.js";
 import {createMainWindow, registerAppLifecycle} from "./window.js";
 import {registerDodioApiIPC} from "./ipc/registerDodioApi.js";
-import {registerAuthStartup, setupAuth} from "./auth.js";
+import {setupAuth} from "./auth.js";
 import path from "path";
 import {runCleanupTasks} from "./ipc/shutdownManager.js";
 import {setupApi} from "./web/dodio_api.js";
@@ -37,11 +37,6 @@ app.whenReady().then(async () => {
     });
 
     const prefs = await loadPreferencesFromDisk();
-
-    ipcMain.handle("renderer:ready", () => {
-        registerAuthStartup();
-        registerPlayerProcessStartup();
-    });
 
     setupApi();
     mainWindow = createMainWindow();

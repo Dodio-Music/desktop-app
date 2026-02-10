@@ -9,30 +9,38 @@ import {setAuthInfo} from "@renderer/redux/authSlice";
 import {isLocalSong} from "../../shared/TrackInfo";
 import {CssBaseline, ThemeProvider} from "@mui/material";
 import {theme} from "./muiTheme";
-import {ConfirmProvider} from "@renderer/components/Popup/ConfirmContext";
+import {ConfirmProvider} from "@renderer/components/Popup/Playlist/ConfirmPopup/ConfirmContext";
 import toast from "react-hot-toast";
 
-createRoot(document.getElementById("root")!).render(
-    <Provider store={store}>
-        <StrictMode>
-            <ThemeProvider theme={theme}>
-                <HashRouter>
-                    <ConfirmProvider>
-                        <CssBaseline/>
-                        <App/>
-                    </ConfirmProvider>
-                </HashRouter>
-            </ThemeProvider>
-        </StrictMode>
-    </Provider>
-);
+async function bootstrap() {
+    const auth = await window.api.getAuthInitialRedux();
+    if (auth) store.dispatch(setAuthInfo(auth));
+    const player = await window.api.getPlayerInitialRedux();
+    if(player) store.dispatch(setRepeatMode(player.repeatMode));
+
+    createRoot(document.getElementById("root")!).render(
+        <Provider store={store}>
+            <StrictMode>
+                <ThemeProvider theme={theme}>
+                    <HashRouter>
+                        <ConfirmProvider>
+                            <CssBaseline/>
+                            <App/>
+                        </ConfirmProvider>
+                    </HashRouter>
+                </ThemeProvider>
+            </StrictMode>
+        </Provider>
+    );
+}
+
+void bootstrap();
 
 window.api.onPlayerUpdate((state) => {
     store.dispatch(updatePlayerState(state));
 });
 
 window.api.onToast((type, msg) => {
-    console.log("abc");
     switch(type) {
         case "success": toast.success(msg);
             break;
@@ -65,5 +73,3 @@ window.api.onPlayerEvent((event) => {
 window.api.onAuthUpdate((info) => {
     store.dispatch(setAuthInfo(info));
 });
-
-window.api.ready();

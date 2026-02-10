@@ -1,0 +1,22 @@
+.toastClose {
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: white;
+    margin-right: -10px;
+    z-index: 10;
+}
+
+.toastWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+}
+
+.wrap {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+}

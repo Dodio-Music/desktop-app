@@ -1,7 +1,7 @@
 import React, {ReactNode} from "react";
-import Popup from "../Popup/Popup";
+import Popup from "../../Popup";
 import classNames from "classnames";
-import s from "./popup.module.css";
+import s from "./ConfirmPopup.module.css";
 
 interface ConfirmPopupProps {
     open: boolean;

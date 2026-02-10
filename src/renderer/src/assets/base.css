@@ -112,7 +112,7 @@ img {
     color: #ff8d8d;
 }
 
-.pageWrapper > h1 {
+.pageWrapper h1 {
     color: #ffffff;
     font-size: 2.4rem;
     font-weight: 600;
@@ -131,6 +131,12 @@ button:has(svg) {
     justify-content: center;
 }
 
-button:focus {
+button:focus, input:focus {
     outline: none;
+}
+
+.dragging {
+    pointer-events: none;
+    transition: none !important;
+    background-color: inherit !important;
 }

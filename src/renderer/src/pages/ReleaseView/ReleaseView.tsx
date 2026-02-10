@@ -1,9 +1,7 @@
 import useFetchData from "@renderer/hooks/useFetchData";
 import {ReleaseDTO} from "../../../../shared/Api";
 import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
-import {useNavigate, useParams} from "react-router-dom";
-import toast from "react-hot-toast";
-import {useEffect, useRef} from "react";
+import {useRef} from "react";
 import {SongList} from "@renderer/components/SongList/SongList";
 import {releaseToSongEntries} from "@renderer/util/parseBackendTracks";
 import {remoteSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
@@ -11,24 +9,14 @@ import s from "./ReleaseView.module.css";
 import {formatTime} from "@renderer/util/timeUtils";
 import classNames from "classnames";
 import OpenableCover from "@renderer/components/OpenableCover/OpenableCover";
+import {useRequiredParam} from "@renderer/hooks/useRequiredParam";
 
 const ReleaseView = () => {
-    const navigate = useNavigate();
-    const {id} = useParams();
-    const mounted = useRef(false);
+    const id = useRequiredParam("id");
     const scrollPageRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (id || mounted.current) return;
-        toast.error("No ID provided for ReleasePage!");
-        navigate(-1);
-        mounted.current = true;
-    }, [id]);
-
-    const {data: release, loading, error} = useFetchData<ReleaseDTO>(`/release/${id}`);
-
+    const { data: release, loading, error } = useFetchData<ReleaseDTO>(`/release/${id}`);
     const songEntries = releaseToSongEntries(release);
-
     const albumLengthSeconds = release?.releaseTracks.map(r => r.track.duration).reduce((partialSum, a) => partialSum + a, 0) ?? 0;
 
     return (

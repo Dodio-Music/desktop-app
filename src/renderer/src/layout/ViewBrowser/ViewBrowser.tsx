@@ -16,6 +16,7 @@ import ForgotPassword from "@renderer/pages/account/ForgotPassword";
 import UploadDashboard from "@renderer/pages/UploadDashboard/UploadDashboard";
 import PlaylistPage from "@renderer/pages/PlaylistPage/PlaylistPage";
 import PlaylistView from "@renderer/pages/PlaylistView/PlaylistView";
+import NotificationsPage from "@renderer/pages/NotificationsPage/NotificationsPage";
 
 const ViewBrowser = () => {
     return (
@@ -36,6 +37,7 @@ const ViewBrowser = () => {
                 <Route path={"/signup"} element={<SignupPage/>}/>
                 <Route path={"/resetPassword"} element={<ForgotPassword/>}/>
                 <Route path={"/account"} element={<ProtectedRoute><AccountPage/></ProtectedRoute>}/>
+                <Route path={"/notifications"} element={<ProtectedRoute><NotificationsPage/></ProtectedRoute>}/>
                 <Route path={"*"} element={<NotFoundPage/>}/>
             </Routes>
         </div>

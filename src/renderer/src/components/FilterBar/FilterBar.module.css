@@ -1,0 +1,28 @@
+.filterWrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 7px;
+}
+
+.filterWrapper div {
+    background-color: #363636;
+    border-radius: 18px;
+    padding: 7px 13px;
+    cursor: pointer;
+    color: #ffffff;
+    transition: 0.05s;
+}
+
+.filterWrapper div:hover {
+    background-color: #414141;
+}
+
+.filterWrapper div p {
+    font-size: 1rem;
+}
+
+.filterWrapper div.filterActive {
+    background-color: #ffffff;
+    color: black;
+}

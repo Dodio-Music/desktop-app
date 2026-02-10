@@ -1,15 +1,24 @@
-import {ListItemIcon, ListItemText, MenuItem } from "@mui/material";
+import {ListItemIcon, ListItemText, MenuItem} from "@mui/material";
 import {ReactNode} from "react";
-import {PlaylistPreviewDTO, ReleasePreviewDTO} from "../../../shared/Api";
-import {playlistActions, releaseActions, songActions} from "@renderer/contextMenus/registry";
+import {PlaylistDTO, PlaylistPreviewDTO, PlaylistRole, PlaylistUserDTO, ReleasePreviewDTO} from "../../../shared/Api";
+import {
+    playlistActions,
+    playlistPreviewActions,
+    playlistUserActions,
+    releaseActions,
+    songActions
+} from "@renderer/contextMenus/registry";
 import {IRole} from "../../../main/web/Typing";
 import {ConfirmFn} from "@renderer/hooks/useConfirm";
 import {RemoteSongEntry} from "../../../shared/TrackInfo";
+import AddToPlaylistMenu from "@renderer/components/SongList/AddToPlaylistMenu";
 
 export type ContextEntity =
     | { type: "release"; data: ReleasePreviewDTO }
-    | { type: "playlist"; data: PlaylistPreviewDTO }
-    | { type: "song"; data: RemoteSongEntry};
+    | { type: "playlistPreview"; data: PlaylistPreviewDTO }
+    | { type: "playlist"; data: PlaylistDTO }
+    | { type: "song"; data: RemoteSongEntry }
+    | { type: "playlistUser"; data: PlaylistUserDTO };
 
 interface ContextRegistryEntry<T> {
     actions: ContextAction<T>[];
@@ -20,15 +29,22 @@ export interface ContextActionHelpers {
     refetch?: () => void;
     role?: IRole;
     username?: string;
+
+    view?: "playlist" | "release" | "library";
+    playlistId?: number;
+    currentUserPlaylistRole?: PlaylistRole;
+    navigate?: (path: string, replace: boolean) => void;
 }
 
 const contextRegistry: {
     [K in ContextEntity["type"]]: ContextRegistryEntry<
         Extract<ContextEntity, { type: K }>["data"]>
 } = {
-    release: { actions: releaseActions },
-    playlist: { actions: playlistActions },
-    song: {actions: songActions}
+    release: {actions: releaseActions},
+    playlistPreview: {actions: playlistPreviewActions},
+    playlist: {actions: playlistActions},
+    song: {actions: songActions},
+    playlistUser: {actions: playlistUserActions}
 };
 
 export interface ContextAction<T> {
@@ -60,21 +76,33 @@ export function renderEntityActions(
 
 export function renderActions<T>(actions: ContextAction<T>[], data: T, close: () => void, helpers: ContextActionHelpers) {
     const filteredActions = actions.filter(a => a.visible?.(data, helpers) ?? true);
-    if(filteredActions.length <= 0) {
+    if (filteredActions.length <= 0) {
         close();
         return <></>;
     }
     return filteredActions
-        .map(action => (
-        <MenuItem
-            key={action.id}
-            onClick={() => {
-                close();
-                action.onClick(data, helpers);
-            }}
-        >
-            {action.icon && <ListItemIcon>{action.icon}</ListItemIcon>}
-            <ListItemText primary={action.label}/>
-        </MenuItem>
-    ))
+        .map(action => {
+            if (action.id === "add-to-playlist") {
+                return (
+                    <AddToPlaylistMenu
+                        key={action.id}
+                        song={data as RemoteSongEntry}
+                        closeParentMenu={close}
+                    />
+                );
+            }
+
+            return (
+                <MenuItem
+                    key={action.id}
+                    onClick={() => {
+                        close();
+                        action.onClick(data, helpers);
+                    }}
+                >
+                    {action.icon && <ListItemIcon>{action.icon}</ListItemIcon>}
+                    <ListItemText primary={action.label} sx={{paddingRight: "5px"}}/>
+                </MenuItem>
+            );
+        });
 }

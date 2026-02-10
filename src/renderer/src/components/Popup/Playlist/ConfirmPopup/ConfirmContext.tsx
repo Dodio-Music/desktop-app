@@ -1,5 +1,5 @@
-import {FC, ReactNode, useCallback, useEffect, useState} from "react";
-import ConfirmPopup from "@renderer/components/Popup/ConfirmPopup";
+import {FC, ReactNode, useCallback, useState} from "react";
+import ConfirmPopup from "@renderer/components/Popup/Playlist/ConfirmPopup/ConfirmPopup";
 import {ConfirmContext, ConfirmFn, ConfirmOptions} from "@renderer/hooks/useConfirm";
 
 export const ConfirmProvider: FC<{ children: ReactNode }> = ({children}) => {
@@ -16,17 +16,6 @@ export const ConfirmProvider: FC<{ children: ReactNode }> = ({children}) => {
         resolver?.(result);
         setState(null);
     }, [resolver]);
-
-    useEffect(() => {
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
-                close(false);
-            }
-        };
-
-        window.addEventListener("keydown", onKeyDown);
-        return () => window.removeEventListener("keydown", onKeyDown);
-    }, [close]);
 
     return (
         <ConfirmContext.Provider value={confirm}>

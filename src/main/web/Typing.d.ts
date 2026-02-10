@@ -12,6 +12,7 @@ export interface IAuthData {
 export type IRole = "USER" | "ADMIN";
 export type AuthStatus = "login" | "signup" | "account";
 export interface AuthInfo {
+    accessToken: string;
     status: AuthStatus,
     role?: IRole,
     username?: string,

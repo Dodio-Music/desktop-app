@@ -1,25 +1,34 @@
 import {useState, MouseEvent} from "react";
 import {ContextEntity} from "@renderer/contextMenus/menuHelper";
 
-export function useContextMenu() {
-    const [state, setState] = useState<{
-        target: ContextEntity;
-        mouseX: number;
-        mouseY: number;
-    } | null>(null);
+export type ContextMenuState = {
+    target: ContextEntity;
+    mouseX: number;
+    mouseY: number;
+} | null;
+
+export type ContextMenuHandle = {
+    state: ContextMenuState,
+    open: (e: MouseEvent, target: ContextEntity) => void;
+    close: () => void;
+}
+
+export function useContextMenu(closeCallback?: () => void) {
+    const [state, setState] = useState<ContextMenuState>(null);
 
     return {
         state,
-        open(e: MouseEvent, target: ContextEntity) {
+        open(e: MouseEvent, target: ContextEntity, pos?: {clientX: number, clientY: number}) {
             e.preventDefault();
             setState({
                 target,
-                mouseX: e.clientX,
-                mouseY: e.clientY
+                mouseX: pos ? pos.clientX : e.clientX,
+                mouseY: pos ? pos.clientY : e.clientY
             });
         },
         close() {
             setState(null);
+            closeCallback?.();
         }
     };
 }

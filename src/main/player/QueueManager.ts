@@ -237,8 +237,8 @@ export class QueueManager extends EventEmitter {
         return this.strategy.getUpcoming(this.state, count);
     }
 
-    notifyInitial() {
-        this.notifyState("repeat-mode", {repeatMode: this.repeatMode});
+    getInitialRedux() {
+        return {repeatMode: this.repeatMode};
     }
 
     private notifyNextTrack() {

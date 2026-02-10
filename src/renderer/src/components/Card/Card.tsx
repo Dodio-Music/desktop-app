@@ -1,6 +1,7 @@
 import {JSX, memo, MouseEvent} from "react";
 import s from "./Card.module.css";
 import {FaPause, FaPlay} from "react-icons/fa6";
+import CoverGrid from "@renderer/components/CoverGrid/CoverGrid";
 
 
 interface CardProps<T> {
@@ -13,13 +14,20 @@ interface CardProps<T> {
     getTitle: (data: T) => string;
     getArtists?: (data: T) => string[];
     getCoverUrl: (data: T) => string;
+    getTiledCovers?: (data: T) => string[] | undefined;
 }
 
-function CardComponent<T>({data, isPlaying, onClick, onContextMenu, onIconClick, getTitle, getCoverUrl, getArtists}: CardProps<T>) {
+function CardComponent<T>({data, isPlaying, onClick, onContextMenu, onIconClick, getTitle, getCoverUrl, getArtists, getTiledCovers}: CardProps<T>) {
+    const covers = getTiledCovers?.(data);
+    const img = covers ?
+        <CoverGrid coverArtUrls={covers}/>
+        :
+        <img alt="cover" className={s.cover} src={`${getCoverUrl(data)}?size=low`} loading="lazy"/>
+
     return (
         <div className={s.card} onClick={() => onClick(data)} onContextMenu={(e) => onContextMenu(e, data)}>
             <div className={s.coverWrapper}>
-                <img alt="cover" className={s.cover} src={`${getCoverUrl(data)}?size=low`} loading="lazy"/>
+                {img}
                 <button className={s.play} onClick={(e) => onIconClick(e, data)}>
                     {isPlaying ?
                         <FaPause size={24} className={s.pauseIcon}/>

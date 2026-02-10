@@ -9,6 +9,8 @@
     bottom: 0;
     left: 0;
     right: 0;
+    opacity: 0;
+    transition: opacity 0.1s;
 }
 
 .popup_inner {
@@ -21,6 +23,10 @@
     padding: 40px;
     background-color: #1b1b1e;
     border-radius: 15px;
+}
+
+.popup_shown {
+    opacity: 1;
 }
 
 .popup_inner > div {
@@ -41,42 +47,12 @@
     font-size: 1.1rem;
 }
 
-.confirmation_buttons {
-    margin-top: 5px;
-    display: flex;
-    justify-content: space-evenly;
-    flex-direction: row;
-    width: 100%;
-    gap: 15px;
+@keyframes show-image {
+    0% {
+        transform: scale(0.6);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
-.confirmation_buttons > button {
-    width: 100%;
-    padding: 15px;
-    border: none;
-    font-size: 1.1rem;
-    border-radius: 8px;
-    font-weight: 700;
-    transition: 0.2s;
-    cursor: pointer;
-}
-
-.confirmation_buttons > button:hover {
-    filter: brightness(0.85);
-}
-
-.confirmation_buttons > button:active, .confirmButtonActive {
-    transform: scale(0.96) !important;
-    transition: 0s !important;
-    filter: brightness(0.5) !important;
-}
-
-.deleteCancel {
-    background-color: #ffffff;
-    color: black;
-}
-
-.deleteConfirm {
-    background-color: #ca1f35;
-    color: white;
-}

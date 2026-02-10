@@ -1,4 +1,4 @@
-import {app, BrowserWindow} from "electron";
+import {app, BrowserWindow, ipcMain} from "electron";
 import path from "path";
 import fs from "fs/promises";
 import {AuthInfo, AuthStatus, IAuthData} from "./web/Typing.js";
@@ -40,7 +40,7 @@ export function updateAuth(new_auth: Partial<IAuthData>) {
             ? "login"
             : "signup";
 
-    authInfoCache = {status: authStatus, role: auth.role, email: auth.email, username: auth.username};
+    authInfoCache = {accessToken: auth.access_token ?? "", status: authStatus, role: auth.role, email: auth.email, username: auth.username};
 
     mainWindow.webContents.send("auth:statusChange", authInfoCache);
 
@@ -56,8 +56,6 @@ export async function setupAuth(window: BrowserWindow) {
     await refreshAuthToken();
 }
 
-export function registerAuthStartup() {
-    if (authInfoCache !== null) {
-        mainWindow.webContents.send("auth:statusChange", authInfoCache);
-    }
-}
+ipcMain.handle("auth:get-initial-redux", () => {
+    return authInfoCache;
+});

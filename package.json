@@ -55,6 +55,7 @@
         "@mui/material": "^7.3.6",
         "@phosphor-icons/react": "^2.1.10",
         "@reduxjs/toolkit": "^2.9.0",
+        "@stomp/stompjs": "^7.3.0",
         "@uidotdev/usehooks": "^2.4.1",
         "@underswing/naudiodon": "github:underswing/naudiodon",
         "axios": "^1.12.2",
