@@ -6,6 +6,9 @@ import {loadEnv} from "vite";
 
 export default defineConfig(({mode}) => {
     const defined_envs = loadEnv(mode, process.cwd(), "DODIO_");
+    const define_envs = Object.fromEntries(
+        Object.entries(defined_envs).map(([k, v]) => [`process.env.${k}`, JSON.stringify(v)])
+    );
     return {
         main: {
             build: {
@@ -15,12 +18,7 @@ export default defineConfig(({mode}) => {
                     }
                 }
             },
-            define: Object.fromEntries(
-                Object.entries(defined_envs).map(([k, v]) => [
-                    `process.env.${k}`,
-                    JSON.stringify(v)
-                ])
-            )
+            define: define_envs
         },
         preload: {
             build: {
@@ -37,7 +35,8 @@ export default defineConfig(({mode}) => {
                     "@renderer": resolve("src/renderer/src")
                 }
             },
-            plugins: [react()]
+            plugins: [react()],
+            define: define_envs
         },
         build: {
             rollupOptions: {

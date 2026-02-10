@@ -37,7 +37,6 @@ const notifications = createSlice({
         builder.addCase(fetchNotificationState.fulfilled, (state, action) => {
             if(action.payload.type === "ok") {
                 state.unreadCount = action.payload.value.unreadNotifications;
-                console.log(action.payload.value);
                 state.initialized = true;
             }
         });

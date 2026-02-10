@@ -25,9 +25,10 @@ store.subscribe(async () => {
 
 export function connectStomp() {
     if (client) return;
+    const wsUrl = (process.env.DODIO_BACKEND_URL ?? "").replace(/^http/, 'ws');
 
     client = new Client({
-        brokerURL: `ws://localhost:8085/ws?t=${ store.getState().auth.info.accessToken}`,
+        brokerURL: `${wsUrl}/ws?t=${ store.getState().auth.info.accessToken}`,
         reconnectDelay: 5000,
         onConnect: () => {
             console.log("STOMP connected");
