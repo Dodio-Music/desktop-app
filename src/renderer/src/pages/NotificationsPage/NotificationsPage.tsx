@@ -15,6 +15,7 @@ import {useNavigate} from "react-router-dom";
 import {useDispatch} from "react-redux";
 import {AppDispatch} from "@renderer/redux/store";
 import {setNotifications} from "@renderer/redux/notificationsSlice";
+import dodo from "../../../../../resources/dodo_whiteondark_512.png";
 
 type FilterOption = "" | "INVITES" | "RELEASES";
 type FilterEntry = { type: FilterOption, label: string };
@@ -81,7 +82,7 @@ const NotificationsPage = () => {
                     </div>
                     <div className={s.noti}>
                         <div className={s.left}>
-                            <div className={s.cover}><CoverGrid coverArtUrls={n.playlistPreview.coverArtUrls}></CoverGrid></div>
+                            <div className={s.cover}><CoverGrid coverArtUrls={n.playlistPreview.coverArtUrls.length > 0 ? n.playlistPreview.coverArtUrls : [dodo]}></CoverGrid></div>
                             <div className={s.playlistMeta}>
                                 <p className={s.title}>{n.playlistPreview.playlistName}</p>
                                 <p className={s.meta}>{songCountPlural(n.playlistPreview.songCount)}</p>

@@ -61,7 +61,7 @@ const PlaylistView = () => {
             role: playlist?.playlistUsers.find(p => p.user.username === info.username)?.role ?? null
         }));
 
-        const subSongs = subscribeToPlaylistSongs(playlist.playlistId);
+        const subSongs = subscribeToPlaylistSongs(playlist.playlistId, playlist.isPublic);
         const subDetails = subscribeToPlaylistDetails(playlist.playlistId);
         return () => {
             subSongs?.unsubscribe();
