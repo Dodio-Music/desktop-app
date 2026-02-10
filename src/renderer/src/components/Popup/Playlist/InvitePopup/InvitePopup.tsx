@@ -1,4 +1,4 @@
-import {FC, JSX, useEffect, useState} from "react";
+import {FC, JSX, useEffect, useRef, useState} from "react";
 import Popup from "@renderer/components/Popup/Popup";
 import s from "./InvitePopup.module.css";
 import {useDebounce} from "@uidotdev/usehooks";
@@ -49,6 +49,7 @@ const InvitePopup: FC<InvitePopupProps> = ({open, onClose, playlistUserUsernames
     const [query, setQuery] = useState("");
     const debouncedQuery = useDebounce(query, 300);
     const {setError, InvalidInputError} = useErrorHandling();
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     const [results, setResults] = useState<{ user: UserPublicDTO, invited: boolean }[]>([]);
 
@@ -94,6 +95,7 @@ const InvitePopup: FC<InvitePopupProps> = ({open, onClose, playlistUserUsernames
         if (!open) return;
 
         void fetchUsers(debouncedQuery);
+        searchInputRef.current?.focus();
     }, [debouncedQuery, open]);
 
     return (
@@ -101,7 +103,7 @@ const InvitePopup: FC<InvitePopupProps> = ({open, onClose, playlistUserUsernames
             <h1>Invite to Playlist</h1>
             <div className={s.searchWrapper}>
                 <label className={s.searchLabel}>Search for user</label>
-                <input onChange={(e) => setQuery(e.currentTarget.value)} placeholder={"Search..."}
+                <input ref={searchInputRef} onChange={(e) => setQuery(e.currentTarget.value)} placeholder={"Search..."}
                        className={s.search}/>
                 <InvalidInputError inputKey="search"/>
             </div>

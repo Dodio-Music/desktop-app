@@ -146,6 +146,7 @@ export interface PlaylistNotificationDTO {
 
 export interface NotificationDTO {
     playlistNotifications: PlaylistNotificationDTO[];
+    unreadNotifications: number;
 }
 
 export interface InviteSearchResponse {

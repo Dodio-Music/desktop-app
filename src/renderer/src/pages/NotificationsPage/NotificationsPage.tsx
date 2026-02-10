@@ -12,6 +12,9 @@ import {errorToString} from "@renderer/util/errorToString";
 import toast from "react-hot-toast";
 import {onNotification} from "@renderer/ws/stompClient";
 import {useNavigate} from "react-router-dom";
+import {useDispatch} from "react-redux";
+import {AppDispatch} from "@renderer/redux/store";
+import {setNotifications} from "@renderer/redux/notificationsSlice";
 
 type FilterOption = "" | "INVITES" | "RELEASES";
 type FilterEntry = { type: FilterOption, label: string };
@@ -24,13 +27,21 @@ const filterOptions: FilterEntry[] = [
 const NotificationsPage = () => {
     const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState<FilterOption>("");
+    const dispatch = useDispatch<AppDispatch>();
 
     const {
         data,
         loading,
         error,
         refetch
-    } = useFetchData<NotificationDTO>(`/notification/all?include=${activeFilter}`);
+    } = useFetchData<NotificationDTO>(`/notification/all?include=${activeFilter}&markAsSeen=true`);
+
+    useEffect(() => {
+        if(data) {
+            dispatch(setNotifications(data.unreadNotifications));
+        }
+        console.log(data);
+    }, [data, dispatch]);
 
     useEffect(() => {
         const off = onNotification(() => refetch());

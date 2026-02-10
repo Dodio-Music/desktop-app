@@ -4,6 +4,7 @@ import authSlice from "./authSlice";
 import shortcutsSlice from "./shortcutsSlice";
 import rendererPlayerSlice from "./rendererPlayerSlice";
 import playlistSlice from "@renderer/redux/playlistSlice";
+import notificationsSlice from "@renderer/redux/notificationsSlice";
 
 export const store = configureStore({
     reducer: {
@@ -11,7 +12,8 @@ export const store = configureStore({
         auth: authSlice,
         shortcuts: shortcutsSlice,
         rendererPlayer: rendererPlayerSlice,
-        playlistSlice: playlistSlice
+        playlistSlice: playlistSlice,
+        notifications: notificationsSlice
     }
 });
 

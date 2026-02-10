@@ -9,9 +9,12 @@ import {useNavigationShortcuts} from "./hooks/useNavigationShortcuts";
 import {Toaster} from "react-hot-toast";
 import {useShortcuts} from "@renderer/hooks/useShortcuts";
 import {ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import CollapsedSidebar from "@renderer/layout/Sidebar/CollapsedSidebar";
 import RealtimeNotificationBridge from "@renderer/components/Bridge/RealtimeNotificationBridge";
+import {useDispatch, useSelector} from "react-redux";
+import {fetchNotificationState, resetNotifications} from "@renderer/redux/notificationsSlice";
+import {AppDispatch, RootState} from "@renderer/redux/store";
 
 function App() {
     const zoomFactor = useZoom();
@@ -20,6 +23,21 @@ function App() {
 
     const leftPanelRef = useRef<ImperativePanelHandle>(null);
     const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
+
+    const username = useSelector((state: RootState) => state.auth.info.username);
+    const initialized = useSelector((state: RootState) => state.notifications.initialized);
+    const dispatch = useDispatch<AppDispatch>();
+
+    useEffect(() => {
+        if (!username) {
+            dispatch(resetNotifications());
+            return;
+        }
+
+        if (!initialized) {
+            dispatch(fetchNotificationState());
+        }
+    }, [username]);
 
     return (
         <>

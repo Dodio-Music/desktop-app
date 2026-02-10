@@ -33,8 +33,9 @@ export const playlistPreviewActions: ContextAction<PlaylistPreviewDTO>[] = [
         icon: <MdDelete size={22}/>,
         visible: (entity, helpers) => entity.owner.username === helpers.username,
         onClick: async (entity, helpers) => {
-            await deletePlaylistAction(entity, helpers);
-            helpers.refetch?.();
+            if(await deletePlaylistAction(entity, helpers)) {
+                helpers.refetch?.();
+            }
         }
     }
 ];
@@ -46,8 +47,9 @@ export const playlistActions: ContextAction<PlaylistDTO>[] = [
         icon: <MdDelete size={22}/>,
         visible: (_, helpers) => helpers.currentUserPlaylistRole === "OWNER",
         onClick: async (entity, helpers) => {
-            await deletePlaylistAction(entity, helpers);
-            helpers.navigate?.("/collection/playlists", true);
+            if(await deletePlaylistAction(entity, helpers)) {
+                helpers.navigate?.("/collection/playlists", true);
+            }
         }
     },
     {

@@ -7,6 +7,8 @@ import {useAuth} from "@renderer/hooks/reduxHooks";
 import {IoMdNotifications, IoMdNotificationsOutline} from "react-icons/io";
 import {IoSettingsOutline, IoSettingsSharp} from "react-icons/io5";
 import {RiDashboardFill, RiDashboardLine} from "react-icons/ri";
+import {useSelector} from "react-redux";
+import {RootState} from "@renderer/redux/store";
 
 interface TitlebarProps {
     zoomLevel: number;
@@ -23,6 +25,7 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
     const [isMaximized, setIsMaximized] = useState(false);
     const {info} = useAuth();
     const navigate = useNavigate();
+    const {initialized, unreadCount} = useSelector((state: RootState) => state.notifications);
 
     useEffect(() => {
         window.electron.isMaximized().then(setIsMaximized);
@@ -69,8 +72,11 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
                     <button onClick={() => window.api.resetZoom()} className={s.zoomContainer}><p className={s.zoomLevel}>{zoomLevel}%</p></button>}
 
                 {navButtons.map((btn, idx) => btn.show ? (
-                    <div key={idx} className={s.item} onClick={() => handleNavigate(btn.path)} id={btn.path === "/settings" ? s.settingsContainer : ""}>
-                        {currentHash === `#${btn.path}` && btn.activeIcon ? btn.activeIcon : btn.icon}
+                    <div key={idx} className={s.itemWrapper}>
+                        <div className={s.item} onClick={() => handleNavigate(btn.path)} id={btn.path === "/settings" ? s.settingsContainer : ""}>
+                            {currentHash === `#${btn.path}` && btn.activeIcon ? btn.activeIcon : btn.icon}
+                        </div>
+                        {btn.path === "/notifications" && initialized && unreadCount > 0 && <div className={s.notifPopover}>{unreadCount}</div>}
                     </div>
                 ) : null)}
 

@@ -94,6 +94,10 @@
     padding: 13px;
 }
 
+.itemWrapper {
+    position: relative;
+}
+
 .item {
     display: flex;
     font-size: 25px;
@@ -134,4 +138,20 @@
 
 #notif {
     stroke-width: 6;
+}
+
+.notifPopover {
+    position: absolute;
+    color: white;
+    background-color: var(--color-accent-primary);
+    font-size: 0.7rem;
+    border-radius: 100px;
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1.1rem;
+    top: 0;
+    right: -4px;
+    pointer-events: none;
 }

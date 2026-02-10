@@ -111,7 +111,11 @@ export async function refreshAuthToken(): Promise<MayError> {
                 access_token: undefined,
                 access_token_expiry: undefined,
                 refresh_token: undefined,
-                refresh_token_expiry: undefined
+                refresh_token_expiry: undefined,
+                email: undefined,
+                hasAccount: true,
+                role: undefined,
+                username: undefined
             });
         } else {
             updateAuth({});
@@ -173,6 +177,9 @@ export default {
             refresh_token_expiry: undefined,
             access_token_expiry: undefined,
             access_token: undefined,
+            role: undefined,
+            username: undefined,
+            email: undefined,
             hasAccount: true
         });
         return null;
