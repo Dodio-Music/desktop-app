@@ -1,7 +1,5 @@
 import {useNavigate} from "react-router-dom";
-import {useEffect, useMemo, useRef, useState} from "react";
-import useFetchData from "@renderer/hooks/useFetchData";
-import {PlaylistDTO} from "../../../../shared/Api";
+import {useMemo, useRef, useState} from "react";
 import classNames from "classnames";
 import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
 import {formatDurationHuman} from "@renderer/util/timeUtils";
@@ -17,15 +15,7 @@ import {MdOutlineEdit} from "react-icons/md";
 import {LuUserRoundPlus, LuUsers} from "react-icons/lu";
 import PlaylistInitPopup from "@renderer/components/Popup/Playlist/PlaylistInitPopup";
 import {useRequiredParam} from "@renderer/hooks/useRequiredParam";
-import {useAuth} from "@renderer/hooks/reduxHooks";
-import {useDispatch, useSelector} from "react-redux";
-import {resetPlaylist, setPlaylist, setPlaylistUser} from "@renderer/redux/playlistSlice";
-import {
-    resubscribeToPlaylist,
-    subscribeToPlaylistDetails,
-    subscribeToPlaylistMeta,
-    subscribeToPlaylistSongs
-} from "@renderer/stomp/stompClient";
+import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
 import {Tooltip} from "@mui/material";
 import InvitePopup from "@renderer/components/Popup/Playlist/InvitePopup/InvitePopup";
@@ -35,61 +25,23 @@ import {useContextMenu} from "@renderer/hooks/useContextMenu";
 import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
 import {renderEntityActions} from "@renderer/contextMenus/menuHelper";
 import {useConfirm} from "@renderer/hooks/useConfirm";
-import {toCapitalized} from "@renderer/util/playlistUtils";
-import toast from "react-hot-toast";
+import {usePlaylistLifecycle} from "@renderer/hooks/playlist/usePlaylistLifecycle";
+import {useNotifyPlaylistChange} from "@renderer/hooks/playlist/useNotifyPlaylistChange";
 
 const PlaylistView = () => {
     const id = useRequiredParam("id");
+    const {data: playlist, loading, error, refetch, playlistUser} = usePlaylistLifecycle(parseInt(id ?? ""));
     const scrollPageRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const ctx = useContextMenu();
     const confirm = useConfirm();
+    const playlistUser = users.find(p => p.user.username === info.username);
 
     const [updateOpen, setUpdateOpen] = useState(false);
     const [addMembersOpen, setAddMembersOpen] = useState(false);
     const [membersOpen, setMembersOpen] = useState(false);
-    const {data: playlist, loading, error, refetch} = useFetchData<PlaylistDTO>(`/playlist/${id}/full`);
 
-    const dispatch = useDispatch();
-    const {orderedIds, songs, users, kicked, playlistName, isPublic, playlistId} = useSelector((state: RootState) => state.playlistSlice);
-    const info = useAuth().info;
-
-    const prevRoleRef = useRef<typeof userRole | null>(null);
-    const prevIsPublicRef = useRef<boolean | null>(null);
-
-    useEffect(() => {
-        if (prevIsPublicRef.current !== null && prevIsPublicRef.current !== isPublic && playlistId !== null && isPublic !== null) {
-            resubscribeToPlaylist(playlistId, isPublic);
-        }
-        prevIsPublicRef.current = isPublic;
-    }, [isPublic, playlistId]);
-
-    useEffect(() => {
-        if (!playlist) return;
-
-        const songsMap = Object.fromEntries(
-            playlist.playlistSongs.map(ps => [ps.playlistSongId, ps])
-        );
-
-        dispatch(setPlaylist({
-            playlistId: playlist.playlistId,
-            orderedIds: playlist.playlistSongs.map(ps => ps.playlistSongId),
-            songs: songsMap,
-            users: playlist.playlistUsers,
-            playlistName: playlist.playlistName,
-            isPublic: playlist.isPublic,
-            kicked: false
-        }));
-
-        const unsubMeta = subscribeToPlaylistMeta(playlist.playlistId);
-        const unsubSongs = subscribeToPlaylistSongs(playlist.playlistId, playlist.isPublic);
-        const unsubDetails = subscribeToPlaylistDetails(playlist.playlistId, playlist.isPublic);
-        return () => {
-            unsubMeta?.();
-            unsubSongs?.();
-            unsubDetails?.();
-        }
-    }, [dispatch, playlist]);
+    const {orderedIds, songs, playlistName, isPublic, playlistId} = useSelector((state: RootState) => state.playlistSlice);
 
     const albumLengthSeconds = useMemo(() => {
         if (!orderedIds || !songs) return 0;
@@ -98,47 +50,21 @@ const PlaylistView = () => {
             .reduce((sum, d) => sum + d, 0);
     }, [orderedIds, songs]);
 
-    const playlistUser = users.find(p => p.user.username === info.username);
-    useEffect(() => {
-        if(!playlistUser) return;
-        dispatch(setPlaylistUser(playlistUser));
-    }, [dispatch, playlistUser]);
-
-    useEffect(() => {
-        return () => {
-            dispatch(resetPlaylist());
-        }
-    }, []);
-
-    const userRole = playlistUser?.role;
-    const canReorder = userRole === "OWNER" || userRole === "EDITOR";
-    const canEdit = userRole === "OWNER";
-    const canInvite = userRole === "OWNER";
+    const permissions = useMemo(() => {
+        const role = playlistUser?.role;
+        return {
+            role,
+            canReorder: role === "OWNER" || role === "EDITOR",
+            canEdit: role === "OWNER",
+            canInvite: role === "OWNER",
+        };
+    }, [playlistUser]);
+    useNotifyPlaylistChange(permissions.role);
 
     const songEntries = useMemo(() => {
         if (!orderedIds || !songs) return [];
         return playlistTracksToSongEntries(orderedIds, songs);
     }, [orderedIds, songs]);
-
-    useEffect(() => {
-        if (!userRole) return;
-
-        const prevRole = prevRoleRef.current;
-        if (prevRole && prevRole !== userRole) {
-            toast.success(
-                `The playlist owner changed your role to ${toCapitalized(userRole)}.`
-            );
-        }
-
-        prevRoleRef.current = userRole;
-    }, [userRole]);
-
-    useEffect(() => {
-        if (!kicked) return;
-
-        toast.error("You were removed from this playlist.");
-        navigate("/collection/playlists", { replace: true });
-    }, [kicked, navigate]);
 
     return (
         <div
@@ -174,17 +100,17 @@ const PlaylistView = () => {
                                     <Tooltip title={"View Members"}>
                                         <button onClick={() => setMembersOpen(true)}><LuUsers/></button>
                                     </Tooltip>
-                                    <Tooltip title={canInvite ? "Invite Users" : "You aren't allowed to invite users!"}>
-                                        <button className={!canInvite ? s.disabled : ""} onClick={() => {
-                                            if (!canInvite) return;
+                                    <Tooltip title={permissions.canInvite ? "Invite Users" : "You aren't allowed to invite users!"}>
+                                        <button className={!permissions.canInvite ? s.disabled : ""} onClick={() => {
+                                            if (!permissions.canInvite) return;
                                             setAddMembersOpen(true);
                                         }}><LuUserRoundPlus/></button>
                                     </Tooltip>
                                     <Tooltip
-                                        title={canEdit ? "Edit Playlist" : "You aren't allowed to change the playlist!"}>
-                                        <button className={!canEdit ? s.disabled : ""}
+                                        title={permissions.canEdit ? "Edit Playlist" : "You aren't allowed to change the playlist!"}>
+                                        <button className={!permissions.canEdit ? s.disabled : ""}
                                                 onClick={() => {
-                                                    if (!canEdit) return;
+                                                    if (!permissions.canEdit) return;
                                                     setUpdateOpen(true);
                                                 }}
                                         >
@@ -215,11 +141,11 @@ const PlaylistView = () => {
                         contextHelpers={{
                             view: "playlist",
                             playlistId: playlist.playlistId,
-                            currentUserPlaylistRole: userRole ?? undefined
+                            currentUserPlaylistRole: permissions.role ?? undefined
                         }}
                         helpers={{
                             navigate,
-                            enableDrag: canReorder,
+                            enableDrag: permissions.canReorder,
                             playlistId: playlist.playlistId,
                             refresh: refetch
                         }}
@@ -247,7 +173,7 @@ const PlaylistView = () => {
                             ctx.state && renderEntityActions(ctx.state.target, ctx.close, {
                                 playlistId: playlist.playlistId,
                                 navigate: (path, replace) => navigate(path, {replace}),
-                                currentUserPlaylistRole: userRole ?? undefined,
+                                currentUserPlaylistRole: permissions.role ?? undefined,
                                 confirm
                             })
                         }
