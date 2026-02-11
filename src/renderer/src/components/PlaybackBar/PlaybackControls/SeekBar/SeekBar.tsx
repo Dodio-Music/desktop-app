@@ -200,11 +200,12 @@ const SeekBar = () => {
     };
 
     return (
-        <div className={s.row} id={s.middleRow}>
-            <p className={s.time}>{formatTime(Math.max(currentTime, 0))}</p>
+        <div className={s.row} id={s.middleRow} data-testid="seekbar-container">
+            <p className={s.time} data-testid="seekbar-time-current">{formatTime(Math.max(currentTime, 0))}</p>
             <div
                 style={{width: seekbarWidth, padding: displayStyle === SeekBarDisplayStyle.WAVEFORM ? 0 : "10px 0"}}
                 className={s.seekBar}
+                data-testid="seekbar-container"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 onMouseDown={handleMouseDown}
@@ -213,11 +214,12 @@ const SeekBar = () => {
                 }}
                 ref={barRef}>
                 <div className={s.barWrapper} style={{height: seekbarHeight + "px"}}>
-                    <canvas className={s.canvas} ref={canvasRef} width={seekbarWidth} height={seekbarHeight + "px"}
+                    <canvas className={s.canvas} data-testid="seekbar-bar" ref={canvasRef} width={seekbarWidth} height={seekbarHeight + "px"}
                             style={displayStyle === SeekBarDisplayStyle.WAVEFORM ? {backgroundColor: "transparent"} : {borderRadius: "2px"}}/>
                     {(isHovering || dragTimeRef.current) && hoverTimeRef.current !== null && (
                         <div
                             className={s.tooltip}
+                            data-testid="seekbar-tooltip"
                             style={{left: hoverX}}
                         >
                             {formatTime(hoverTimeRef.current)}
@@ -225,7 +227,7 @@ const SeekBar = () => {
                     )}
                 </div>
             </div>
-            <p className={s.time}>{formatTime(duration)}</p>
+            <p className={s.time} data-testid={"seekbar-time-total"}>{formatTime(duration)}</p>
         </div>
     );
 };

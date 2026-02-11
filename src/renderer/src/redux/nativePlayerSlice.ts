@@ -17,7 +17,7 @@ const nativePlayerSlice = createSlice({
     name: "player",
     initialState,
     reducers: {
-        updatePlayerState(state, action: PayloadAction<PlayerState>) {
+        updatePlayerState(state, action: PayloadAction<Partial<PlayerState>>) {
             return {...state, ...action.payload};
         },
         setCurrentTrack(state, action: PayloadAction<BaseSongEntry>) {
