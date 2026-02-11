@@ -10,12 +10,13 @@ import {Tooltip} from "@mui/material";
 import {FaUserPlus} from "react-icons/fa6";
 import classNames from "classnames";
 import useErrorHandling from "@renderer/hooks/useErrorHandling";
+import {useSelector} from "react-redux";
+import {RootState} from "@renderer/redux/store";
 
 interface InvitePopupProps {
     open: boolean;
     onClose: () => void;
     playlistId: number;
-    playlistUserUsernames: string[];
 }
 
 function highlight(text: string, query: string): JSX.Element {
@@ -45,11 +46,12 @@ function highlight(text: string, query: string): JSX.Element {
     );
 }
 
-const InvitePopup: FC<InvitePopupProps> = ({open, onClose, playlistUserUsernames, playlistId}) => {
+const InvitePopup: FC<InvitePopupProps> = ({open, onClose, playlistId}) => {
     const [query, setQuery] = useState("");
     const debouncedQuery = useDebounce(query, 300);
     const {setError, InvalidInputError} = useErrorHandling();
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const playlistUserUsernames = useSelector((state: RootState) => state.playlistSlice.users).map(u => u.user.username);
 
     const [results, setResults] = useState<{ user: UserPublicDTO, invited: boolean }[]>([]);
 

@@ -16,16 +16,14 @@ import {toCapitalized} from "@renderer/util/playlistUtils";
 interface InvitePopupProps {
     open: boolean;
     onClose: () => void;
-    playlistUsers: PlaylistUserDTO[];
     currentUser?: PlaylistUserDTO;
     playlistId: number;
-    refetchPlaylist: () => void;
 }
 
-const MembersPopup: FC<InvitePopupProps> = ({open, onClose, playlistUsers, currentUser, playlistId, refetchPlaylist}) => {
+const MembersPopup: FC<InvitePopupProps> = ({open, onClose, currentUser, playlistId}) => {
     const ctx = useContextMenu(() => setExpandedUser(""));
     const [expandedUser, setExpandedUser] = useState("");
-    const currentUserRole = useSelector((state: RootState) => state.playlistSlice.userRole);
+    const users = useSelector((state: RootState) => state.playlistSlice.users);
 
     const handleUserClick = (e: MouseEvent, u: PlaylistUserDTO) => {
         e.stopPropagation();
@@ -47,7 +45,7 @@ const MembersPopup: FC<InvitePopupProps> = ({open, onClose, playlistUsers, curre
             <Popup open={open} onClose={onClose}>
                 <h1>Playlist Members</h1>
                 <div className={si.searchResults} style={{maxHeight: "350px", marginTop: "5px"}}>
-                    {playlistUsers.map(u => {
+                    {users.map(u => {
                         const canEdit = currentUser?.role === "OWNER" && u.role !== "OWNER";
 
                         return (
@@ -62,7 +60,7 @@ const MembersPopup: FC<InvitePopupProps> = ({open, onClose, playlistUsers, curre
                                     </p>
                                 </div>
                                 <div onClick={(e) => canEdit && handleUserClick(e, u)}
-                                     className={classNames(s.role, canEdit && s.changeable)}>{toCapitalized(u.user.username === currentUser?.user.username && currentUserRole ? currentUserRole : u.role)}
+                                     className={classNames(s.role, canEdit && s.changeable)}>{toCapitalized(u.role)}
                                     {
                                         canEdit && (
                                             expandedUser === u.user.username ?
@@ -78,7 +76,7 @@ const MembersPopup: FC<InvitePopupProps> = ({open, onClose, playlistUsers, curre
             {
                 <ContextMenu ctx={ctx}>
                     {
-                        ctx.state && renderEntityActions(ctx.state.target, ctx.close, {playlistId: playlistId, refetch: refetchPlaylist})
+                        ctx.state && renderEntityActions(ctx.state.target, ctx.close, {playlistId: playlistId})
                     }
                 </ContextMenu>
             }

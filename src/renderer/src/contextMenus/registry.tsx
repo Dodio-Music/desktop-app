@@ -154,7 +154,6 @@ export const playlistUserActions: ContextAction<PlaylistUserDTO>[] = [
                 toast.error(errorToString(res.error));
             } else {
                 toast.success(res.value);
-                helpers.refetch?.();
             }
         })
     },
@@ -172,7 +171,6 @@ export const playlistUserActions: ContextAction<PlaylistUserDTO>[] = [
                 toast.error(errorToString(res.error));
             } else {
                 toast.success(res.value);
-                helpers.refetch?.();
             }
         })
     },
@@ -189,7 +187,6 @@ export const playlistUserActions: ContextAction<PlaylistUserDTO>[] = [
                 toast.error(errorToString(res.error));
             } else {
                 toast.success(res.value);
-                helpers.refetch?.();
             }
         })
     }

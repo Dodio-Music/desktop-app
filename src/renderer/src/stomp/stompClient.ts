@@ -1,12 +1,9 @@
 import {Client, StompSubscription} from "@stomp/stompjs";
 import {store} from "@renderer/redux/store";
 import {
-    applyPlaylistRoleUpdate,
-    applyPlaylistSongUpdate,
+    applyPlaylistSongUpdate, applyPlaylistUpdate,
     PlaylistSongUpdateEvent, PlaylistUpdateEvent
 } from "@renderer/redux/playlistSlice";
-import toast from "react-hot-toast";
-import {toCapitalized} from "@renderer/util/playlistUtils";
 import {emitNotification} from "@renderer/stomp/notifications";
 
 const stompState = {
@@ -18,11 +15,13 @@ const stompState = {
 
 const subscriptionIntent = {
     playlistSongs: null as { playlistId: number; isPublic: boolean } | null,
-    playlistDetails: null as number | null
+    playlistDetails: null as { playlistId: number; isPublic: boolean } | null,
+    playlistMeta: null as {playlistId: number} | null
 };
 
 let currentPlaylistSongsSub: StompSubscription | null = null;
 let currentPlaylistDetailsSub: StompSubscription | null = null;
+let currentPlaylistMetaSub: StompSubscription | null = null;
 let currentNotificationSub: StompSubscription | null = null;
 
 function safeUnsubscribe(sub: StompSubscription | null) {
@@ -132,18 +131,10 @@ export function connectStomp() {
             console.log("STOMP reconnected");
             subscribeToNotifications();
 
+            // resubscribe
             const { playlistSongs, playlistDetails } = subscriptionIntent;
-
-            if (playlistSongs) {
-                subscribeToPlaylistSongs(
-                    playlistSongs.playlistId,
-                    playlistSongs.isPublic
-                );
-            }
-
-            if (playlistDetails) {
-                subscribeToPlaylistDetails(playlistDetails);
-            }
+            if (playlistSongs) subscribeToPlaylistSongs(playlistSongs.playlistId, playlistSongs.isPublic);
+            if (playlistDetails) subscribeToPlaylistDetails(playlistDetails.playlistId, playlistDetails.isPublic);
         },
         onStompError: (frame) => {
             console.error("STOMP error", frame.headers["message"]);
@@ -175,26 +166,61 @@ export function subscribeToPlaylistSongs(playlistId: number, isPublic: boolean) 
     return () => safeUnsubscribe(currentPlaylistSongsSub);
 }
 
-export function subscribeToPlaylistDetails(playlistId: number) {
-    subscriptionIntent.playlistDetails = playlistId;
+export function subscribeToPlaylistDetails(playlistId: number, isPublic: boolean) {
+    subscriptionIntent.playlistDetails = { playlistId, isPublic };
 
     if (!stompState.client || !stompState.client.connected) return;
 
     safeUnsubscribe(currentPlaylistDetailsSub);
 
+    const destination = isPublic
+        ? `/topic/playlist/${playlistId}/details`
+        : `/user/queue/playlist/details`;
+
     currentPlaylistDetailsSub = stompState.client.subscribe(
-        `/user/queue/playlist/details`,
+        destination,
         (msg) => {
             const event: PlaylistUpdateEvent = JSON.parse(msg.body);
 
             if (event.playlistId === playlistId) {
-                store.dispatch(applyPlaylistRoleUpdate(event.userRole));
-                toast.success("The playlist owner just changed your member role to " + toCapitalized(event.userRole) + ".");
+                store.dispatch(applyPlaylistUpdate(event));
             }
         }
     );
 
     return () => safeUnsubscribe(currentPlaylistDetailsSub);
+}
+
+export function subscribeToPlaylistMeta(playlistId: number) {
+    subscriptionIntent.playlistMeta = { playlistId };
+
+    if (!stompState.client || !stompState.client.connected) return;
+
+    safeUnsubscribe(currentPlaylistMetaSub);
+
+    currentPlaylistMetaSub = stompState.client.subscribe(
+        `/topic/playlist/${playlistId}/meta`,
+        (msg) => {
+            const event: PlaylistUpdateEvent = JSON.parse(msg.body);
+
+            if (event.playlistId === playlistId) {
+                store.dispatch(applyPlaylistUpdate(event));
+            }
+        }
+    );
+
+    return () => safeUnsubscribe(currentPlaylistDetailsSub);
+}
+
+export function resubscribeToPlaylist(playlistId: number, isPublic: boolean) {
+    subscriptionIntent.playlistSongs = null;
+    subscriptionIntent.playlistDetails = null;
+
+    currentPlaylistSongsSub && currentPlaylistSongsSub.unsubscribe();
+    currentPlaylistDetailsSub && currentPlaylistDetailsSub.unsubscribe();
+
+    subscribeToPlaylistSongs(playlistId, isPublic);
+    subscribeToPlaylistDetails(playlistId, isPublic);
 }
 
 export function subscribeToNotifications() {

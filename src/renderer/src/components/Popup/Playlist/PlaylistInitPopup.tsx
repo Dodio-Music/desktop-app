@@ -13,7 +13,7 @@ import {ApiResult} from "../../../../../shared/Api";
 interface PlaylistInitPopupProps {
     open: boolean;
     close: () => void;
-    refetch: () => void;
+    refetch?: () => void;
 
     title: string;
     submitLabel: string;
@@ -70,11 +70,13 @@ const PlaylistInitPopup: FC<PlaylistInitPopupProps> = ({
             setIsPublic(false);
             close();
             toast.success(res.value);
-            refetch();
+            refetch?.();
         }
 
         setCreationRequestActive(false);
     };
+
+    const sameDataUpdate = initialName === playlistName && initialPublic === isPublic;
 
     return (
         <div>
@@ -108,7 +110,7 @@ const PlaylistInitPopup: FC<PlaylistInitPopupProps> = ({
                     </div>
                     <p className={s.titleInfo}>(These can always be changed later.)</p>
                 </div>
-                <button disabled={!playlistName}
+                <button disabled={!playlistName || sameDataUpdate}
                         className={classNames(s.finalCreate, creationRequestActive && s.creating)}>{submitLabel}
                 </button>
             </Popup>}

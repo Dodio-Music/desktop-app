@@ -19,8 +19,13 @@ import PlaylistInitPopup from "@renderer/components/Popup/Playlist/PlaylistInitP
 import {useRequiredParam} from "@renderer/hooks/useRequiredParam";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import {useDispatch, useSelector} from "react-redux";
-import {setPlaylist} from "@renderer/redux/playlistSlice";
-import {subscribeToPlaylistDetails, subscribeToPlaylistSongs} from "@renderer/stomp/stompClient";
+import {resetPlaylist, setPlaylist, setPlaylistUser} from "@renderer/redux/playlistSlice";
+import {
+    resubscribeToPlaylist,
+    subscribeToPlaylistDetails,
+    subscribeToPlaylistMeta,
+    subscribeToPlaylistSongs
+} from "@renderer/stomp/stompClient";
 import {RootState} from "@renderer/redux/store";
 import {Tooltip} from "@mui/material";
 import InvitePopup from "@renderer/components/Popup/Playlist/InvitePopup/InvitePopup";
@@ -30,6 +35,8 @@ import {useContextMenu} from "@renderer/hooks/useContextMenu";
 import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
 import {renderEntityActions} from "@renderer/contextMenus/menuHelper";
 import {useConfirm} from "@renderer/hooks/useConfirm";
+import {toCapitalized} from "@renderer/util/playlistUtils";
+import toast from "react-hot-toast";
 
 const PlaylistView = () => {
     const id = useRequiredParam("id");
@@ -44,8 +51,18 @@ const PlaylistView = () => {
     const {data: playlist, loading, error, refetch} = useFetchData<PlaylistDTO>(`/playlist/${id}/full`);
 
     const dispatch = useDispatch();
-    const {orderedIds, songs, userRole} = useSelector((state: RootState) => state.playlistSlice);
+    const {orderedIds, songs, users, kicked, playlistName, isPublic, playlistId} = useSelector((state: RootState) => state.playlistSlice);
     const info = useAuth().info;
+
+    const prevRoleRef = useRef<typeof userRole | null>(null);
+    const prevIsPublicRef = useRef<boolean | null>(null);
+
+    useEffect(() => {
+        if (prevIsPublicRef.current !== null && prevIsPublicRef.current !== isPublic && playlistId !== null && isPublic !== null) {
+            resubscribeToPlaylist(playlistId, isPublic);
+        }
+        prevIsPublicRef.current = isPublic;
+    }, [isPublic, playlistId]);
 
     useEffect(() => {
         if (!playlist) return;
@@ -58,15 +75,20 @@ const PlaylistView = () => {
             playlistId: playlist.playlistId,
             orderedIds: playlist.playlistSongs.map(ps => ps.playlistSongId),
             songs: songsMap,
-            role: playlist?.playlistUsers.find(p => p.user.username === info.username)?.role ?? null
+            users: playlist.playlistUsers,
+            playlistName: playlist.playlistName,
+            isPublic: playlist.isPublic,
+            kicked: false
         }));
 
+        const unsubMeta = subscribeToPlaylistMeta(playlist.playlistId);
         const unsubSongs = subscribeToPlaylistSongs(playlist.playlistId, playlist.isPublic);
-        const unsubDetails = subscribeToPlaylistDetails(playlist.playlistId);
+        const unsubDetails = subscribeToPlaylistDetails(playlist.playlistId, playlist.isPublic);
         return () => {
+            unsubMeta?.();
             unsubSongs?.();
             unsubDetails?.();
-        };
+        }
     }, [dispatch, playlist]);
 
     const albumLengthSeconds = useMemo(() => {
@@ -76,7 +98,19 @@ const PlaylistView = () => {
             .reduce((sum, d) => sum + d, 0);
     }, [orderedIds, songs]);
 
-    const playlistUser = (playlist?.playlistUsers.find(p => p.user.username === info.username));
+    const playlistUser = users.find(p => p.user.username === info.username);
+    useEffect(() => {
+        if(!playlistUser) return;
+        dispatch(setPlaylistUser(playlistUser));
+    }, [dispatch, playlistUser]);
+
+    useEffect(() => {
+        return () => {
+            dispatch(resetPlaylist());
+        }
+    }, []);
+
+    const userRole = playlistUser?.role;
     const canReorder = userRole === "OWNER" || userRole === "EDITOR";
     const canEdit = userRole === "OWNER";
     const canInvite = userRole === "OWNER";
@@ -85,6 +119,26 @@ const PlaylistView = () => {
         if (!orderedIds || !songs) return [];
         return playlistTracksToSongEntries(orderedIds, songs);
     }, [orderedIds, songs]);
+
+    useEffect(() => {
+        if (!userRole) return;
+
+        const prevRole = prevRoleRef.current;
+        if (prevRole && prevRole !== userRole) {
+            toast.success(
+                `The playlist owner changed your role to ${toCapitalized(userRole)}.`
+            );
+        }
+
+        prevRoleRef.current = userRole;
+    }, [userRole]);
+
+    useEffect(() => {
+        if (!kicked) return;
+
+        toast.error("You were removed from this playlist.");
+        navigate("/collection/playlists", { replace: true });
+    }, [kicked, navigate]);
 
     return (
         <div
@@ -106,15 +160,15 @@ const PlaylistView = () => {
                                     coverArtUrls={playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : [dodo]}/>
                             </div>
                             <div className={s.releaseInfo}>
-                                <p className={s.publicPrivate}>{playlist.isPublic ? "Public Playlist" : "Private Playlist"}</p>
+                                <p className={s.publicPrivate}>{isPublic ? "Public Playlist" : "Private Playlist"}</p>
                                 <div>
-                                    <p className={s.releaseTitle}>{playlist.playlistName}</p>
+                                    <p className={s.releaseTitle}>{playlistName}</p>
                                 </div>
                                 <div className={s.horiz}>
                                     <p className={s.owner}><FaRegCircleUser/><span
                                         className={s.link}>{playlist.owner.displayName}</span></p>
                                     <GoDotFill size={9}/>
-                                    <p className={s.tracksInfo}>{playlist.playlistSongs.length} song{playlist.playlistSongs.length !== 1 && "s"}, {formatDurationHuman(albumLengthSeconds)}</p>
+                                    <p className={s.tracksInfo}>{orderedIds.length} song{orderedIds.length !== 1 && "s"}, {formatDurationHuman(albumLengthSeconds)}</p>
                                 </div>
                                 <div className={s.optionBar}>
                                     <Tooltip title={"View Members"}>
@@ -171,22 +225,22 @@ const PlaylistView = () => {
                         }}
                     />
 
-                    <PlaylistInitPopup open={updateOpen} close={() => setUpdateOpen(false)} refetch={refetch}
+                    <PlaylistInitPopup open={updateOpen} close={() => setUpdateOpen(false)}
                                        title={"Update your Playlist"}
                                        onSubmit={(data) => window.api.authRequest<string>("patch", "/playlist", data)}
-                                       playlistId={playlist?.playlistId}
-                                       initialName={playlist?.playlistName}
-                                       initialPublic={playlist?.isPublic}
+                                       playlistId={playlistId ?? undefined}
+                                       initialName={playlistName ?? undefined}
+                                       initialPublic={isPublic ?? undefined}
                                        submitLabel={"Update Playlist"}/>
 
                     <InvitePopup open={addMembersOpen} onClose={() => setAddMembersOpen(false)}
-                                 playlistUserUsernames={playlist?.playlistUsers.map(u => u.user.username)}
                                  playlistId={playlist?.playlistId}
                     />
 
                     <MembersPopup open={membersOpen} onClose={() => setMembersOpen(false)}
-                                  playlistUsers={playlist.playlistUsers} currentUser={playlistUser}
-                                  playlistId={playlist.playlistId} refetchPlaylist={refetch}/>
+                                  playlistId={playlist.playlistId}
+                                  currentUser={playlistUser}
+                    />
 
                     <ContextMenu ctx={ctx}>
                         {
