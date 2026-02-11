@@ -105,6 +105,11 @@ export interface PlaylistPreviewDTO {
     coverArtUrls: string[];
 }
 
+export interface PlaylistMinmalDTO {
+    playlistId: number;
+    playlistName: string;
+}
+
 export type PlaylistRole = "OWNER" | "EDITOR" | "VIEWER";
 
 export interface ReleaseLightDTO {

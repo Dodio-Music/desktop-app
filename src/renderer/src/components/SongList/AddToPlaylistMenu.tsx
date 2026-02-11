@@ -1,5 +1,5 @@
 import {RemoteSongEntry} from "../../../../shared/TrackInfo";
-import {PlaylistPreviewDTO} from "../../../../shared/Api";
+import {PlaylistMinmalDTO} from "../../../../shared/Api";
 import {ListItemIcon, ListItemText, MenuItem, Paper, Popper} from "@mui/material";
 import {IoAddOutline} from "react-icons/io5";
 import {useEffect, useState} from "react";
@@ -13,7 +13,7 @@ interface AddToPlaylistMenuProps {
 }
 
 const AddToPlaylistMenu = ({closeParentMenu, song}: AddToPlaylistMenuProps) => {
-    const [playlists, setPlaylists] = useState<PlaylistPreviewDTO[]>([]);
+    const [playlists, setPlaylists] = useState<PlaylistMinmalDTO[]>([]);
     const [loading, setLoading] = useState(false);
     const [submenuAnchor, setSubmenuAnchor] = useState<HTMLElement | null>(null);
     const [hoveringParent, setHoveringParent] = useState(false);
@@ -25,7 +25,7 @@ const AddToPlaylistMenu = ({closeParentMenu, song}: AddToPlaylistMenuProps) => {
         if (hoveringParent && playlists.length === 0 && !loading) {
             const fetchPlaylists = async () => {
                 setLoading(true);
-                const data = await window.api.authRequest<PlaylistPreviewDTO[]>("get", "/playlist/library/by-permission?permissions=ADD_SONG");
+                const data = await window.api.authRequest<PlaylistMinmalDTO[]>("get", "/playlist/library/by-permission?permissions=ADD_SONG");
                 if (data.type === "error") {
                     toast.error(errorToString(data.error));
                 } else {

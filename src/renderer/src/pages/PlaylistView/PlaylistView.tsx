@@ -41,7 +41,7 @@ const PlaylistView = () => {
     const [updateOpen, setUpdateOpen] = useState(false);
     const [addMembersOpen, setAddMembersOpen] = useState(false);
     const [membersOpen, setMembersOpen] = useState(false);
-    const {data: playlist, loading, error, refetch} = useFetchData<PlaylistDTO>(`/playlist/${id}/songs`);
+    const {data: playlist, loading, error, refetch} = useFetchData<PlaylistDTO>(`/playlist/${id}/full`);
 
     const dispatch = useDispatch();
     const {orderedIds, songs, userRole} = useSelector((state: RootState) => state.playlistSlice);
