@@ -138,6 +138,7 @@
 }
 
 .accountButton {
+    display: flex;
 
 }
 
@@ -174,4 +175,56 @@
 #delete {
     background-color: #ca1f35;
     color: white;
+}
+
+.manageAccountContainer{
+    padding-bottom: 5px;
+
+}
+
+.deleteContainer{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.userInfoContainer{
+    display: flex;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.accountInfoContainer{
+    display: flex;
+    width: 80%;
+    flex-direction: row;
+    justify-content: space-around;
+
+    background-color: #262424;
+    border-radius: 5px;
+    margin: 0 auto;
+
+    /*border-top: 5px solid var(--color-border);*/
+    /*border-bottom: 5px solid var(--color-border);*/
+}
+
+.userAccountSettingsContainer{
+    display: flex;
+    margin-top: 20px;
+    margin-bottom: 10px;
+
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    padding: 15px;
+
+    background: rgba(255, 0, 0, 0.11);
+
+    border-top: var(--color-border) solid 2px ;
+    border-top: rgba(255, 0, 0, 0.11) solid 2px ;
 }

@@ -63,7 +63,7 @@
 
 /* themes */
 :root:has(.appContainer[data-theme="dark"]) {
-    --color-bg: #111112;
+    --color-bg: #404042;
     --color-bar: #070707;
     --color-panel: #171719;
     --color-text-primary: #E5E5E7;
