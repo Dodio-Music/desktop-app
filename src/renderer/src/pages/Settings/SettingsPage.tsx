@@ -4,7 +4,7 @@ import {latencyPresets} from "../../../../shared/latencyPresets.js";
 const SettingsPage = () => {
 
     return (
-        <div className={`pageWrapper pageWrapperFullHeight ${s.wrapper}`}>
+        <div className={`pageWrapper ${s.wrapper}`}>
             <h1>Settings</h1>
             <h2>Playback</h2>
             <div className={s.setting}>

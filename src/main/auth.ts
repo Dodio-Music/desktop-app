@@ -41,7 +41,7 @@ export function updateAuth(new_auth: Partial<IAuthData>) {
             ? "login"
             : "signup";
 
-    authInfoCache = {accessToken: auth.access_token, accessTokenExpiry: auth.access_token_expiry?.toISOString(), status: authStatus, role: auth.role, email: auth.email, username: auth.username};
+    authInfoCache = {accessToken: auth.access_token, accessTokenExpiry: auth.access_token_expiry?.toISOString(), status: authStatus, role: auth.role, email: auth.email, username: auth.username, displayname: auth.displayname};
 
     mainWindow.webContents.send("auth:statusChange", authInfoCache);
 

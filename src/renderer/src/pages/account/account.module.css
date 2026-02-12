@@ -227,13 +227,9 @@
 
 /*experiemental*/
 .card {
-    background-color: #2b2d31;
     border-radius: 8px;
-    padding: 16px;
     margin-bottom: 20px;
     width: 100%;
-    max-width: 720px;
-
     margin-left: auto;
     margin-right: auto;
 
@@ -241,12 +237,9 @@
 }
 
 .cardSecurity {
-    background-color: #2b2d31;
     border-radius: 8px;
-    padding: 16px;
     margin-bottom: 20px;
     width: 100%;
-    max-width: 720px;
 
     margin-left: auto;
     margin-right: auto;
@@ -266,12 +259,9 @@
 }
 
 .cardTitle {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #b5bac1;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 15px;
 }
 
 .infoRow {
@@ -288,8 +278,8 @@
 
 .label {
     display: block;
-    font-size: 0.75rem;
-    color: #949ba4;
+    color: #c0c0c0;
+    font-size: 1.1rem;
     margin-bottom: 4px;
 }
 
@@ -305,15 +295,14 @@
     padding: 6px 12px;
     border-radius: 4px;
     cursor: pointer;
+    transition: ease-in-out 0.1s;
+    font-size: 1rem;
 }
 
 .secondary:hover {
-    background-color: #3f4147;
+    background-color: var(--color-accent-hover);
 }
-.danger {
-    border: 1px solid #f23f43;
-    background-color: #2b2d31;
-}
+
 
 .dangerTitle {
     color: #f23f43;
@@ -323,8 +312,8 @@
 }
 
 .dangerText {
-    font-size: 0.85rem;
-    color: #b5bac1;
+    color: #c0c0c0;
+    font-size: 1.1rem;
     margin-bottom: 12px;
 }
 
