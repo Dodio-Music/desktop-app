@@ -23,6 +23,7 @@ async function loadAuth(): Promise<IAuthData> {
             access_token: parsed.access_token,
             email: parsed.email,
             username: parsed.username,
+            displayname: parsed.displayname,
             role: parsed.role
         };
     } catch {

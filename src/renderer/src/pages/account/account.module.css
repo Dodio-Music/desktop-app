@@ -138,17 +138,12 @@
 }
 
 .accountButton {
-    display: flex;
-
-}
-
-.accountButton {
     cursor: pointer;
     transition: 0.2s;
     background-color: white;
     color: black;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.95rem;
     padding: 10px;
     border: none;
     border-radius: 5px;
@@ -227,4 +222,129 @@
 
     border-top: var(--color-border) solid 2px ;
     border-top: rgba(255, 0, 0, 0.11) solid 2px ;
+}
+
+
+/*experiemental*/
+.card {
+    background-color: #2b2d31;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 720px;
+
+    margin-left: auto;
+    margin-right: auto;
+
+
+}
+
+.cardSecurity {
+    background-color: #2b2d31;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 720px;
+
+    margin-left: auto;
+    margin-right: auto;
+
+}
+
+.accountButton {
+    display: flex;
+    width: fit-content;
+    margin: 0;
+}
+
+.securityContainerButton{
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.cardTitle {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #b5bac1;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.infoRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-top: 1px solid #3f4147;
+}
+
+.infoRow:first-of-type {
+    border-top: none;
+}
+
+.label {
+    display: block;
+    font-size: 0.75rem;
+    color: #949ba4;
+    margin-bottom: 4px;
+}
+
+.value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: white;
+}
+.secondary {
+    background: transparent;
+    border: 1px solid #4e5058;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.secondary:hover {
+    background-color: #3f4147;
+}
+.danger {
+    border: 1px solid #f23f43;
+    background-color: #2b2d31;
+}
+
+.dangerTitle {
+    color: #f23f43;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.dangerText {
+    font-size: 0.85rem;
+    color: #b5bac1;
+    margin-bottom: 12px;
+}
+
+#delete {
+    background-color: #f23f43;
+    color: white;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-weight: 600;
+}
+
+.deleteButton{
+    cursor: pointer;
+    transition: 0.2s;
+    background-color: #f23f43;
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    gap: 5px;
 }

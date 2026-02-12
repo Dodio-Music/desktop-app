@@ -101,6 +101,7 @@ export async function refreshAuthToken(): Promise<MayError> {
             access_token_expiry: new Date(res.data.accessTokenExpirationDate),
             role: res.data.role,
             username: res.data.username,
+            displayname: res.data.displayName,
             email: res.data.email
         });
         return null;
@@ -115,7 +116,8 @@ export async function refreshAuthToken(): Promise<MayError> {
                 email: undefined,
                 hasAccount: true,
                 role: undefined,
-                username: undefined
+                username: undefined,
+                displayname: undefined
             });
         } else {
             updateAuth({});
@@ -129,6 +131,7 @@ interface SignInResponse {
     id: number,
     type: string,
     username: string,
+    displayName: string,
     email: string,
     accessToken: string,
     accessTokenExpirationDate: string,
@@ -141,6 +144,7 @@ interface RefreshTokenResponse {
     accessToken: string,
     accessTokenExpirationDate: string,
     username: string,
+    displayName: string,
     email: string,
     role: IRole
 }
@@ -164,6 +168,7 @@ export default {
                 refresh_token_expiry: new Date(res.data.refreshTokenExpirationDate),
                 role: res.data.role,
                 username: res.data.username,
+                displayname: res.data.displayName,
                 email: res.data.email
             });
             return null;
@@ -179,6 +184,7 @@ export default {
             access_token: undefined,
             role: undefined,
             username: undefined,
+            displayname: undefined,
             email: undefined,
             hasAccount: true
         });

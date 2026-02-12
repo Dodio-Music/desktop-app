@@ -6,6 +6,7 @@ export interface IAuthData {
     refresh_token_expiry?: Date,
     role?: IRole;
     username?: string;
+    displayname?: string;
     email?: string;
 }
 
@@ -17,5 +18,6 @@ export interface AuthInfo {
     status: AuthStatus,
     role?: IRole,
     username?: string,
+    displayname?: string,
     email?: string
 }
