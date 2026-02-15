@@ -3,9 +3,9 @@ import useFetchData from "@renderer/hooks/useFetchData";
 import {PlaylistPreviewDTO, ReleaseDTO, ReleasePreviewDTO} from "../../../../shared/Api";
 import {releaseToSongEntries} from "@renderer/util/parseBackendTracks";
 import {useNavigate} from "react-router-dom";
-import {MouseEvent, useCallback, useEffect, useRef, useState} from "react";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
+import {MouseEvent, useCallback, useEffect, useRef} from "react";
+import {useDispatch, useSelector} from "react-redux";
+import {AppDispatch, RootState} from "@renderer/redux/store";
 import {isRemoteSong} from "../../../../shared/TrackInfo";
 import toast from "react-hot-toast";
 import {useAuth} from "@renderer/hooks/reduxHooks";
@@ -18,12 +18,12 @@ import CardSkeleton from "@renderer/components/Card/CardSkeleton";
 import dodo from "../../../../../resources/dodo_whiteondark_512.png";
 import classNames from "classnames";
 import ToggleSectionButton from "@renderer/pages/HomePage/ToggleSectionButton";
-
-type Section = "releases" | "playlists";
+import {homepageToggleExpandedSection} from "@renderer/redux/uiSlice";
 
 const HomePage = () => {
     const navigate = useNavigate();
-    const [expandSection, setexpandSection] = useState<Record<Section, boolean>>({playlists: false, releases: false});
+    const expandedSection = useSelector((state: RootState) => state.uiSlice.homepage.expandedSections);
+    const dispatch = useDispatch<AppDispatch>();
     const {
         data: dataReleases,
         loading: loadingReleases,
@@ -86,11 +86,11 @@ const HomePage = () => {
             <div className={s.heading}>
                 <h1>New Releases</h1>
                 <ToggleSectionButton
-                    expanded={expandSection.releases}
-                    onToggle={() => setexpandSection(prev => ({...prev, releases: !prev.releases}))}
+                    expanded={expandedSection.releases}
+                    onToggle={() => dispatch(homepageToggleExpandedSection("releases"))}
                 />
             </div>
-            <div className={classNames(s.scroller, expandSection.releases && s.scrollerShow, errorReleases && s.scrollerError)}>
+            <div className={classNames(s.scroller, expandedSection.releases && s.scrollerShow, errorReleases && s.scrollerError)}>
                 {errorReleases && !dataReleases ?
                     <div className={s.error}>
                         <p>{`Error: ${errorReleases}`}</p>
@@ -122,11 +122,11 @@ const HomePage = () => {
             <div className={s.heading}>
                 <h1>Discover Playlists</h1>
                 <ToggleSectionButton
-                    expanded={expandSection.playlists}
-                    onToggle={() => setexpandSection(prev => ({...prev, playlists: !prev.playlists}))}
+                    expanded={expandedSection.playlists}
+                    onToggle={() => dispatch(homepageToggleExpandedSection("playlists"))}
                 />
             </div>
-            <div className={classNames(s.scroller, expandSection.playlists && s.scrollerShow, errorPlaylists && s.scrollerError)}>
+            <div className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorPlaylists && s.scrollerError)}>
                 {errorPlaylists && !dataPlaylists ?
                     <div className={s.error}>
                         <p>{`Error: ${errorPlaylists}`}</p>
@@ -145,7 +145,7 @@ const HomePage = () => {
                               isPlaying={false}
                               onIconClick={() => {
                               }}
-                              onContextMenu={(e, data) => ctx.open(e, {type: "playlist", data})}
+                              onContextMenu={(e, data) => ctx.open(e, {type: "playlist", data: {...data, playlistUsers: [], playlistSongs: []}})}
                               getTitle={p => p.playlistName}
                               getArtists={c => [c.owner.displayName]}
                               getCoverUrl={() => dodo}

@@ -5,6 +5,7 @@ import shortcutsSlice from "./shortcutsSlice";
 import rendererPlayerSlice from "./rendererPlayerSlice";
 import playlistSlice from "@renderer/redux/playlistSlice";
 import notificationsSlice from "@renderer/redux/notificationsSlice";
+import uiSlice from "@renderer/redux/uiSlice";
 
 export const store = configureStore({
     reducer: {
@@ -13,7 +14,8 @@ export const store = configureStore({
         shortcuts: shortcutsSlice,
         rendererPlayer: rendererPlayerSlice,
         playlistSlice: playlistSlice,
-        notifications: notificationsSlice
+        notifications: notificationsSlice,
+        uiSlice: uiSlice
     }
 });
 
