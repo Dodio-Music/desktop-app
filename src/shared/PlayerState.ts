@@ -1,5 +1,5 @@
 import {BaseSongEntry} from "./TrackInfo.js";
-import {QueueState} from "../main/player/QueueManager.ts";
+import {QueueState} from "../main/player/QueueManager";
 
 export interface PlayerState {
     currentTrack: BaseSongEntry | null;

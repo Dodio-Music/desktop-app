@@ -1,6 +1,6 @@
 import {act, renderHook} from '@testing-library/react'
 import {afterEach, beforeEach, describe, expect, Mock, test, vi} from 'vitest'
-import {useShortcuts} from '../../../src/renderer/src/hooks/useShortcuts'
+import {useShortcuts} from '../../../src/renderer/src/hooks/layout/useShortcuts'
 import {Provider} from 'react-redux'
 import {configureStore, Store} from '@reduxjs/toolkit'
 import rendererPlayerSlice from '../../../src/renderer/src/redux/rendererPlayerSlice'

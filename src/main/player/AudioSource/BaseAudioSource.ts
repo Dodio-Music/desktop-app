@@ -7,7 +7,10 @@ import {EventEmitter} from "node:events";
 import _ffmpegPath from "ffmpeg-static";
 import path from "path";
 
-const ffmpegRawPath = (typeof _ffmpegPath === "string") ? _ffmpegPath : _ffmpegPath.default ?? "";
+const ffmpegRawPath =
+    typeof _ffmpegPath === "string"
+        ? _ffmpegPath
+        : ((_ffmpegPath as unknown as { default?: string })?.default ?? "");
 
 export interface BaseAudioSourceInit {
     id: string;

@@ -8,7 +8,7 @@ import IpcRenderer = Electron.IpcRenderer;
 import {IAllPreferences} from "../main/preferences.js";
 import {UploadProgress, UploadResponse} from "../main/dashboard.js";
 import {AuthInfo} from "../main/web/Typing.js";
-import {QueueState} from "../main/player/QueueManager.ts";
+import {QueueState} from "../main/player/QueueManager";
 
 export interface CustomWindowControls {
     minimize: () => void;

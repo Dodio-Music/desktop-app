@@ -36,11 +36,19 @@ test("convert release dto to remote song entries", () => {
                 artists: [],
                 releaseType: "",
                 releaseTracks: [{
-                    releaseTrackId: "", track: {
+                    releaseTrackId: "",
+                    release: {
+                        releaseId: "abc",
+                        releaseName: "A Release",
+                        coverArtUrl: "",
+                        releaseDate: new Date(2025, 10, 10).toISOString()
+                    },
+                    track: {
                         trackId: "",
                         title: "",
                         views: 0,
                         duration: 0,
+                        waveformUrl: "",
                         artists: ["abc"],
                         sources: [{
                             sourceId: "sourceid-1",
@@ -51,10 +59,13 @@ test("convert release dto to remote song entries", () => {
                 }]
             },
             expected: [{
+                "releaseTrackId": "",
+                "context": {"type": "release", "id": "abc", "name": "A Release", url: ""},
                 "album": "A Release",
                 "artists": ["abc"],
                 "duration": 0,
                 "id": "",
+                "waveformUrl": "",
                 "picture": "",
                 "releaseDate": "2025-11-09T23:00:00.000Z",
                 "releaseId": "abc",

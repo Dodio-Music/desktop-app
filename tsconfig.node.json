@@ -4,12 +4,11 @@
         "electron.vite.config.*",
         "src/main/**/*",
         "src/preload/**/*",
-        "src/shared/**/*",
-        "tests/**/*"
+        "src/shared/**/*"
     ],
     "compilerOptions": {
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
         "composite": true,
         "types": [
             "electron-vite/node",
