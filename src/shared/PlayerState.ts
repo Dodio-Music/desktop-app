@@ -1,4 +1,5 @@
 import {BaseSongEntry} from "./TrackInfo.js";
+import {QueueState} from "../main/player/QueueManager.ts";
 
 export interface PlayerState {
     currentTrack: BaseSongEntry | null;
@@ -9,6 +10,7 @@ export interface PlayerState {
     latency: number;
     playbackRunning: boolean;
     repeatMode: RepeatMode | null;
+    queue: QueueState | null;
 }
 
 export interface WaveformData {

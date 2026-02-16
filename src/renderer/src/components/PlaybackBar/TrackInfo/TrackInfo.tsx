@@ -7,6 +7,7 @@ import {RootState} from "@renderer/redux/store";
 import {useCallback, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import OpenableCover from "@renderer/components/OpenableCover/OpenableCover";
+import {MdQueueMusic} from "react-icons/md";
 
 const TrackInfo = () => {
     const navigate = useNavigate();
@@ -48,6 +49,15 @@ const TrackInfo = () => {
         navigate(path, {replace, state: {scroll: {scrollToId: activeTrack.id, timestamp: Date.now()}}});
     }, [activeTrack, navigate]);
 
+    const handleContextClick = useCallback(() => {
+        if (!activeTrack) return;
+
+        const url = activeTrack.context.url;
+        const replace = window.location.hash === `#${url}`;
+
+        navigate(url, {replace, state: {scroll: {scrollToId: activeTrack.id, timestamp: Date.now()}}});
+    }, [activeTrack, navigate]);
+
     let thumbnail = placeholder;
     if (activeTrack && isRemoteSong(activeTrack) && activeTrack.picture) {
         thumbnail = `${activeTrack.picture}?size=low`;
@@ -74,6 +84,7 @@ const TrackInfo = () => {
                                 </span>
                             ))}
                         </p>
+                        <p className={s.playingFrom}><MdQueueMusic size={18} /><span className={s.link} onClick={handleContextClick}> {activeTrack.context.name}</span></p>
                     </div>
                 </>
             )}

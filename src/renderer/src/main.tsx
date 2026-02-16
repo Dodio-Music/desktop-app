@@ -3,7 +3,7 @@ import {createRoot} from "react-dom/client";
 import App from "./App";
 import {HashRouter} from "react-router-dom";
 import {store} from "./redux/store";
-import {updatePlayerState, setCurrentTrack, setPendingData, setRepeatMode} from "./redux/nativePlayerSlice";
+import {updatePlayerState, setCurrentTrack, setPendingData, setRepeatMode, setQueue} from "./redux/nativePlayerSlice";
 import {Provider} from "react-redux";
 import {setAuthInfo} from "@renderer/redux/authSlice";
 import {isLocalSong} from "../../shared/TrackInfo";
@@ -68,6 +68,10 @@ window.api.onPlayerEvent((event) => {
             break;
         }
     }
+});
+
+window.api.onQueueUpdate((event) => {
+    store.dispatch(setQueue(event));
 });
 
 window.api.onAuthUpdate((info) => {

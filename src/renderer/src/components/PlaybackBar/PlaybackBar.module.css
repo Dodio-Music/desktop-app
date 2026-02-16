@@ -176,6 +176,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    gap: 5px;
 }
 
 .trackInfoMeta p {
@@ -196,11 +197,21 @@
     font-size: 1rem;
     color: white;
     min-width: 0;
+    width: fit-content;
 }
 
 .trackArtists {
     font-size: 0.9rem;
-    color: #bfbfbf;
+    color: var(--secondary);
+    margin-top: -5px;
+}
+
+.playingFrom {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    color: #ffffff;
 }
 
 .forward, .backward {

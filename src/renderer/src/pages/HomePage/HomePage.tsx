@@ -1,13 +1,10 @@
 import s from "./HomePage.module.css";
 import useFetchData from "@renderer/hooks/useFetchData";
-import {PlaylistPreviewDTO, ReleaseDTO, ReleasePreviewDTO} from "../../../../shared/Api";
-import {releaseToSongEntries} from "@renderer/util/parseBackendTracks";
+import {PlaylistPreviewDTO, ReleasePreviewDTO} from "../../../../shared/Api";
 import {useNavigate} from "react-router-dom";
-import {MouseEvent, useCallback, useEffect, useRef} from "react";
+import {useCallback, useEffect, useRef} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch, RootState} from "@renderer/redux/store";
-import {isRemoteSong} from "../../../../shared/TrackInfo";
-import toast from "react-hot-toast";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import Card from "@renderer/components/Card/Card";
 import {useContextMenu} from "@renderer/hooks/useContextMenu";
@@ -19,6 +16,7 @@ import dodo from "../../../../../resources/dodo_whiteondark_512.png";
 import classNames from "classnames";
 import ToggleSectionButton from "@renderer/pages/HomePage/ToggleSectionButton";
 import {homepageToggleExpandedSection} from "@renderer/redux/uiSlice";
+import {useLoadCollection} from "@renderer/hooks/useLoadCollection";
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -42,39 +40,12 @@ const HomePage = () => {
     const userPaused = useSelector((state: RootState) => state.nativePlayer.userPaused);
     const authInfo = useAuth().info;
 
-    const trackRef = useRef(track);
     const userPausedRef = useRef(userPaused);
-
-    useEffect(() => {
-        trackRef.current = track;
-    }, [track]);
+    const loadCollection = useLoadCollection();
 
     useEffect(() => {
         userPausedRef.current = userPaused;
     }, [userPaused]);
-
-    const handleIconClick = useCallback(
-        async (e: MouseEvent, releasePrev: ReleasePreviewDTO) => {
-            e.stopPropagation();
-
-            const track = trackRef.current;
-
-            if (track && isRemoteSong(track) && track.releaseId === releasePrev.releaseId) {
-                window.api.pauseOrResume();
-                return;
-            }
-
-            const req = await window.api.authRequest("get", `/release/${releasePrev.releaseId}`);
-            if (req.type === "error") {
-                toast.error("Couldn't load release!");
-                return;
-            }
-
-            const releaseTracks = releaseToSongEntries(req.value as ReleaseDTO);
-            window.api.loadTrackRemote(releaseTracks[0], releaseTracks);
-        },
-        []
-    );
 
     const handleClick = useCallback(
         (release: ReleasePreviewDTO) => navigate(`/release/${release.releaseId}`),
@@ -90,7 +61,8 @@ const HomePage = () => {
                     onToggle={() => dispatch(homepageToggleExpandedSection("releases"))}
                 />
             </div>
-            <div className={classNames(s.scroller, expandedSection.releases && s.scrollerShow, errorReleases && s.scrollerError)}>
+            <div
+                className={classNames(s.scroller, expandedSection.releases && s.scrollerShow, errorReleases && s.scrollerError)}>
                 {errorReleases && !dataReleases ?
                     <div className={s.error}>
                         <p>{`Error: ${errorReleases}`}</p>
@@ -103,11 +75,13 @@ const HomePage = () => {
                         ))
                         :
                         dataReleases.map(t => {
-                            const isPlaying = track && isRemoteSong(track) && track.releaseId === t.releaseId && !userPaused;
+                            const isPlaying = track?.context.type === "release" && track?.context.id === t.releaseId && !userPaused;
 
                             return <Card
                                 data={t}
-                                onIconClick={handleIconClick}
+                                onIconClick={(e, data) => {
+                                    e.stopPropagation();
+                                    void loadCollection(data.releaseId, "release")}}
                                 key={t.releaseName}
                                 isPlaying={isPlaying}
                                 onClick={handleClick}
@@ -126,7 +100,8 @@ const HomePage = () => {
                     onToggle={() => dispatch(homepageToggleExpandedSection("playlists"))}
                 />
             </div>
-            <div className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorPlaylists && s.scrollerError)}>
+            <div
+                className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorPlaylists && s.scrollerError)}>
                 {errorPlaylists && !dataPlaylists ?
                     <div className={s.error}>
                         <p>{`Error: ${errorPlaylists}`}</p>
@@ -134,24 +109,30 @@ const HomePage = () => {
                     </div>
                     :
                     (loadingPlaylists || !dataPlaylists)
-                    ? Array.from({length: 12}).map((_, i) => (
-                        <CardSkeleton key={i}/>
-                    ))
-                    :
-                    dataPlaylists.map(playlist =>
-                        <Card key={playlist.playlistId}
-                              data={playlist}
-                              onClick={() => navigate(`/playlist/${playlist.playlistId}`)}
-                              isPlaying={false}
-                              onIconClick={() => {
-                              }}
-                              onContextMenu={(e, data) => ctx.open(e, {type: "playlist", data: {...data, playlistUsers: [], playlistSongs: []}})}
-                              getTitle={p => p.playlistName}
-                              getArtists={c => [c.owner.displayName]}
-                              getCoverUrl={() => dodo}
-                              getTiledCovers={() => playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
-                        />
-                    )
+                        ? Array.from({length: 12}).map((_, i) => (
+                            <CardSkeleton key={i}/>
+                        ))
+                        :
+                        dataPlaylists.map(playlist => {
+                            const isPlaying = track?.context.type === "playlist" && track?.context.id === playlist.playlistId && !userPaused;
+
+                            return <Card key={playlist.playlistId}
+                                         data={playlist}
+                                         onClick={() => navigate(`/playlist/${playlist.playlistId}`)}
+                                         isPlaying={isPlaying}
+                                         onIconClick={(e, data) => {
+                                             e.stopPropagation();
+                                             void loadCollection(data.playlistId, "playlist")}}
+                                         onContextMenu={(e, data) => ctx.open(e, {
+                                             type: "playlist",
+                                             data: {...data, playlistUsers: [], playlistSongs: []}
+                                         })}
+                                         getTitle={p => p.playlistName}
+                                         getArtists={c => [c.owner.displayName]}
+                                         getCoverUrl={() => dodo}
+                                         getTiledCovers={() => playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
+                            />;
+                        })
                 }
             </div>
             <ContextMenu ctx={ctx}>

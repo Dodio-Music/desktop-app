@@ -9,6 +9,7 @@ export interface BaseSongEntry {
     duration: number;
     picture?: string;
     type: SourceType;
+    context: PlaybackContext;
 }
 
 export interface LocalSongEntry extends BaseSongEntry {
@@ -27,6 +28,11 @@ export interface RemoteSongEntry extends BaseSongEntry {
     addedAt?: Date;
     addedBy?: UserPublicDTO;
 }
+
+export type PlaybackContext =
+    | { type: "local", name: string, url: string }
+    | { type: "release", name: string, url: string, id: string }
+    | { type: "playlist", name: string, url: string, id: number };
 
 export interface SongSource {
     id: string;

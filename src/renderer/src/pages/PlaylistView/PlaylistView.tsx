@@ -9,7 +9,7 @@ import {SongList} from "@renderer/components/SongList/SongList";
 import {playlistSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
 import s from "./PlaylistView.module.css";
 import dodo from "../../../../../resources/dodo_whiteondark_512.png";
-import {playlistTracksToSongEntries} from "@renderer/util/parseBackendTracks";
+import {orderedIdsAndSongsToSongEntries} from "@renderer/util/parseBackendTracks";
 import CoverGrid from "@renderer/components/CoverGrid/CoverGrid";
 import {FaRegCircleUser} from "react-icons/fa6";
 import {GoDotFill} from "react-icons/go";
@@ -116,9 +116,9 @@ const PlaylistView = () => {
     const canInvite = userRole === "OWNER";
 
     const songEntries = useMemo(() => {
-        if (!orderedIds || !songs) return [];
-        return playlistTracksToSongEntries(orderedIds, songs);
-    }, [orderedIds, songs]);
+        if (!orderedIds || !songs || !playlist) return [];
+        return orderedIdsAndSongsToSongEntries(orderedIds, songs, playlist);
+    }, [orderedIds, songs, playlist]);
 
     useEffect(() => {
         if (!userRole) return;

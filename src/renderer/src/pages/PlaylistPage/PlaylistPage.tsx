@@ -16,6 +16,9 @@ import {useNavigate} from "react-router-dom";
 import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
 import PlaylistInitPopup from "@renderer/components/Popup/Playlist/PlaylistInitPopup";
 import FilterBar from "@renderer/components/FilterBar/FilterBar";
+import {useLoadCollection} from "@renderer/hooks/useLoadCollection";
+import {useSelector} from "react-redux";
+import {RootState} from "@renderer/redux/store";
 
 type FilterOption = "" | "OWNED,INVITED" | "LIKED";
 type FilterEntry = { type: FilterOption, label: string };
@@ -32,6 +35,9 @@ const PlaylistPage = () => {
     const confirm = useConfirm();
     const ctx = useContextMenu();
     const authInfo = useAuth().info;
+    const loadCollection = useLoadCollection();
+    const track = useSelector((state: RootState) => state.nativePlayer.currentTrack);
+    const userPaused = useSelector((state: RootState) => state.nativePlayer.userPaused);
 
     const {
         data,
@@ -57,20 +63,24 @@ const PlaylistPage = () => {
                 {data && data.length > 0 &&
                     <div className={s.playlists}>
                         {
-                            data.map(playlist =>
-                                <Card key={playlist.playlistId}
-                                      data={playlist}
-                                      onClick={() => navigate(`/playlist/${playlist.playlistId}`)}
-                                      isPlaying={false}
-                                      onIconClick={() => {
-                                      }}
-                                      onContextMenu={(e, data) => ctx.open(e, {type: "playlistPreview", data})}
-                                      getTitle={p => p.playlistName}
-                                      getArtists={c => [c.owner.displayName]}
-                                      getCoverUrl={() => dodo}
-                                      getTiledCovers={() => playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
-                                />
-                            )
+                            data.map(playlist => {
+                                const isPlaying = track?.context.type === "playlist" && track?.context.id === playlist.playlistId && !userPaused;
+
+                                return <Card key={playlist.playlistId}
+                                             data={playlist}
+                                             onClick={() => navigate(`/playlist/${playlist.playlistId}`)}
+                                             isPlaying={isPlaying}
+                                             onIconClick={(e) => {
+                                                 e.stopPropagation();
+                                                 void loadCollection(playlist.playlistId, "playlist");
+                                             }}
+                                             onContextMenu={(e, data) => ctx.open(e, {type: "playlistPreview", data})}
+                                             getTitle={p => p.playlistName}
+                                             getArtists={c => [c.owner.displayName]}
+                                             getCoverUrl={() => dodo}
+                                             getTiledCovers={() => playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
+                                />;
+                            })
                         }
                     </div>
                 }

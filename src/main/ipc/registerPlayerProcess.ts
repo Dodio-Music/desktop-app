@@ -72,14 +72,14 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow, initialPrefs
 
     ipcMain.handle("player:load-remote", async (_, track: RemoteSongEntry, contextTracks: RemoteSongEntry[]) => {
         const startIndex = contextTracks.findIndex(t => t.id === track.id);
-        queue.setContext("remote", contextTracks, startIndex);
+        queue.setContext(contextTracks, startIndex);
 
         await session.loadTrack(track);
     });
 
     ipcMain.handle("player:load-local", async (_, track: LocalSongEntry, contextTracks: BaseSongEntry[]) => {
         const startIndex = contextTracks.findIndex(t => t.id === track.id);
-        queue.setContext("local", contextTracks, startIndex);
+        queue.setContext(contextTracks, startIndex);
 
         await session.loadTrack(track);
     });

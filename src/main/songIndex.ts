@@ -14,7 +14,7 @@ export interface CachedSongMetadata {
     id: string;
     path: string;
     mTimeMs: number;
-    metadata: LocalSongEntry;
+    metadata: Omit<LocalSongEntry, "context">;
 }
 
 type MetadataCache = Record<string, CachedSongMetadata>;
@@ -95,7 +95,7 @@ async function buildMetadata(id: string, fullPath: string, stat: fs.Stats): Prom
         picture = await getThumbnail(id, common.picture[0].data);
     }
 
-    const song: LocalSongEntry = {
+    const song: Omit<LocalSongEntry, "context"> = {
         id,
         type: "local",
         fileName: path.basename(fullPath),
@@ -223,7 +223,7 @@ function emitAllSongs() {
 function getSortedSongs(): LocalSongEntry[] {
     return Array.from(index.values())
         .sort((a, b) => new Date(b.metadata.createdAt).getTime() - new Date(a.metadata.createdAt).getTime())
-        .map(e => e.metadata)
+        .map(e => ({...e.metadata, context: {type: "local", name: "Local Files", url: "/collection/local"}}))
 }
 
 async function setSongDirectory() {

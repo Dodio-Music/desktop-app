@@ -6,7 +6,7 @@ import CoverGrid from "@renderer/components/CoverGrid/CoverGrid";
 
 interface CardProps<T> {
     data: T;
-    isPlaying: boolean | null;
+    isPlaying: boolean;
     onClick: (data: T) => void;
     onContextMenu: (e: MouseEvent, item: T) => void;
     onIconClick: (e: MouseEvent, item: T) => void;

@@ -8,6 +8,7 @@ import IpcRenderer = Electron.IpcRenderer;
 import {IAllPreferences} from "../main/preferences.js";
 import {UploadProgress, UploadResponse} from "../main/dashboard.js";
 import {AuthInfo} from "../main/web/Typing.js";
+import {QueueState} from "../main/player/QueueManager.ts";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -112,6 +113,11 @@ const api = {
         const listener = (_: IpcRendererEvent, event: PlayerEvent) => callback(event);
         ipcRenderer.on("player:event", listener);
         return () => ipcRenderer.removeListener("player:event", listener);
+    },
+    onQueueUpdate: (callback: (state: QueueState) => void) => {
+        const listener = (_: IpcRendererEvent, state: QueueState) => callback(state);
+        ipcRenderer.on("player:queue-update", listener);
+        return () => ipcRenderer.removeListener("player:queue-update", listener);
     },
     onPlayerUpdate: (callback: (event: PlayerState) => void) => {
         const listener = (_: IpcRendererEvent, event: PlayerState) => callback(event);

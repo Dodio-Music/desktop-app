@@ -8,10 +8,7 @@ export interface PlaybackStrategy {
     getUpcoming(state: QueueState, count: number): BaseSongEntry[];
 }
 
-export type QueueContextType = "local" | "remote";
-
 export interface QueueContext {
-    type: QueueContextType;
     tracks: BaseSongEntry[];
     startIndex: number;
 }
@@ -35,7 +32,7 @@ export class RepeatAllStrategy implements PlaybackStrategy {
         // context
         if (!state.context) return result;
 
-        const { tracks, startIndex } = state.context;
+        const {tracks, startIndex} = state.context;
         let tempIndex = startIndex;
 
         while (result.length < count) {
@@ -66,7 +63,7 @@ export class RepeatOffStrategy implements PlaybackStrategy {
         // context
         if (!state.context) return result;
 
-        const { tracks, startIndex } = state.context;
+        const {tracks, startIndex} = state.context;
         let tempIndex = startIndex;
 
         while (result.length < count) {
@@ -90,7 +87,7 @@ function advanceState(state: QueueState, next: BaseSongEntry) {
     }
 
     if (state.context) {
-        const { tracks } = state.context;
+        const {tracks} = state.context;
         const index = tracks.findIndex(t => t.id === next.id);
 
         if (index !== -1) {
@@ -103,7 +100,7 @@ function advanceState(state: QueueState, next: BaseSongEntry) {
 function rewindState(state: QueueState, strategy: PlaybackStrategy): BaseSongEntry | null {
     if (!state.context || !state.current) return null;
 
-    const { tracks, startIndex } = state.context;
+    const {tracks, startIndex} = state.context;
 
     const prevIndex = startIndex - 1;
 
@@ -168,8 +165,8 @@ export class QueueManager extends EventEmitter {
         return this.repeatMode;
     }
 
-    setContext(type: QueueContextType, tracks: BaseSongEntry[], startIndex: number) {
-        this.state.context = { type, tracks, startIndex };
+    setContext(tracks: BaseSongEntry[], startIndex: number) {
+        this.state.context = {tracks, startIndex};
         this.state.current = tracks[startIndex];
         this.notifyNextTrack();
         this.notifyQueueState();
@@ -203,13 +200,13 @@ export class QueueManager extends EventEmitter {
         return prev;
     }
 
-    getNext(): BaseSongEntry | null  {
+    getNext(): BaseSongEntry | null {
         return this.strategy.getUpcoming(this.state, 1)[0] ?? null;
     }
 
     getPrevious(): BaseSongEntry | null {
         if (!this.state.context || !this.state.current) return null;
-        const { tracks, startIndex } = this.state.context;
+        const {tracks, startIndex} = this.state.context;
         const prevIndex = startIndex - 1;
 
         if (prevIndex >= 0) {
@@ -247,20 +244,14 @@ export class QueueManager extends EventEmitter {
     }
 
     notifyState(type: PlayerEvent["type"], payload: object) {
-        if(!this.window.isDestroyed()) {
+        if (!this.window.isDestroyed()) {
             this.window.webContents.send("player:event", {type, ...payload});
         }
     }
 
     notifyQueueState() {
         if (!this.window.isDestroyed()) {
-            this.window.webContents.send("player:queue-update", {
-                current: this.state.current,
-                userQueue: this.state.userQueue,
-                contextQueue:
-                    this.state.context?.tracks.slice(this.state.context.startIndex + 1) ?? [],
-                sourceType: this.state.context?.type ?? null,
-            });
+            this.window.webContents.send("player:queue-update", this.state);
         }
     }
 }
