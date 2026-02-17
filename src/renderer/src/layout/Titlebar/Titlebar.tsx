@@ -1,14 +1,16 @@
 import s from "./titlebar.module.css";
 import {VscChromeClose, VscChromeMaximize, VscChromeMinimize, VscChromeRestore} from "react-icons/vsc";
 import {FC, JSX, useEffect, useMemo, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import dodos from "../../../../../resources/dodo_transparent_white_256.png";
 import {useAuth} from "@renderer/hooks/reduxHooks";
-import {IoMdNotifications, IoMdNotificationsOutline} from "react-icons/io";
+import {IoIosArrowBack, IoIosArrowForward, IoMdNotifications, IoMdNotificationsOutline} from "react-icons/io";
 import {IoSettingsOutline, IoSettingsSharp} from "react-icons/io5";
 import {RiDashboardFill, RiDashboardLine} from "react-icons/ri";
 import {useSelector} from "react-redux";
 import {RootState} from "@renderer/redux/store";
+import classNames from "classnames";
+import {Tooltip} from "@mui/material";
 
 interface TitlebarProps {
     zoomLevel: number;
@@ -26,6 +28,8 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
     const {info} = useAuth();
     const navigate = useNavigate();
     const {initialized, unreadCount} = useSelector((state: RootState) => state.notifications);
+    useLocation();  // used to trigger rerenders on navigation
+                    // (back/forward buttons derive from history which doesn't trigger a rerender)
 
     useEffect(() => {
         window.electron.isMaximized().then(setIsMaximized);
@@ -64,9 +68,20 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
         },
     ], [info]);
 
+    const historyIndex = window.history.state?.idx ?? 0;
+
+    const canGoBack = historyIndex > 0;
+    const canGoForward = historyIndex < window.history.length - 1;
+
     return (
         <div className={s.title_bar}>
-            <div className={s.logo}><img src={dodos} alt={"Dodio"}/><p className={s.title}>Dodio</p></div>
+            <div className={s.left}>
+                <div className={s.leftsub}><img src={dodos} alt={"Dodio"}/><p className={s.title}>Dodio</p></div>
+                <div className={classNames(s.leftsub, s.nav)}>
+                    <Tooltip title={canGoBack ? "Go Back" : ""}><button onClick={() => navigate(-1)} disabled={!canGoBack}><IoIosArrowBack /></button></Tooltip>
+                    <Tooltip title={canGoForward ? "Go Forward" : ""}><button onClick={() => navigate(1)} disabled={!canGoForward}><IoIosArrowForward /></button></Tooltip>
+                </div>
+            </div>
             <div className={s.right}>
                 {zoomLevel !== 100 &&
                     <button onClick={() => window.api.resetZoom()} className={s.zoomContainer}><p className={s.zoomLevel}>{zoomLevel}%</p></button>}

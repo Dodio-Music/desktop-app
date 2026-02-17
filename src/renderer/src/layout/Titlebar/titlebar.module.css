@@ -60,14 +60,6 @@
     background-color: rgb(103, 103, 103);
 }
 
-.right {
-    height: 100%;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 20px;
-}
-
 .zoomContainer {
     border: none;
     transition: background-color 0.1s;
@@ -87,11 +79,63 @@
     font-size: 0.85rem;
 }
 
-.logo {
+.leftsub {
     display: flex;
     align-items: center;
     height: 100%;
-    padding: 13px;
+}
+
+.nav {
+    -webkit-app-region: no-drag;
+}
+
+.leftsub img {
+    padding: 13px 0 13px 13px;
+}
+
+.leftsub button {
+    margin: 0 3px;
+    padding: 8px 2px;
+    background-color: transparent;
+    border: none;
+    color: var(--secondary);
+    font-size: 27px;
+    transition: 0.1s;
+}
+
+.leftsub button:not(:disabled):active {
+    color: var(--secondary) !important;
+    transition: 0s !important;
+    transform: scale(1) !important;
+}
+
+.leftsub button:not(:disabled) {
+    cursor: pointer;
+}
+
+.leftsub button:disabled {
+    color: #4d4d4d;
+}
+
+.leftsub button:not(:disabled):hover {
+    color: white;
+    transform: scale(1.08);
+}
+
+.right {
+    height: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 20px;
+}
+
+.left {
+    height: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
 }
 
 .itemWrapper {
