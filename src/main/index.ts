@@ -1,4 +1,4 @@
-import { electronApp, optimizer } from "@electron-toolkit/utils";
+import {electronApp, is, optimizer} from "@electron-toolkit/utils";
 import {app, BrowserWindow, protocol, net} from "electron";
 import { registerMagnifierIPC } from "./ipc/registerMagnifier.js";
 import {registerPlayerProcessIPC} from "./ipc/registerPlayerProcess.js";
@@ -22,6 +22,45 @@ app.on("before-quit", async (event) => {
     app.exit();
 });
 
+if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+        app.setAsDefaultProtocolClient(
+            "dodio",
+            process.execPath,
+            [path.resolve(process.argv[1])]
+        );
+    }
+} else {
+    app.setAsDefaultProtocolClient("dodio");
+}
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+
+if (!is.dev) {
+    if (!gotTheLock) {
+        app.quit();
+    } else {
+        app.on("second-instance", (_event, commandLine) => {
+            const url = commandLine.find(arg => arg.startsWith("dodio://"));
+            if (url) {
+                handleDeepLink(url);
+            }
+
+            if (mainWindow) {
+                if (mainWindow.isMinimized()) mainWindow.restore();
+                mainWindow.focus();
+            }
+        });
+    }
+}
+
+function handleDeepLink(url: string) {
+    if (!mainWindow) return;
+
+    mainWindow.webContents.send("deep-link", url);
+}
+
 app.whenReady().then(async () => {
     electronApp.setAppUserModelId("com.underswing");
 
@@ -40,6 +79,10 @@ app.whenReady().then(async () => {
 
     setupApi();
     mainWindow = createMainWindow();
+    const deepLink = process.argv.find(arg => arg.startsWith("dodio://"));
+    if (deepLink) {
+        handleDeepLink(deepLink);
+    }
     registerPreferencesIPC();
     registerPlayerProcessIPC(mainWindow, prefs);
     void setupAuth(mainWindow);

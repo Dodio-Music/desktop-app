@@ -53,6 +53,10 @@ if(LOG_ALL_IPC_EVENTS) {
     };
 }
 
+ipcRenderer.on("deep-link", (_event, url) => {
+    console.log(url);
+});
+
 const windowControls: CustomWindowControls = {
     minimize: () => ipcRenderer.send("window-minimize"),
     maximize: () => ipcRenderer.send("window-maximize"),
