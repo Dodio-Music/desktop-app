@@ -76,6 +76,12 @@ const api = {
         ipcRenderer.on("songs:emit", handler);
         return () => ipcRenderer.removeListener("songs:emit", handler);
     },
+    onLocalSongCount: (cb: (count: number) => void) => {
+        const handler = (_ev: Electron.IpcRendererEvent, count: number) => cb(count);
+        ipcRenderer.on("songs:count", handler);
+        return () => ipcRenderer.removeListener("songs:count", handler);
+    },
+    getLocalSongCount: (): Promise<number> => ipcRenderer.invoke("songs:get-count"),
     getFullCover: async (fullPath: string): Promise<string> => ipcRenderer.invoke("songs:get-full-cover", fullPath),
     loadTrack: (track: LocalSongEntry, contextTracks: BaseSongEntry[]) => ipcRenderer.invoke("player:load-local", track, contextTracks),
     loadTrackRemote: (track: RemoteSongEntry, contextTracks: BaseSongEntry[]) => ipcRenderer.invoke("player:load-remote", track, contextTracks),

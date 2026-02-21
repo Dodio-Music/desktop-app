@@ -1,4 +1,4 @@
-import {FormEvent, MouseEvent, useRef, useState} from "react";
+import {FormEvent, useRef, useState} from "react";
 import {Link, useNavigate} from "react-router-dom";
 import useErrorHandling from "@renderer/hooks/useErrorHandling";
 import s from "./account.module.css";
@@ -39,15 +39,14 @@ const SignupPage = () => {
         navigate("/login", {replace: true});
     }
 
-    const onExit = (event: MouseEvent<HTMLDivElement>) => {
-        if(event.target !== event.currentTarget) return;
-
-        navigate(-1);
+    const onExit = () => {
+        navigate("/home");
     }
 
     return (
-        <div className={s.page} onMouseDown={onExit}>
+        <div className={s.page}>
             <form className={s.container} onSubmit={onSignup}>
+                <button className={s.back} type={"button"} onClick={onExit}>Back</button>
                 <h1 className={s.heading} {...testId("signup-title")}>Create Dodio Account</h1>
                 <div className={classNames({[s.error]: hasError("username")})}>
                     <input ref={usernameRef} placeholder={"Username"} autoFocus={true}/>

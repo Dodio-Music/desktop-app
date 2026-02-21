@@ -6,7 +6,7 @@ import RealtimeNotificationBridge from "@renderer/components/Bridge/RealtimeNoti
 import {useDispatch, useSelector} from "react-redux";
 import {fetchNotificationState, resetNotifications} from "@renderer/redux/notificationsSlice";
 import {AppDispatch, RootState} from "@renderer/redux/store";
-import PageRouter from "@renderer/layout/Routing/PageRouter";
+import ViewBrowser from "@renderer/layout/Routing/ViewBrowser";
 
 function App() {
     const username = useSelector((state: RootState) => state.auth.info.username);
@@ -39,7 +39,7 @@ function App() {
                 containerClassName={s.toast}
                 reverseOrder={false}
             />
-            <PageRouter/>
+            <ViewBrowser/>
         </>
     );
 }

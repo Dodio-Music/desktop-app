@@ -1,4 +1,4 @@
-import {FormEvent, useEffect, useRef, useState, MouseEvent} from "react";
+import {FormEvent, useEffect, useRef, useState} from "react";
 import {Link, useNavigate, useSearchParams} from "react-router-dom";
 import toast from "react-hot-toast";
 import useErrorHandling from "@renderer/hooks/useErrorHandling";
@@ -47,15 +47,14 @@ const LoginPage = () => {
         toast.success("Successfully logged in.");
     }
 
-    const onExit = (event: MouseEvent<HTMLDivElement>) => {
-        if(event.target !== event.currentTarget) return;
-
-        navigate(-1);
+    const onExit = () => {
+        navigate("/home");
     }
 
     return (
-        <div className={s.page} onMouseDown={onExit}>
+        <div className={s.page}>
             <form className={s.container} onSubmit={onLogin}>
+                <button className={s.back} type={"button"} onClick={onExit}>Back</button>
                 <h1 className={s.heading}>Log in to Dodio</h1>
                 <div className={classNames({["error"]: hasError("login")})}>
                     <input placeholder={"Email / Username"} ref={loginRef} autoFocus={true}/>

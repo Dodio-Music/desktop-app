@@ -131,7 +131,7 @@ button:has(svg) {
     justify-content: center;
 }
 
-button:focus, input:focus {
+button:focus, input:focus, div {
     outline: none;
 }
 

@@ -1,4 +1,4 @@
-import {FormEvent, MouseEvent, useEffect, useState} from 'react';
+import {FormEvent, useState} from 'react';
 import s from "./account.module.css";
 import classNames from "classnames";
 import {IoEyeOffOutline, IoEyeOutline} from "react-icons/io5";
@@ -13,25 +13,13 @@ const ForgotPassword = () => {
     const [buttonClickable, setButtonClickable] = useState(true);
     const [showPw, setShowPw] = useState<boolean>(false);
     const {InvalidInputError, setError, hasError} = useErrorHandling();
+    const [showTokenAndPasswordField, setShowTokenAndPasswordField] = useState<boolean>(false);
 
-    const [showTokenAndPasswordField, setShowTokenAndPasswordField] = useState<boolean>(false   )
-    const [userName, setUserName] = useState<string>("");
+    const {info} = useAuth();
+    //show email if user is logged in
+    const [userName, setUserName] = useState<string>(info?.email ?? "");
     const [resetToken, setResetToken] = useState<string>("");
     const [newPassword, setNewPassword] = useState<string>("");
-
-    //show email if user is logged in
-    const {info} = useAuth();
-
-    useEffect(() => {
-        if (info.email) setUserName(info.email);
-    }, []);
-
-
-    const onExit = (event: MouseEvent<HTMLDivElement>) => {
-        if(event.target !== event.currentTarget) return;
-
-        navigate(-1);
-    }
 
     const submitUserName = async () => {
         const res = await window.api.authRequest("post", "/account/request-password-reset", {
@@ -72,10 +60,14 @@ const ForgotPassword = () => {
         setButtonClickable(true);
     }
 
+    const onExit = () => {
+        navigate("/home");
+    }
 
     return (
-        <div className={s.page} onMouseDown={onExit}>
-            <form className={s.container} onSubmit={event => submitButtonPressed(event)}>
+        <div className={s.page}>
+            <form className={s.container} onSubmit={submitButtonPressed}>
+                <button className={s.back} type={"button"} onClick={onExit}>Back</button>
                 <h1 className={s.heading}>Reset Dodio Password</h1>
 
                 <div className={classNames({["error"]: hasError("username")})}>

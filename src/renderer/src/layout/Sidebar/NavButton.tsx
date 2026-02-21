@@ -1,5 +1,5 @@
 import {useMatch, useNavigate, useResolvedPath} from "react-router-dom";
-import s from "../sidebar.module.css";
+import s from "./sidebar.module.css";
 import {ButtonHTMLAttributes, FC} from "react";
 
 interface NavButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

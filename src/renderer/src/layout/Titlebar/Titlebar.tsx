@@ -89,7 +89,7 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
                 {navButtons.map((btn, idx) => btn.show ? (
                     <div key={idx} className={s.itemWrapper}>
                         <div className={s.item} onClick={() => handleNavigate(btn.path)} id={btn.path === "/settings" ? s.settingsContainer : ""}>
-                            {currentHash === `#${btn.path}` && btn.activeIcon ? btn.activeIcon : btn.icon}
+                            {currentHash.startsWith(`#${btn.path}`) && btn.activeIcon ? btn.activeIcon : btn.icon}
                         </div>
                         {btn.path === "/notifications" && initialized && unreadCount > 0 && <div className={s.notifPopover}>{unreadCount}</div>}
                     </div>

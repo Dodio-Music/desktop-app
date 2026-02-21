@@ -223,6 +223,7 @@ const PlaylistView = () => {
                             playlistId: playlist.playlistId,
                             refresh: refetch
                         }}
+                        navigate={navigate}
                     />
 
                     <PlaylistInitPopup open={updateOpen} close={() => setUpdateOpen(false)}

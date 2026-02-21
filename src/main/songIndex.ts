@@ -23,6 +23,7 @@ const index = new Map<string, CachedSongMetadata>();
 let watcher: FSWatcher | null = null;
 let mainWindow: BrowserWindow | undefined;
 let error: string = "";
+let songCount = 0;
 
 const cachePath = path.join(app.getPath("userData"), "metadata-cache.json");
 const supportedExts = new Set([".mp3", ".flac", ".wav", ".ogg", ".opus"]);
@@ -118,6 +119,11 @@ async function buildMetadata(id: string, fullPath: string, stat: fs.Stats): Prom
 
 /* ---------- WATCHER ---------- */
 
+function updateSongCount() {
+    songCount = index.size;
+    mainWindow?.webContents.send("songs:count", songCount);
+}
+
 function resetWatcher(dir: string) {
     watcher?.close();
 
@@ -136,8 +142,9 @@ function resetWatcher(dir: string) {
         const id = await computeContentId(file);
         const entry = await buildMetadata(id, file, stat);
         index.set(id, entry);
+        updateSongCount();
         await saveCache();
-        emitAllSongs()
+        emitAllSongs();
     });
 
     watcher.on("change", async file => {
@@ -186,6 +193,8 @@ function resetWatcher(dir: string) {
             await saveCache();
             emitAllSongs();
         }
+
+        updateSongCount();
     });
 }
 
@@ -197,6 +206,7 @@ export function registerSongIndexIPC(window: BrowserWindow) {
     ipcMain.handle("songs:get-all", () => emitAllSongs());
     ipcMain.handle("songs:setdirectory", () => setSongDirectory());
     ipcMain.handle("songs:get-full-cover", async(_e, fullPath: string) => getFullCover(fullPath));
+    ipcMain.handle("songs:get-count", () => index.size);
 
     void resetIndex();
 }
@@ -209,6 +219,7 @@ const resetIndex = async () => {
     }
 
     await resetFileIndex(prefs.localFilesDir);
+    updateSongCount();
     resetWatcher(prefs.localFilesDir);
 }
 

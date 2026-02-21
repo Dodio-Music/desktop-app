@@ -19,7 +19,7 @@ import AuthContentLayout from "@renderer/layout/Routing/AuthContentLayout";
 import AppContentLayout from "@renderer/layout/Routing/AppContentLayout";
 import RootLayout from "@renderer/layout/Routing/RootLayout";
 
-const PageRouter = () => {
+const ViewBrowser = () => {
     return (
         <RootLayout>
             <Routes>
@@ -29,8 +29,8 @@ const PageRouter = () => {
                     <Route path={"/resetPassword"} element={<ForgotPassword/>}/>
                 </Route>
                 <Route element={<AppContentLayout/>}>
-                    <Route path={"/"} element={<Navigate to={"/collection/local"} replace/>}/>
-                    <Route path={"/home"} element={<ProtectedRoute redirect={false}><HomePage/></ProtectedRoute>}/>
+                    <Route path={"/"} element={<Navigate to={"/home"} replace/>}/>
+                    <Route path={"/home"} element={<ProtectedRoute><HomePage/></ProtectedRoute>}/>
                     <Route path={"/dashboard"} element={<UploadDashboard/>}/>
                     <Route path={"/collection/local"} element={<LocalFilesPage/>}/>
                     <Route path={"/collection/tracks"}
@@ -43,15 +43,14 @@ const PageRouter = () => {
                            element={<ProtectedRoute><PlaylistPage/></ProtectedRoute>}/>
                     <Route path={"/release/:id"} element={<ProtectedRoute><ReleaseView/></ProtectedRoute>}/>
                     <Route path={"/playlist/:id"} element={<ProtectedRoute><PlaylistView/></ProtectedRoute>}/>
-                    <Route path={"/settings"} element={<OverallSettings scrollDown={false}></OverallSettings>}/>
-                    <Route path={"/account"} element={<OverallSettings scrollDown={true}></OverallSettings>}/>
+                    <Route path={"/settings"} element={<OverallSettings/>}/>
                     <Route path={"/notifications"} element={<ProtectedRoute><NotificationsPage/></ProtectedRoute>}/>
-                </Route>
 
-                <Route path={"*"} element={<NotFoundPage/>}/>
+                    <Route path={"*"} element={<NotFoundPage/>}/>
+                </Route>
             </Routes>
         </RootLayout>
     );
 };
 
-export default PageRouter;
+export default ViewBrowser;

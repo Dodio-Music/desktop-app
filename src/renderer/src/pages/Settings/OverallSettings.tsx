@@ -1,21 +1,22 @@
 import SettingsPage from "@renderer/pages/Settings/SettingsPage";
 import AccountPage from "@renderer/pages/Settings/AccountPage";
 import {useAuth} from "@renderer/hooks/reduxHooks";
-import {FC} from "react";
+import {useSearchParams} from "react-router-dom";
 
-interface OverallSettingsProps{
-    scrollDown: boolean
-}
-
-const OverallSettings: FC<OverallSettingsProps> = ({scrollDown}) => {
+const OverallSettings = () => {
     const {info} = useAuth();
+
+    const [searchParams] = useSearchParams();
+
+    const tab = searchParams.get("tab");
+    const showAccount = tab === "account";
 
     return (
         <>
             <SettingsPage></SettingsPage>
 
             {info.email && (
-                <AccountPage scrollDown={scrollDown}></AccountPage>
+                <AccountPage scrollDown={showAccount}></AccountPage>
             )}
         </>
     );

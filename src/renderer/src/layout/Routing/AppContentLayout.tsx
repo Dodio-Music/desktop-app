@@ -1,38 +1,47 @@
-import {ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
+import {Panel, Group, Separator, useDefaultLayout} from "react-resizable-panels";
 import Sidebar from "@renderer/layout/Sidebar/Sidebar";
 import s from "./routing.module.css";
-import CollapsedSidebar from "@renderer/layout/Sidebar/CollapsedSidebar";
-import {useRef, useState} from "react";
+import {useState} from "react";
 import {Outlet} from "react-router-dom";
 
 const AppContentLayout = () => {
-    const leftPanelRef = useRef<ImperativePanelHandle>(null);
-    const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
+    const {defaultLayout, onLayoutChanged} = useDefaultLayout({
+        id: "unique-layout-id",
+        storage: localStorage
+    });
+    const collapsedSize = 80;
+    const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
 
     return (
         <div className={s.panelContainer}>
-            {leftPanelCollapsed && <CollapsedSidebar/>}
-            <PanelGroup className={s.mainContainer} direction={"horizontal"}
-                        autoSaveId="mainPanelStructure">
-                <Panel order={2} onCollapse={() => setLeftPanelCollapsed(true)}
-                       onExpand={() => setLeftPanelCollapsed(false)}
-                       className={s.panel} ref={leftPanelRef}
-                       collapsible defaultSize={20} minSize={15} maxSize={30}
-                >
-                    <Sidebar/>
+            <Group className={s.mainContainer} defaultLayout={defaultLayout}
+                   onLayoutChanged={(layout) => onLayoutChanged(layout)}>
+                <Panel id={"left"}
+                       onResize={(nextSize, _, prevSize) => {
+                           if (prevSize !== undefined) {
+                               const wasCollapsed = prevSize.inPixels === collapsedSize;
+                               const isCollapsed = nextSize.inPixels === collapsedSize;
+                               if (isCollapsed !== wasCollapsed) {
+                                   setIsLeftCollapsed(isCollapsed);
+                               }
+                           }
+                       }}
+                       className={s.panel} collapsible collapsedSize={collapsedSize}
+                       defaultSize={300} minSize={230} maxSize={400}>
+                    <Sidebar isCollapsed={isLeftCollapsed}/>
                 </Panel>
-                <PanelResizeHandle className={s.resizeHandle}/>
-                <Panel order={3} className={s.panel}>
+                <Separator className={s.resizeHandle}/>
+                <Panel id={"main"} className={s.panel}>
                     <div className={s.wrapper}>
                         <Outlet/>
                     </div>
                 </Panel>
-                <PanelResizeHandle className={s.resizeHandle}/>
-                <Panel order={4} className={s.panel} collapsible={true} defaultSize={10} maxSize={20}
-                       minSize={8}>
+                <Separator className={s.resizeHandle}/>
+                <Panel id={"right"} className={s.panel} collapsible={true} defaultSize={0} maxSize={400}
+                       minSize={200} collapsedSize={0}>
                     <div className={s.songInfo}></div>
                 </Panel>
-            </PanelGroup>
+            </Group>
         </div>
     );
 };

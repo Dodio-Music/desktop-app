@@ -2,13 +2,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.51);
     z-index: 10;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
 }
 
 .container {
@@ -18,7 +12,9 @@
     align-items: center;
     gap: 20px;
     padding: 40px;
-    margin-bottom: 50px;
+    position: relative;
+    background-color: #1b1b1b;
+    border-radius: 20px;
 }
 
 .container > div {
@@ -336,4 +332,21 @@
     border: none;
     border-radius: 5px;
     gap: 5px;
+}
+
+.back {
+    position: absolute;
+    top: 23px;
+    line-height: 1;
+    left: 23px;
+    color: white;
+    background-color: transparent;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.back:hover {
+    color: white;
+    text-decoration: underline;
 }
