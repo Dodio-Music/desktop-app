@@ -61,7 +61,7 @@ const ForgotPassword = () => {
     }
 
     const onExit = () => {
-        navigate("/home");
+        navigate(-1);
     }
 
     return (
@@ -95,7 +95,7 @@ const ForgotPassword = () => {
                 )}
 
                 <button className={classNames(s.button, !buttonClickable ? s.buttonActive : "")} type={"submit"} >Reset</button>
-                <p className={s.createInfo}>Already have an account? <Link className={s.create} to="/login" replace={true}>Log in</Link></p>
+                <p className={classNames(s.createInfo, s.extraPadTop)}>Already have an account? <Link className={s.create} to="/login" replace={true}>Log in</Link></p>
             </form>
         </div>
     );

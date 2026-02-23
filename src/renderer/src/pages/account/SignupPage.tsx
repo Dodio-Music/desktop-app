@@ -40,7 +40,7 @@ const SignupPage = () => {
     }
 
     const onExit = () => {
-        navigate("/home");
+        navigate(-1);
     }
 
     return (
@@ -69,7 +69,7 @@ const SignupPage = () => {
                 <button className={classNames(s.button, !buttonClickable ? s.buttonActive : "")}
                         type={"submit"} {...testId("signup-submit")}>Sign Up
                 </button>
-                <p className={s.createInfo}>Already have an account? <Link className={s.create} to="/login"
+                <p className={classNames(s.createInfo, s.extraPadTop)}>Already have an account? <Link className={s.create} to="/login"
                                                                            replace={true} data-testid="signup-title">Log
                     in</Link></p>
             </form>
