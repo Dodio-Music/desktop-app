@@ -18,12 +18,11 @@
         display: grid;
         grid-template-columns: 60px minmax(0, 1fr);
         align-items: center;
-        gap: 5px;
 
         svg {
             width: 100%;
             height: 100%;
-            padding: 15px;
+            padding: 16px;
             color: #848484;
             transform: scale(0.98);
             transition: 0.1s color;
@@ -52,13 +51,21 @@
     }
 }
 
-.isCollapsed {
+.main {
+    container-type: inline-size;
+}
+
+@container (max-width: 85px) {
     button {
-        grid-template-columns: 75px;
+        grid-template-columns: 75px !important;
 
         svg {
-            padding: 22px;
+            padding: 22px !important;
         }
+    }
+
+    .label, .subLabel {
+        display: none;
     }
 }
 

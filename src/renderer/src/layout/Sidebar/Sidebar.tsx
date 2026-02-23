@@ -3,7 +3,7 @@ import {PiMicrophoneStageBold} from "react-icons/pi";
 import {BiAlbum, BiSolidPlaylist} from "react-icons/bi";
 import {FaRegFolderOpen, FaRegHeart} from "react-icons/fa6";
 import NavButton from "./NavButton";
-import React, {FC, useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {MdOutlineLogin} from "react-icons/md";
 import {AuthStatus} from "../../../../main/web/Typing";
 import {useAuth} from "@renderer/hooks/reduxHooks";
@@ -47,7 +47,7 @@ const navItems = ({localSongsCount}: ItemHelper): NavItem[] => [
     {
         url: "/collection/tracks",
         label: "Liked Songs",
-        icon: <FaRegHeart/>,
+        icon: <FaRegHeart style={{transform: "scale(0.9)"}}/>,
         needsAccount: true
     },
     {
@@ -59,7 +59,7 @@ const navItems = ({localSongsCount}: ItemHelper): NavItem[] => [
     {
         url: "/collection/albums",
         label: "Liked Albums",
-        icon: <BiAlbum id={s.album} />,
+        icon: <BiAlbum id={s.album}  style={{transform: "scale(1.1)"}} />,
         needsAccount: true
     },
     {
@@ -70,11 +70,7 @@ const navItems = ({localSongsCount}: ItemHelper): NavItem[] => [
     }
 ];
 
-interface SidebarProps {
-    isCollapsed: boolean;
-}
-
-const Sidebar: FC<SidebarProps> = ({isCollapsed}) => {
+const Sidebar = () => {
     const {info} = useAuth();
     const {url: accountUrl, text: accountText, icon: accountIcon} = accountPages[info.status];
     const [localSongsCount, setLocalSongsCount] = useState(0);
@@ -94,19 +90,17 @@ const Sidebar: FC<SidebarProps> = ({isCollapsed}) => {
     }, []);
 
     return (
-        <div className={classNames(s.main, isCollapsed && s.isCollapsed)}>
+        <div className={classNames(s.main)}>
             {navItems({localSongsCount}).filter(c => !c.needsAccount || info.status === "account").map((item) => (
                 <NavButton key={item.url} url={item.url}>
                     {item.icon}
-                    {!isCollapsed &&
-                        <div className={s.name}>
-                            <span className={s.label}>{item.label}</span>
-                            <span className={s.subLabel}>{item.subLabel}</span>
-                        </div>
-                    }
+                    <div className={s.name}>
+                        <span className={s.label}>{item.label}</span>
+                        <span className={s.subLabel}>{item.subLabel}</span>
+                    </div>
                 </NavButton>
             ))}
-            <NavButton url={accountUrl}>{accountIcon}{!isCollapsed && <span className={s.label}>{accountText}</span>}</NavButton>
+            <NavButton url={accountUrl}>{accountIcon}{<span className={s.label}>{accountText}</span>}</NavButton>
         </div>
     );
 };
