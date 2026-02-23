@@ -9,7 +9,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 50px;
-    background-color: var(--color-bar);
+    background-color: var(--color-bg-0-darker);
 }
 
 .container p {
@@ -47,7 +47,7 @@
 .btnAnim {
     background: none;
     border: none;
-    color: #ffffff;
+    color: var(--color-text-primary);
     cursor: pointer;
     transition: 0.1s color, 0.1s transform;
     line-height: 1;
@@ -55,18 +55,18 @@
 
 .play {
     background: none;
-    color: white;
+    color: var(--color-text-primary);
     border: none;
     font-size: 29px;
 }
 
 .btnAnim:hover {
-    color: #c3c3c3;
+    color: var(--color-text-primary-hover);
 }
 
 .btnAnim:active {
     transition: 0s;
-    color: #8b8b8b;
+    color: var(--color-text-tertiary);
 }
 
 .rightContainer {
@@ -80,11 +80,11 @@
     display: flex;
     gap: 8px;
     align-items: center;
-    color: white;
+    color: var(--color-text-primary);
 }
 
 .volumeControl p {
-    color: white;
+    color: var(--color-text-primary);
     font-size: 18px;
     width: 3ch;
     text-align: center;
@@ -94,7 +94,7 @@
 .volBtn {
     background-color: transparent;
     border: none;
-    color: white;
+    color: var(--color-text-primary);
 }
 
 .volBtn svg {
@@ -106,7 +106,6 @@
     appearance: none;
     width: 110px;
     height: 4px;
-    background: #4c4c4c;
     outline: none;
     border-radius: 2px;
     cursor: pointer;
@@ -117,13 +116,13 @@
     appearance: none;
     width: 4px;
     height: 14px;
-    background: white;
+    background: var(--color-text-primary);
     border-radius: 2px;
     cursor: pointer;
 }
 
 .time {
-    color: #c0c0c0;
+    color: var(--color-text-secondary);
     font-size: 14px;
     font-weight: 500;
     width: 3ch;
@@ -153,8 +152,8 @@
     position: absolute;
     bottom: 100%;
     transform: translateX(-50%);
-    background: #262626;
-    color: #ffffff;
+    background: var(--color-bg-2);
+    color: var(--color-text-primary);
     padding: 2px 6px;
     font-size: 14px;
     font-weight: 500;
@@ -195,14 +194,14 @@
 
 .trackName {
     font-size: 1rem;
-    color: white;
+    color: var(--color-text-primary);
     min-width: 0;
     width: fit-content;
 }
 
 .trackArtists {
     font-size: 0.9rem;
-    color: var(--secondary);
+    color: var(--color-text-secondary);
     margin-top: -5px;
 }
 
@@ -211,7 +210,7 @@
     align-items: center;
     gap: 5px;
     font-size: 0.9rem;
-    color: #ffffff;
+    color: var(--color-text-primary);
 }
 
 .forward, .backward {
@@ -225,7 +224,7 @@
 }
 
 .link:hover {
-    color: white;
+    color: var(--color-text-primary);
     text-decoration: underline;
 }
 
@@ -236,5 +235,5 @@
 }
 
 .disabledBtn {
-    color: #8b8b8b;
+    color: var(--color-text-tertiary);
 }

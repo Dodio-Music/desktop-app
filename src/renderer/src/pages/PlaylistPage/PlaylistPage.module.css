@@ -6,9 +6,9 @@
 
 .create {
     padding: 11px;
-    background-color: #363636;
+    background-color: var(--color-bg-2);
     border: none;
-    color: white;
+    color: var(--color-text-primary);
     border-radius: 100px;
     aspect-ratio: 1;
     line-height: 1;
@@ -17,14 +17,14 @@
 }
 
 .create:hover {
-    background-color: #414141;
+    background-color: var(--color-bg-3);
 }
 
 .create:active {
     transition: 0s;
     transform: scale(0.9);
-    background-color: #292929;
-    color: #cbcbcb;
+    background-color: var(--color-bg-1);
+    color: var(--color-text-secondary);
 }
 
 .finalCreate {
@@ -50,7 +50,7 @@
 }
 
 .finalCreate:disabled {
-    color: #393939;
+    color: var(--color-bg-3);
     opacity: 0.4;
     cursor: default;
     filter: none;
@@ -62,13 +62,13 @@
     padding: 15px;
     border-radius: 10px;
     border: none;
-    background-color: #313235;
-    color: white;
+    background-color: var(--color-bg-3);
+    color: var(--color-text-primary);
     outline: none;
 }
 
 .popup .titleInfo {
-    color: #b9b9b9;
+    color: var(--color-text-secondary);
     font-size: 0.95rem;
     text-align: left !important;
     margin-top: -5px;
@@ -88,7 +88,7 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    color: #ffffff;
+    color: var(--color-text-primary);
     font-size: 1.1rem;
 }
 
@@ -110,7 +110,7 @@
 
 .info {
     padding: 2px;
-    color: rgb(201, 201, 201);
+    color: var(--color-text-secondary);
     transition: 0.1s;
 }
 

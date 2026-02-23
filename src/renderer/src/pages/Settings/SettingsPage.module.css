@@ -6,7 +6,7 @@
 
 .wrapper h2 {
     font-size: 1.6rem;
-    color: white;
+    color: var(--color-text-primary);
     font-weight: 600;
     margin-bottom: 15px;
 }
@@ -19,13 +19,13 @@
 }
 
 .label {
-    color: white;
+    color: var(--color-text-primary);
     font-size: 1.3rem;
     font-weight: 500;
 }
 
 .info {
-    color: #c0c0c0;
+    color: var(--color-text-secondary);
     font-size: 1.1rem;
 }
 
@@ -33,14 +33,14 @@
     transition: 0.1s background-color, 0.1s color;
     font-size: 1rem;
     padding: 10px;
-    background-color: #303030;
+    background-color: var(--color-bg-2);
     border: none;
     outline: none;
-    color: #c0c0c0;
+    color: var(--color-text-secondary);
     border-radius: 5px;
 }
 
 .latencyDropdown:hover {
-    color: #ffffff;
-    background-color: #393939;
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-3);
 }

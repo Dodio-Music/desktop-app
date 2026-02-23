@@ -1,6 +1,6 @@
 .main {
     padding: 5px;
-    background-color: var(--color-panel);
+    background-color: var(--color-bg-1);
     height: 100%;
     width: 100%;
     overflow-x: hidden;
@@ -10,7 +10,7 @@
         background-color: transparent;
         border: none;
         border-radius: 8px;
-        color: #ffffff;
+        color: var(--color-text-primary);
         text-align: left;
 
         cursor: pointer;
@@ -23,7 +23,7 @@
             width: 100%;
             height: 100%;
             padding: 16px;
-            color: #848484;
+            color: var(--color-text-secondary);
             transform: scale(0.98);
             transition: 0.1s color;
         }
@@ -39,15 +39,15 @@
     }
 
     button:hover, button.active {
-        background-color: rgb(255, 255, 255, 0.08);
+        background-color: var(--color-bg-2);
 
         svg {
-            color: #ffffff;
+            color: var(--color-text-primary);
         }
     }
 
     button.active {
-        background-color: rgb(255, 255, 255, 0.12);
+        background-color: var(--color-bg-3);
     }
 }
 

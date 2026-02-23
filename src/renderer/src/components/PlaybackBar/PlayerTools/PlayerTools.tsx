@@ -71,7 +71,7 @@ const PlayerTools = () => {
     };
 
     const sliderBackground = useMemo(() => (
-        `linear-gradient(to right, white 0%, white ${percent}%, #4c4c4c ${percent}%, #4c4c4c 100%)`
+        `linear-gradient(to right, var(--color-text-primary) 0%, var(--color-text-primary) ${percent}%, var(--color-bg-3) ${percent}%, var(--color-bg-3) 100%)`
     ), [percent]);
 
     return (

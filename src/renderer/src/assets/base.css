@@ -56,7 +56,7 @@ ul {
 body {
     min-height: 100vh;
     color: var(--color-text-primary);
-    background: var(--color-bg);
+    background: var(--color-bg-0) !important;
     line-height: 1.6;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -86,12 +86,12 @@ img {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.26);
+    background: var(--color-bg-4);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.36);
+    background: var(--color-text-tertiary);
 }
 
 .pageWrapper, .errorPage {
@@ -99,21 +99,21 @@ img {
 }
 
 .error {
-    color: #ff8d8d;
+    color: var(--color-danger-text)
 }
 
 .error input {
-    border: 2px solid #ff8d8d !important;
+    border: 2px solid var(--color-danger-text) !important;
 }
 
 .error span {
     padding: 5px;
     font-size: 0.9rem;
-    color: #ff8d8d;
+    color: var(--color-danger-text);
 }
 
 .pageWrapper h1 {
-    color: #ffffff;
+    color: var(--color-text-primary);
     font-size: 2.4rem;
     font-weight: 600;
 }
@@ -125,7 +125,7 @@ img {
     overflow-y: auto;
 }
 
-button:has(svg) {
+button {
     display: inline-flex;
     align-items: center;
     justify-content: center;

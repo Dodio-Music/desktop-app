@@ -9,6 +9,6 @@
 }
 
 .changeable:hover {
-    color: white;
+    color: var(--color-text-primary);
     cursor: pointer;
 }

@@ -29,11 +29,11 @@
 }
 
 .deleteCancel {
-    background-color: #ffffff;
-    color: black;
+    background-color: var(--color-inverse-bg);
+    color: var(--color-inverse-text);
 }
 
 .deleteConfirm {
-    background-color: #ca1f35;
-    color: white;
+    background-color: var(--color-danger);
+    color: var(--color-text-primary);
 }

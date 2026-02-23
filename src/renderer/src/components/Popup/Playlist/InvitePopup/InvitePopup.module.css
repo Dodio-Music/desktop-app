@@ -17,7 +17,7 @@
     background: #37383b;
     border: 2px solid transparent;
     border-radius: 5px;
-    color: var(--primary);
+    color: var(--color-text-primary);
 }
 
 .search:focus {
@@ -91,7 +91,7 @@
 }
 
 #userName {
-    color: var(--secondary);
+    color: var(--color-text-secondary);
 }
 
 .invite {
@@ -108,16 +108,16 @@
 }
 
 .invite:hover svg {
-    color: white;
+    color: var(--color-text-primary);
     transform: scale(1.05);
 }
 
 .invite:active svg {
     transition: 0s;
     transform: scale(0.95);
-    color: #969696;
+    color: var(--color-text-tertiary);
 }
 
 .userCard:hover .invite {
-    color: var(--secondary);
+    color: var(--color-text-secondary);
 }

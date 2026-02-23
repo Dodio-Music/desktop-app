@@ -6,16 +6,16 @@
 }
 
 .filterWrapper div {
-    background-color: #363636;
+    background-color: var(--color-bg-2);
     border-radius: 18px;
     padding: 7px 13px;
     cursor: pointer;
-    color: #ffffff;
+    color: var(--color-text-primary);
     transition: 0.05s;
 }
 
 .filterWrapper div:hover {
-    background-color: #414141;
+    background-color: var(--color-bg-3);
 }
 
 .filterWrapper div p {
@@ -23,6 +23,6 @@
 }
 
 .filterWrapper div.filterActive {
-    background-color: #ffffff;
-    color: black;
+    background-color: var(--color-inverse-bg);
+    color: var(--color-inverse-text);
 }

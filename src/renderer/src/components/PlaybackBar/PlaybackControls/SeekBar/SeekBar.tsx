@@ -21,6 +21,7 @@ const SeekBar = () => {
     const currentTime = useSelector((state: RootState) => state.nativePlayer.currentTime);
     const playbackRunning = useSelector((state: RootState) => state.nativePlayer.playbackRunning);
     const currentTrack = useSelector((state: RootState) => state.nativePlayer.currentTrack, shallowEqual);
+    const theme = useSelector((state: RootState) => state.uiSlice.theme);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const durationRef = useRef<number>(duration);
@@ -38,12 +39,17 @@ const SeekBar = () => {
         : wantedDisplayStyle;
     const seekbarHeight = displayStyle === SeekBarDisplayStyle.WAVEFORM ? 25 : 5;
 
-    const waveformRef = useWaveform(waveformData, seekbarWidth, seekbarHeight, currentTrack?.id ?? null);
     const lastIpcTimeRef = useRef<number>(0);
     const lastIpcTimestampRef = useRef<number>(0);
     const rafRef = useRef<number | null>(null);
     const playbackRunningRef = useRef(playbackRunning);
     const trackRef = useRef(currentTrack);
+
+    const listenProgressColor = theme.type === "light" ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.7)";
+    const waveformColor = getComputedStyle(document.documentElement)
+        .getPropertyValue("--color-inverse-bg")
+        .trim();
+    const waveformRef = useWaveform(waveformData, seekbarWidth, seekbarHeight, currentTrack?.id ?? null, waveformColor);
 
     useEffect(() => {
         trackRef.current = currentTrack;
@@ -148,7 +154,7 @@ const SeekBar = () => {
             }
 
             const progressX = progressTime / durationRef.current * ctx.canvas.width;
-            ctx.fillStyle = "rgba(0,0,0,0.7)";
+            ctx.fillStyle = listenProgressColor;
             ctx.fillRect(progressX, 0, ctx.canvas.width - progressX, ctx.canvas.height);
 
             rafRef.current = requestAnimationFrame(loop);
@@ -159,7 +165,7 @@ const SeekBar = () => {
         return () => {
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
         };
-    }, [displayStyle, waveformRef]);
+    }, [displayStyle, waveformRef, listenProgressColor]);
 
     const updateHover = (clientX: number, dragging: boolean) => {
         if (!barRef.current || duration <= 0) return;

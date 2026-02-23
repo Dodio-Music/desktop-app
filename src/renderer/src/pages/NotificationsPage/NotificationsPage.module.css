@@ -44,6 +44,7 @@
 
 .title {
     font-size: 1.4rem;
+    color: var(--color-text-primary);
 }
 
 .topRight {
@@ -66,15 +67,17 @@
     font-weight: 600;
     transition: 0.1s;
     cursor: pointer;
+    background-color: var(--color-inverse-bg);
+    color: var(--color-inverse-text);
 }
 
 .buttons button:hover {
-    background-color: #c9c9c9;
+    background-color: var(--color-inverse-hover);
 }
 
 .buttons button:active {
     transition: 0s;
-    background-color: #979797;
+    background-color: var(--color-inverse-active);
     transform: scale(0.98);
 }
 
@@ -88,16 +91,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    color: var(--color-text-primary);
 }
 
 .time {
-    color: rgb(153, 153, 153);
+    color: var(--color-text-secondary);
     font-weight: 500;
     font-size: 1.1rem;
 }
 
 .seperator {
-    background-color: #323232;
+    background-color: var(--color-bg-3);
     height: 3px;
     margin: 5px -15px 15px -15px;
 }
@@ -105,8 +109,10 @@
 .owner {
     font-size: 1.2rem;
     font-weight: 600;
+    color: var(--color-text-primary);
 }
 
 .meta {
     font-size: 1.1rem;
+    color: var(--color-text-secondary);
 }

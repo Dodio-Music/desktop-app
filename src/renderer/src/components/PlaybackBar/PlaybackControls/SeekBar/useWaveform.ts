@@ -1,7 +1,9 @@
 import {useEffect, useRef} from "react";
 import {WaveformData} from "../../../../../../shared/PlayerState";
+import {useSelector} from "react-redux";
+import {RootState} from "@renderer/redux/store";
 
-export function useWaveform (waveformData: WaveformData | undefined, width: number, height: number, currentTrackId: string | null) {
+export function useWaveform (waveformData: WaveformData | undefined, width: number, height: number, currentTrackId: string | null, fillColor: string) {
     const offscreenCanvasRef = useRef<HTMLCanvasElement>(
         (() => {
             const canvas = document.createElement("canvas");
@@ -14,6 +16,8 @@ export function useWaveform (waveformData: WaveformData | undefined, width: numb
     const peaks = waveformData?.peaks;
     const id = waveformData?.id;
 
+    const theme = useSelector((state: RootState) => state.uiSlice.theme);
+
     useEffect(() => {
         const canvas = offscreenCanvasRef.current;
         const ctx = canvas.getContext("2d");
@@ -25,7 +29,7 @@ export function useWaveform (waveformData: WaveformData | undefined, width: numb
         const middle = height / 2;
         ctx.clearRect(0, 0, width, height);
         const fallbackHeightFraction = 0.25;
-        ctx.fillStyle = "rgb(255,255,255)";
+        ctx.fillStyle = fillColor;
         if (!peaks || peaks.length === 0 || currentTrackId !== id) {
             ctx.fillRect(0, middle - fallbackHeightFraction * height / 2, width, fallbackHeightFraction * height);
         } else {
@@ -41,7 +45,7 @@ export function useWaveform (waveformData: WaveformData | undefined, width: numb
         }
 
         offscreenCanvasRef.current = canvas;
-    }, [width, height, currentTrackId, id, peaks]);
+    }, [width, height, currentTrackId, id, peaks, theme, fillColor]);
 
     return offscreenCanvasRef;
 }

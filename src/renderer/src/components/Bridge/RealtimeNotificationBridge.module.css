@@ -3,7 +3,7 @@
     border: none;
     font-size: 1.4rem;
     cursor: pointer;
-    color: white;
+    color: var(--color-text-primary);
     margin-right: -10px;
     z-index: 10;
 }

@@ -51,20 +51,21 @@
     background: linear-gradient(
         to right,
         rgba(40,40,40,0) 0%,
-        var(--color-bg) 100%
+        var(--color-bg-0) 100%
     );
 }
 
 .showHide {
     background: none;
     border: none;
-    color: white;
+    color: var(--color-text-primary);
     cursor: pointer;
     font-size: 1rem;
     gap: 8px;
 }
 
 .error {
+    color: var(--color-text-primary);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -80,18 +81,18 @@
     padding: 8px;
     width: 120px;
     border: none;
-    background-color: #ffffff;
+    background-color: var(--color-inverse-bg);
     transition: 0.1s;
-    color: black;
+    color: var(--color-inverse-text);
     font-weight: 500;
 }
 
 .error button:hover {
-    background-color: #cccccc;
+    background-color: var(--color-inverse-hover);
 }
 
 .error button:active {
     transform: scale(0.95);
     transition: 0s;
-    background-color: #b1b1b1;
+    background-color: var(--color-inverse-active);
 }

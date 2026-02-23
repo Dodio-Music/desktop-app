@@ -5,8 +5,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--color-bar);
-    color: white;
+    background: var(--color-bg-0-darker);
+    color: var(--color-text-primary);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -36,19 +36,19 @@
     border: none;
     height: 100%;
     border-radius: 0;
-    background-color: var(--color-bar);
-    color: white;
+    background-color: var(--color-bg-0-darker);
+    color: var(--color-text-primary);
     -webkit-app-region: no-drag;
 }
 
 .buttons button:hover, .buttons button:active {
-    background-color: rgb(27, 27, 27);
-    color: var(--color-accent-hover);
+    background-color: var(--color-bg-2);
+    color: var(--color-primary-hover);
 }
 
 .buttons button:active {
     transition: 0s;
-    background-color: rgb(58, 58, 58);
+    background-color: var(--color-bg-4);
 }
 
 #exit:hover {
@@ -57,23 +57,23 @@
 
 #exit:active {
     transition: 0s background-color;
-    background-color: rgb(103, 103, 103);
+    background-color: var(--color-bg-4);
 }
 
 .zoomContainer {
     border: none;
     transition: background-color 0.1s;
     border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.14);
+    background-color: var(--color-bg-1);
     -webkit-app-region: no-drag;
 }
 
 .zoomContainer:hover {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: var(--color-bg-3);
 }
 
 .zoomLevel {
-    color: #e5e5e5;
+    color: var(--color-text-primary);
     padding: 9px;
     line-height: 1;
     font-size: 0.85rem;
@@ -98,13 +98,13 @@
     padding: 8px 2px;
     background-color: transparent;
     border: none;
-    color: var(--secondary);
+    color: var(--color-text-primary);
     font-size: 27px;
     transition: 0.1s;
 }
 
 .leftsub button:not(:disabled):active {
-    color: var(--secondary) !important;
+    color: var(--color-text-tertiary) !important;
     transition: 0s !important;
     transform: scale(1) !important;
 }
@@ -114,11 +114,11 @@
 }
 
 .leftsub button:disabled {
-    color: #4d4d4d;
+    color: var(--color-text-tertiary);
 }
 
 .leftsub button:not(:disabled):hover {
-    color: white;
+    color: var(--color-text-primary);
     transform: scale(1.08);
 }
 
@@ -149,14 +149,18 @@
     -webkit-app-region: no-drag;
     background: none;
     border: none;
-    color: white;
+    color: var(--color-text-primary);
     cursor: pointer;
     transition: color 0.2s, transform 0.2s;
     line-height: 1;
 }
 
 .item:hover {
-    color: var(--color-accent-hover);
+    color: var(--color-primary-hover);
+}
+
+.item:active {
+    color: var(--color-primary-active);
 }
 
 .item:hover {
@@ -186,8 +190,8 @@
 
 .notifPopover {
     position: absolute;
-    color: white;
-    background-color: var(--color-accent-primary);
+    color: var(--color-text-primary);
+    background-color: var(--color-accent);
     font-size: 0.7rem;
     border-radius: 100px;
     aspect-ratio: 1;

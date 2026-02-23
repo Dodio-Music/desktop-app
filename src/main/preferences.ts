@@ -8,6 +8,7 @@ export interface IPreferences {
     localFilesDir?: string;
     latencyPreset: string;
     closeBehavior: "quit" | "tray";
+    theme: string;
 }
 
 export interface IState {
@@ -20,7 +21,8 @@ export interface IState {
 const defaultPrefs: IPreferences = {
     localFilesDir: undefined,
     latencyPreset: "safe",
-    closeBehavior: "quit"
+    closeBehavior: "quit",
+    theme: "purple"
 };
 
 const defaultState: IState = {

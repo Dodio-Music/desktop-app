@@ -5,7 +5,7 @@
 .dragArea {
     width: 100%;
     aspect-ratio: 1;
-    background-color: #212121;
+    background-color: var(--color-bg-2);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -18,12 +18,12 @@
 }
 
 .dragging {
-    background-color: #333333;
+    background-color: var(--color-bg-3);
 }
 
 .dragArea p {
     font-size: 1.5rem;
-    color: #9c9c9c;
+    color: var(--color-text-secondary);
 }
 
 .horizontal {
@@ -60,7 +60,7 @@
 
 .tableHead p {
     font-weight: 700;
-    color: white;
+    color: var(--color-text-primary);
 }
 
 .delete svg {
@@ -73,18 +73,18 @@
 }
 
 .delete:hover svg {
-    color: #ff5252;
+    color: var(--color-danger);
     opacity: 1;
 }
 
 .status, .fileName {
-    color: #d7d7d7;
+    color: var(--color-text-primary);
 }
 
 .statusError {
-    color: #ff8b8b;
+    color: var(--color-danger-text);
 }
 
 .statusSuccess {
-    color: #8bff8d;
+    color: var(--color-success-text);
 }

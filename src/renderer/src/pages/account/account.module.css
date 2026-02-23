@@ -14,7 +14,7 @@
     padding: 40px;
     padding-bottom: 30px;
     position: relative;
-    background-color: #1b1b1b;
+    background-color: var(--color-bg-1);
     border-radius: 20px;
 }
 
@@ -25,13 +25,13 @@
 }
 
 .heading {
-    color: white;
+    color: var(--color-text-primary);
     font-weight: 600;
 }
 
 .container input {
-    background-color: rgb(50, 50, 50);
-    color: white;
+    background-color: var(--color-bg-2);
+    color: var(--color-text-primary);
     font-weight: 500;
     outline: none;
 }
@@ -46,37 +46,37 @@
 
 .createInfo {
     font-weight: 500;
-    color: rgb(124, 124, 124);
+    color: var(--color-text-tertiary);
     font-size: 1rem;
 }
 
 .create {
     font-weight: 500;
     text-decoration: none;
-    color: white;
+    color: var(--color-text-primary);
     transition: color 0.2s;
 }
 
 
 .create:hover {
-    color: var(--color-accent-hover);
+    color: var(--color-primary-hover);
 }
 
 .forgotPassword {
     font-weight: 500;
     text-decoration: none;
-    color: white;
+    color: var(--color-text-primary);
     transition: color 0.2s;
 }
 
 .forgotPassword:hover {
-    color: var(--color-accent-hover);
+    color: var(--color-primary-hover);
 }
 
 .button {
     cursor: pointer;
     transition: 0.2s;
-    background-color: white;
+    background-color: var(--color-inverse-bg);
     color: black;
     font-weight: 700;
     padding: 15px;
@@ -86,12 +86,12 @@
 
 .buttonActive, .button:active {
     transform: scale(0.98);
-    background-color: #858585 !important;
+    background-color: var(--color-inverse-active) !important;
     transition: 0s;
 }
 
 .button:hover {
-    background-color: #d9d9d9;
+    background-color: var(--color-inverse-hover);
 }
 
 .passwordWrapper {
@@ -106,7 +106,7 @@
 }
 
 .eyeButton {
-    color: white;
+    color: var(--color-text-primary);
     position: absolute;
     right: 10px;
     top: 50%;
@@ -165,8 +165,8 @@
 }
 
 #delete {
-    background-color: #ca1f35;
-    color: white;
+    background-color: var(--color-danger);
+    color: var(--color-text-primary);
 }
 
 .manageAccountContainer{
@@ -195,7 +195,6 @@
     flex-direction: row;
     justify-content: space-around;
 
-    background-color: #262424;
     border-radius: 5px;
     margin: 0 auto;
 
@@ -259,6 +258,7 @@
     font-size: 1.6rem;
     font-weight: 600;
     margin-bottom: 15px;
+    color: var(--color-text-primary);
 }
 
 .infoRow {
@@ -275,7 +275,7 @@
 
 .label {
     display: block;
-    color: #c0c0c0;
+    color: var(--color-text-secondary);
     font-size: 1.1rem;
     margin-bottom: 4px;
 }
@@ -283,12 +283,12 @@
 .value {
     font-size: 0.95rem;
     font-weight: 500;
-    color: white;
+    color: var(--color-text-primary);
 }
 .secondary {
     background: transparent;
     border: 1px solid #4e5058;
-    color: white;
+    color: var(--color-text-primary);
     padding: 6px 12px;
     border-radius: 4px;
     cursor: pointer;
@@ -297,26 +297,26 @@
 }
 
 .secondary:hover {
-    background-color: var(--color-accent-hover);
+    background-color: var(--color-primary-hover);
 }
 
 
 .dangerTitle {
-    color: #f23f43;
+    color: var(--color-danger);
     font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
 }
 
 .dangerText {
-    color: #c0c0c0;
+    color: var(--color-text-secondary);
     font-size: 1.1rem;
     margin-bottom: 12px;
 }
 
 #delete {
-    background-color: #f23f43;
-    color: white;
+    background-color: var(--color-danger);
+    color: var(--color-text-primary);
     border-radius: 4px;
     padding: 8px 12px;
     font-weight: 600;
@@ -325,8 +325,8 @@
 .deleteButton{
     cursor: pointer;
     transition: 0.2s;
-    background-color: #f23f43;
-    color: white;
+    background-color: var(--color-danger);
+    color: var(--color-text-primary);
     font-weight: 600;
     font-size: 0.95rem;
     padding: 10px;
@@ -340,7 +340,7 @@
     top: 23px;
     line-height: 1;
     left: 23px;
-    color: white;
+    color: var(--color-text-primary);
     background-color: transparent;
     border: none;
     font-size: 1rem;
@@ -348,7 +348,7 @@
 }
 
 .back:hover {
-    color: white;
+    color: var(--color-text-primary);
     text-decoration: underline;
 }
 

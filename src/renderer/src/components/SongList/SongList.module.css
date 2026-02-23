@@ -1,8 +1,3 @@
-:root {
-    --primary: #ffffff;
-    --secondary: #b9b9b9;
-}
-
 .songList {
     margin-top: 20px;
     width: 100%;
@@ -33,7 +28,7 @@
 
 .headRow {
     padding: 8px;
-    color: var(--secondary);
+    color: var(--color-text-secondary);
     font-size: 1.05rem;
     align-items: center;
 }
@@ -45,11 +40,11 @@
 }
 
 .songRow:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--color-bg-2);
 }
 
 .activeRow {
-    background-color: rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--color-bg-4) !important;
 }
 
 .textRight {
@@ -57,7 +52,7 @@
 }
 
 .divider {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: var(--color-bg-4);
     height: 1px;
     margin: 0 0 20px;
 }
@@ -91,7 +86,7 @@
 }
 
 .trackTitle {
-    color: var(--primary);
+    color: var(--color-text-primary);
     font-size: 1.2rem;
 }
 
@@ -114,7 +109,7 @@
 
 .trackArtist {
     font-size: 1.1rem;
-    color: var(--secondary);
+    color: var(--color-text-secondary);
 }
 
 .trackNumberWrapper {
@@ -128,7 +123,7 @@
 }
 
 .trackNumber {
-    color: var(--secondary);
+    color: var(--color-text-secondary);
     min-width: 1ch;
     margin-right: -8px;
     transform: translateX(-50%);
@@ -152,29 +147,29 @@
 
 .playButton svg {
     padding: 2px;
-    color: white;
+    color: var(--color-text-primary);
     transition: 0.1s color;
     transform: translateX(-2px);
 }
 
 .playButton svg:hover {
-    color: #d8d8d8;
+    color: var(--color-text-primary-hover);
 }
 
 .playButton svg:active {
     transition: 0s color;
-    color: #8a8a8a;
+    color: var(--color-text-tertiary);
 }
 
 .trackAlbum {
-    color: var(--secondary);
+    color: var(--color-text-secondary);
     width: fit-content;
     max-width: 100%;
     font-size: 1.1rem;
 }
 
 .timestamp {
-    color: var(--secondary);
+    color: var(--color-text-secondary);
     font-size: 1.1rem;
 }
 
@@ -183,13 +178,13 @@
 }
 
 .link:hover {
-    color: white;
+    color: var(--color-text-primary);
     text-decoration: underline;
 }
 
 .addedBy {
     font-size: 1.1rem;
-    color: var(--secondary);
+    color: var(--color-text-secondary);
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -205,7 +200,7 @@
 
 .songRow:hover .menu, .menu.showOptions {
     opacity: 1;
-    color: var(--secondary);
+    color: var(--color-text-secondary);
 }
 
 .menu {
@@ -214,12 +209,12 @@
 }
 
 .menu:hover {
-    color: white !important;
+    color: var(--color-text-primary) !important;
 }
 
 .trackDuration {
     text-align: right;
-    color: var(--secondary);
+    color: var(--color-text-secondary);
     font-size: 1.1rem;
 }
 
@@ -240,7 +235,7 @@
 }
 
 .playing {
-    color: #bc75ff;
+    color: var(--color-accent);
 }
 
 .playsHeader {
@@ -249,7 +244,7 @@
 
 .plays {
     text-align: right;
-    color: var(--secondary);
+    color: var(--color-text-secondary);
 }
 
 .songRow > .colWrapper:first-child {
@@ -266,6 +261,6 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: var(--color-accent-hover);
+    background: var(--color-primary);
     z-index: 10;
 }

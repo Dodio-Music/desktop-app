@@ -1,16 +1,3 @@
-:root{
-    /* themes */
-    --color-bg: #111112;
-    --color-bar: #070707;
-    --color-panel: #171719;
-    --color-text-primary: #E5E5E7;
-    --color-text-secondary: #9B9BA0;
-    --color-accent-primary: #DC143C ;
-    --color-accent-hover: #FF1E56 ;
-    --color-section-glow: #DC143C33 ;
-    --color-border: #2E2E32 ;
-}
-
 .displayContainer {
     position: relative;
     flex: 1;
@@ -35,23 +22,111 @@
 }
 
 /* themes */
-:root:has(.appContainer[data-theme="dark"]) {
-    --color-bg: #404042;
-    --color-bar: #070707;
-    --color-panel: #171719;
-    --color-text-primary: #E5E5E7;
-    --color-text-secondary: #9B9BA0;
-    --color-accent-primary: #DC143C ;
-    --color-accent-hover: #FF1E56 ;
-    --color-section-glow: #DC143C33 ;
-    --color-border: #2E2E32 ;
+/*:root:has(.appContainer[data-theme="dark"]) {*/
+/*    --color-bg: #404042;*/
+/*    --color-bar: #070707;*/
+/*    --color-panel: #171719;*/
+/*    --color-text-primary: #E5E5E7;*/
+/*    --color-text-secondary: #9B9BA0;*/
+/*    --color-accent-primary: #DC143C ;*/
+/*    --color-primary-hover: #FF1E56 ;*/
+/*    --color-section-glow: #DC143C33 ;*/
+/*    --color-border: #2E2E32 ;*/
+/*}*/
+
+:root{
+    /* background/surface layers */
+    --color-bg-0-darker: hsl(0 0% 2.7%);  /* playback / title bar */
+    --color-bg-0: hsl(265 6% 6.9%);  /* app background */
+    --color-bg-1: hsl(260 6% 10%);  /* sidebar */
+    --color-bg-2: hsl(265 4% 15%);  /* cards */
+    --color-bg-3: hsl(265 3% 18%);
+    --color-bg-4: hsl(265 2% 24%);
+    --color-border: hsl(265 3% 18.8%);
+
+    /* text tokens */
+    --color-text-primary: hsl(0, 0%, 100%);
+    --color-text-primary-hover: hsl(0, 0%, 76%);
+    --color-text-secondary: hsl(0 0% 70%);
+    --color-text-tertiary: hsl(0 0% 50%);
+
+    /* main color */
+    --color-primary: hsl(271 91% 60.1%);
+    --color-primary-hover: hsl(271 91% 65.1%);
+    --color-primary-active: hsl(271 100% 55%);
+    --color-accent: hsl(281, 100%, 70%);
+
+    /* inverse */
+    --color-inverse-bg: hsl(0 0% 100%);
+    --color-inverse-hover: hsl(0, 0%, 84%);
+    --color-inverse-active: hsl(0, 0%, 64%);
+    --color-inverse-text: hsl(0, 0%, 0%);
+
+    /* extras */
+    --color-success: hsl(142 70% 45%);
+    --color-warning: hsl(38 85% 55%);
+    --color-danger: hsl(359 73.3% 54.8%);
+
+    --color-success-text: hsl(142 70% 75%);
+    --color-warning-text: hsl(38 85% 75%);
+    --color-danger-text: hsl(359 87.3% 75%);
 }
 
-:root:has(.appContainer[data-theme="crimson"]) {
-    --color-accent-hover: crimson;
+:root[data-theme="crimson"] {
+    --color-primary: hsl(348 75% 55%);
+    --color-primary-hover: hsl(348 75% 62%);
+    --color-primary-active: hsl(348 75% 48%);
+    --color-accent: hsl(340 80% 60%);
+
+    --color-bg-0-darker: hsl(0 0% 2.7%);
+    --color-bg-0: hsl(348 6% 6.9%);
+    --color-bg-1: hsl(348 6% 10%);
+    --color-bg-2: hsl(348 5% 15%);
+    --color-bg-3: hsl(348 3% 18%);
+    --color-bg-4: hsl(348 2% 24%);
+    --color-border: hsl(348 3% 18.8%);
 }
 
-:root:has(.appContainer[data-theme="purple"]) {
-    --color-accent-hover: #a855f7;
+:root[data-theme="purple"] {
+    /* default */
+}
+
+:root[data-theme="blue"] {
+    --color-primary: hsl(210 85% 60%);
+    --color-primary-hover: hsl(210 85% 65%);
+    --color-primary-active: hsl(210 85% 55%);
+    --color-accent: hsl(195 85% 55%);
+
+    --color-bg-0-darker: hsl(0 0% 2.7%);
+    --color-bg-0: hsl(240 3% 6.9%);
+    --color-bg-1: hsl(240 3% 10%);
+    --color-bg-2: hsl(220 2% 15%);
+    --color-bg-3: hsl(220 2% 18%);
+    --color-bg-4: hsl(220 2% 24%);
+    --color-border: hsl(240 3% 18.8%);
+}
+
+:root[data-theme="light"] {
+    --color-bg-0-darker: hsl(0, 0%, 98%);
+    --color-bg-0: hsl(0, 0%, 95%);
+    --color-bg-1: hsl(0, 0%, 91%);
+    --color-bg-2: hsl(0, 0%, 87%);
+    --color-bg-3: hsl(0, 0%, 82%);
+    --color-border: hsl(0, 0%, 81%);
+
+    --color-text-primary: hsl(0, 0%, 0%);
+    --color-text-primary-hover: hsl(0, 0%, 21%);
+    --color-text-secondary: hsl(0, 0%, 36%);
+    --color-text-tertiary: hsl(0, 0%, 56%);
+
+    --color-primary: hsl(210 85% 60%);
+    --color-primary-hover: hsl(210 85% 65%);
+    --color-primary-active: hsl(210 85% 55%);
+    --color-accent: hsl(195 85% 55%);
+
+    --color-inverse-bg: hsl(0, 0%, 0%);
+    --color-inverse-hover: hsl(0, 0%, 17%);
+    --color-inverse-active: hsl(0, 0%, 26%);
+    --color-inverse-text: hsl(0, 0%, 100%);
 }
 

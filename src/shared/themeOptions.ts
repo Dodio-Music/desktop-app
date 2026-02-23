@@ -1,0 +1,12 @@
+export type Theme = {
+    name: string;
+    type: "light" | "dark";
+    displayName: string;
+}
+
+export const themeOptions: Theme[] = [
+    {name: "purple", displayName: "Basic Purple", type: "dark"},
+    {name: "crimson", displayName: "Basic Crimson", type: "dark"},
+    {name: "blue", displayName: "Basic Blue", type: "dark"},
+    {name: "light", displayName: "Light", type: "light"}
+] as const;

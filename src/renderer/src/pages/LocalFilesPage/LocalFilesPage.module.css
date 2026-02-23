@@ -1,11 +1,11 @@
 .error {
-    color: #e1e1e1;
+    color: var(--color-text-primary);
 }
 
 .dirButton {
     transition: 0.1s;
-    background-color: #207fc3;
-    color: white;
+    background-color: var(--color-primary);
+    color: var(--color-text-primary);
     text-transform: uppercase;
     padding: 10px;
     font-size: 1.1rem;

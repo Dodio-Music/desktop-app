@@ -7,6 +7,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {fetchNotificationState, resetNotifications} from "@renderer/redux/notificationsSlice";
 import {AppDispatch, RootState} from "@renderer/redux/store";
 import ViewBrowser from "@renderer/layout/Routing/ViewBrowser";
+import RootLayout from "@renderer/layout/Routing/RootLayout";
 
 function App() {
     const username = useSelector((state: RootState) => state.auth.info.username);
@@ -39,7 +40,9 @@ function App() {
                 containerClassName={s.toast}
                 reverseOrder={false}
             />
-            <ViewBrowser/>
+            <RootLayout>
+                <ViewBrowser/>
+            </RootLayout>
         </>
     );
 }
