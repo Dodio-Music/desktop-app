@@ -17,11 +17,11 @@ const ProtectedRoute = ({ children, redirect = false }: ProtectedRouteProps) => 
 
     if(!info.status) return <LoadingPage/>;
 
-    if(info.status === "account") return <>{children}</>;
+    if(info.status === "logged_in") return <>{children}</>;
 
     if(!redirect) return (
         <div className={"pageWrapper"}>
-            <p style={{marginBottom: "10px"}}>Only registered Dodio users can access this page.</p>
+            <p className={sa.noAccess}>Only registered Dodio users can access this page.</p>
             <button onClick={() => navigate("/login")} className={sa.accountButton}><IoLogIn size={19} /> Sign In</button>
         </div>
     );

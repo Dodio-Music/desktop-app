@@ -9,6 +9,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch, RootState} from "@renderer/redux/store";
 import {setGlobalTheme} from "@renderer/redux/uiSlice";
 import {themeOptions} from "../../../../shared/themeOptions";
+import {useNativeRedirect} from "@renderer/hooks/layout/useNativeRedirect";
 
 const RootLayout = ({children}: {children: ReactNode}) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -16,6 +17,7 @@ const RootLayout = ({children}: {children: ReactNode}) => {
     const zoomFactor = useZoom();
     useNavigationShortcuts();
     useShortcuts();
+    useNativeRedirect();
 
     useEffect(() => {
         window.api.getPreferences().then((prefs) => {

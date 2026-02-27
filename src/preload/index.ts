@@ -7,7 +7,7 @@ import {ApiResult, DodioApi, MayError, AxiosMethodArgs, DodioError} from "../sha
 import IpcRenderer = Electron.IpcRenderer;
 import {IAllPreferences} from "../main/preferences.js";
 import {UploadProgress, UploadResponse} from "../main/dashboard.js";
-import {AuthInfo} from "../main/web/Typing.js";
+import {RendererAuthInfo} from "../main/web/Typing.js";
 import {QueueState} from "../main/player/QueueManager";
 
 export interface CustomWindowControls {
@@ -52,10 +52,6 @@ if(LOG_ALL_IPC_EVENTS) {
         });
     };
 }
-
-ipcRenderer.on("deep-link", (_event, url) => {
-    console.log(url);
-});
 
 const windowControls: CustomWindowControls = {
     minimize: () => ipcRenderer.send("window-minimize"),
@@ -107,13 +103,16 @@ const api = {
     },
     showLocalFilesDialog: () => ipcRenderer.invoke("songs:setdirectory"),
     getAuthInitialRedux: () => ipcRenderer.invoke("auth:get-initial-redux"),
-    onAuthUpdate: (cb: (status: AuthInfo) => void) => {
-        const handler = (_: unknown, status: AuthInfo) => cb(status);
+    onAuthUpdate: (cb: (status: RendererAuthInfo) => void) => {
+        const handler = (_: unknown, status: RendererAuthInfo) => cb(status);
         ipcRenderer.on("auth:statusChange", handler);
         return () => ipcRenderer.removeListener("auth:statusChange", handler);
     },
     authRequest<T = unknown, M extends keyof AxiosMethodArgs = keyof AxiosMethodArgs>(method: M, ...args: AxiosMethodArgs[M]) {
         return ipcRenderer.invoke("api:authRequest", method, ...args) as Promise<ApiResult<T>>;
+    },
+    plainRequest<T = unknown, M extends keyof AxiosMethodArgs = keyof AxiosMethodArgs>(method: M, ...args: AxiosMethodArgs[M]) {
+        return ipcRenderer.invoke("api:plainRequest", method, ...args) as Promise<ApiResult<T>>;
     },
     refreshAccessToken: async (): Promise<MayError> => ipcRenderer.invoke("auth:refresh"),
     login: (login: string, password: string) => ipcRenderer.invoke("api:login", login, password) as Promise<MayError>,
@@ -148,6 +147,11 @@ const api = {
         const listener = (_: IpcRendererEvent, type: "success" | "error", msg: string) => cb(type, msg);
         ipcRenderer.on("ui:toast", listener);
         return () => ipcRenderer.removeListener("ui:toast", listener);
+    },
+    onNavigate: (cb: (url: string) => void) => {
+        const listener = (_: IpcRendererEvent, url: string) => cb(url);
+        ipcRenderer.on("ui:navigate", listener);
+        return () => ipcRenderer.removeListener("ui:navigate", listener);
     }
 } satisfies DodioApi & Record<string, unknown>;
 

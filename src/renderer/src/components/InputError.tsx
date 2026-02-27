@@ -9,7 +9,7 @@ const InputError = ({error, inputKey}: Props) => {
     if(error?.error !== "invalid-input" || error.arg.inputKey !== inputKey) return <></>;
 
     return (
-        <span>{error.arg.message}</span>
+        <span style={{color: "var(--color-text-primary)"}}>{error.arg.message}</span>
     );
 };
 

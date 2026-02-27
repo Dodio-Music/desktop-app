@@ -31,7 +31,8 @@
     width: 100%;
     border-radius: 10px;
     border: none;
-    background-color: white;
+    background-color: var(--color-inverse-bg);
+    color: var(--color-inverse-text);
     font-weight: 500;
     font-size: 1.1rem;
     padding: 15px;

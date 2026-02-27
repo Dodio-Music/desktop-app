@@ -52,13 +52,13 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
             path: "/dashboard",
             icon: <RiDashboardLine size={26} />,
             activeIcon: <RiDashboardFill size={26} />,
-            show: info.role === "ADMIN" && info.status === "account",
+            show: info.role === "ADMIN" && info.status === "logged_in",
         },
         {
             path: "/notifications",
             icon: <IoMdNotificationsOutline id={s.notif} size={27} />,
             activeIcon: <IoMdNotifications id={s.notif} size={27} />,
-            show: info.status === "account",
+            show: info.status === "logged_in",
         },
         {
             path: "/settings",

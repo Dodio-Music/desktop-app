@@ -1,13 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import {AuthInfo} from "../../../main/web/Typing";
+import {RendererAuthInfo} from "../../../main/web/Typing";
 
 export interface AuthState {
-    info: AuthInfo;
+    info: RendererAuthInfo;
 }
 
 const initialState: AuthState = {
     info: {
-        status: "signup"
+        status: "no_account"
     }
 }
 
@@ -15,7 +15,7 @@ const authSlice = createSlice({
     name: "auth",
     initialState,
     reducers: {
-        setAuthInfo: (state, action: PayloadAction<AuthInfo>) => ({ ...state, info: action.payload }),
+        setAuthInfo: (state, action: PayloadAction<RendererAuthInfo>) => ({ ...state, info: action.payload }),
     },
 });
 

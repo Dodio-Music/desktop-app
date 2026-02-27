@@ -21,9 +21,8 @@ interface NavItem {
 }
 
 const accountPages = {
-    login: {url: "/login", text: "Sign In", icon: <MdOutlineLogin/>},
-    signup: {url: "/signup", text: "Sign Up", icon: <MdOutlineLogin/>},
-    account: {url: "/settings?tab=account", text: "Account Page", icon: <FaRegUserCircle />}
+    no_account: {url: "/login", text: "Sign In", icon: <MdOutlineLogin/>},
+    logged_in: {url: "/settings?tab=account", text: "Account Page", icon: <FaRegUserCircle />}
 } as const satisfies Record<AuthStatus, { url: string, text: string, icon: React.ReactElement }>;
 
 interface ItemHelper {
@@ -91,7 +90,7 @@ const Sidebar = () => {
 
     return (
         <div className={classNames(s.main)}>
-            {navItems({localSongsCount}).filter(c => !c.needsAccount || info.status === "account").map((item) => (
+            {navItems({localSongsCount}).filter(c => !c.needsAccount || info.status === "logged_in").map((item) => (
                 <NavButton key={item.url} url={item.url}>
                     {item.icon}
                     <div className={s.name}>

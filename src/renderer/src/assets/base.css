@@ -99,7 +99,7 @@ img {
 }
 
 .error {
-    color: var(--color-danger-text)
+    color: var(--color-danger-text) !important;
 }
 
 .error input {
@@ -109,7 +109,7 @@ img {
 .error span {
     padding: 5px;
     font-size: 0.9rem;
-    color: var(--color-danger-text);
+    color: var(--color-danger-text) !important;
 }
 
 .pageWrapper h1 {

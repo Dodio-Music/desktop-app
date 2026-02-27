@@ -37,7 +37,7 @@ export default function useFetchData<T>(url: string): FetchState<T> {
     }, [url]);
 
     useEffect(() => {
-        if (authInfo.status !== "account") {
+        if (authInfo.status === "no_account") {
             setLoading(false);
             return;
         }

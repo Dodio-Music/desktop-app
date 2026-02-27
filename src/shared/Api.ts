@@ -18,6 +18,10 @@ export interface DodioApi {
         method: M,
         ...args: AxiosMethodArgs[M]
     ): Promise<ApiResult<T>>,
+    plainRequest<T = unknown, M extends keyof AxiosMethodArgs = keyof AxiosMethodArgs>(
+        method: M,
+        ...args: AxiosMethodArgs[M]
+    ): Promise<ApiResult<T>>,
 }
 export type InvalidInputKeys = "username" | "email" | "login" | "password" | "password-reset-token" | "playlistName" | "search";
 export const NoLoginError = {error: "no-login"} satisfies DodioError;

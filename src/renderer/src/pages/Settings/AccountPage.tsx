@@ -57,7 +57,7 @@ const AccountPage: FC<AccountSettingsProps> = ({scrollDown}) => {
                     <div className={s.infoRow}>
                         <div>
                             <span className={s.label}>Display Name</span>
-                            <span className={s.value}>{info.displayname}</span>
+                            <span className={s.value}>{info.displayName}</span>
                         </div>
                         <button className={s.secondary}>Edit</button>
                     </div>

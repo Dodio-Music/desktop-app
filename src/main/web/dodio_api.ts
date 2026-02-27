@@ -1,7 +1,7 @@
 import axios, {AxiosError, AxiosInstance, AxiosResponse} from "axios";
 import {ApiResult, AxiosMethodArgs, DodioApi, DodioError, MayError, NoLoginError} from "../../shared/Api.js";
-import {auth, updateAuth} from "../auth.js";
-import {IRole} from "./Typing.js";
+import {applyLogin, applyRefresh, auth, clearAuth, removeAccessToken} from "../auth.js";
+import {RefreshTokenResponse, SignInResponse} from "./Typing.js";
 
 let instance: AxiosInstance = null!;
 
@@ -16,9 +16,9 @@ export function setupApi() {
     // get refresh token if access token expired
     instance.interceptors.request.use(async (config) => {
         if (config.url?.includes("/auth/refresh")) return config;
-        if (!auth?.access_token) return config;
+        if (!auth?.accessToken) return config;
 
-        if (auth.access_token_expiry && auth.access_token_expiry.getTime() < Date.now()) {
+        if (auth.accessTokenExpirationDate && auth.accessTokenExpirationDate.getTime() < Date.now()) {
             if (!isRefreshing) {
                 isRefreshing = true;
                 const refreshErr = await refreshAuthToken();
@@ -27,10 +27,7 @@ export function setupApi() {
                 refreshQueue = [];
 
                 if (refreshErr) {
-                    updateAuth({
-                        access_token: undefined,
-                        access_token_expiry: undefined
-                    });
+                    removeAccessToken();
                     return Promise.reject(refreshErr);
                 }
             } else {
@@ -38,7 +35,7 @@ export function setupApi() {
             }
         }
 
-        config.headers.Authorization = `Bearer ${auth.access_token}`;
+        config.headers.Authorization = `Bearer ${auth.accessToken}`;
         return config;
     });
 
@@ -54,7 +51,7 @@ export function setupApi() {
                 const refreshErr = await refreshAuthToken();
                 if (refreshErr) return Promise.reject(err);
 
-                originalRequest.headers.Authorization = `Bearer ${auth?.access_token}`;
+                originalRequest.headers.Authorization = `Bearer ${auth?.accessToken}`;
                 return instance(originalRequest);
             }
 
@@ -78,76 +75,30 @@ function handleError(err: unknown): DodioError {
 }
 
 export async function refreshAuthToken(): Promise<MayError> {
-    if (!auth?.refresh_token || !auth.refresh_token_expiry || isNaN(auth.refresh_token_expiry.getTime())) {
+    if (!auth?.refreshToken || !auth.refreshTokenExpirationDate || isNaN(auth.refreshTokenExpirationDate.getTime())) {
         return NoLoginError;
     }
-    if (auth.refresh_token_expiry.getTime() < Date.now()) {
-        updateAuth({
-            refresh_token_expiry: undefined,
-            refresh_token: undefined,
-            access_token: undefined,
-            access_token_expiry: undefined
-        });
+    if (auth.refreshTokenExpirationDate.getTime() < Date.now()) {
+        clearAuth();
         return NoLoginError;
     }
 
     try {
         const res =
             await instance.post<RefreshTokenResponse>("/auth/refresh", {
-                refreshToken: auth?.refresh_token
+                refreshToken: auth?.refreshToken
             });
-        updateAuth({
-            access_token: res.data.accessToken,
-            access_token_expiry: new Date(res.data.accessTokenExpirationDate),
-            role: res.data.role,
-            username: res.data.username,
-            displayname: res.data.displayName,
-            email: res.data.email
-        });
+        applyRefresh(res.data);
         return null;
     } catch (err) {
         const dodioErr = handleError(err);
         if (dodioErr.error === "no-login") {
-            updateAuth({
-                access_token: undefined,
-                access_token_expiry: undefined,
-                refresh_token: undefined,
-                refresh_token_expiry: undefined,
-                email: undefined,
-                hasAccount: true,
-                role: undefined,
-                username: undefined,
-                displayname: undefined
-            });
-        } else {
-            updateAuth({});
+            clearAuth();
         }
         return dodioErr;
     }
 }
 
-
-interface SignInResponse {
-    id: number,
-    type: string,
-    username: string,
-    displayName: string,
-    email: string,
-    accessToken: string,
-    accessTokenExpirationDate: string,
-    refreshToken: string,
-    refreshTokenExpirationDate: string,
-    role: IRole
-}
-
-interface RefreshTokenResponse {
-    accessToken: string,
-    accessTokenExpirationDate: string,
-    username: string,
-    displayName: string,
-    email: string,
-    role: IRole
-}
 
 let isRefreshing = false;
 let refreshQueue: (() => void)[] = [];
@@ -160,34 +111,14 @@ export default {
                 login,
                 password
             });
-            updateAuth({
-                hasAccount: true,
-                access_token: res.data.accessToken,
-                refresh_token: res.data.refreshToken,
-                access_token_expiry: new Date(res.data.accessTokenExpirationDate),
-                refresh_token_expiry: new Date(res.data.refreshTokenExpirationDate),
-                role: res.data.role,
-                username: res.data.username,
-                displayname: res.data.displayName,
-                email: res.data.email
-            });
+            applyLogin(res.data);
             return null;
         } catch (e) {
             return handleError(e);
         }
     },
     async logout(): Promise<MayError> {
-        updateAuth({
-            refresh_token: undefined,
-            refresh_token_expiry: undefined,
-            access_token_expiry: undefined,
-            access_token: undefined,
-            role: undefined,
-            username: undefined,
-            displayname: undefined,
-            email: undefined,
-            hasAccount: true
-        });
+        clearAuth();
         return null;
     },
     async signup(username: string, email: string, password: string) {
@@ -214,6 +145,25 @@ export default {
             return {type: "ok", value: result.data};
         } catch (e) {
             return {type: "error", error: handleError(e)};
+        }
+    },
+    async plainRequest<
+        T = unknown,
+        M extends keyof AxiosMethodArgs = keyof AxiosMethodArgs
+    >(
+        method: M,
+        ...args: AxiosMethodArgs[M]
+    ): Promise<ApiResult<T>> {
+        const tempInstance = axios.create({
+            baseURL: instance.defaults.baseURL,
+            headers: instance.defaults.headers,
+        });
+
+        try {
+            const result = await (tempInstance[method] as (...p: AxiosMethodArgs[M]) => Promise<AxiosResponse<T>>)(...args);
+            return { type: "ok", value: result.data };
+        } catch (e) {
+            return { type: "error", error: handleError(e) };
         }
     }
 } as const satisfies DodioApi;

@@ -38,7 +38,7 @@ export async function processUpload(filePath: string, mainWindow: BrowserWindow)
             {
                 body: form,
                 headers: {
-                    Authorization: `Bearer ${auth?.access_token}`
+                    Authorization: `Bearer ${auth?.accessToken}`
                 }
             }
         );

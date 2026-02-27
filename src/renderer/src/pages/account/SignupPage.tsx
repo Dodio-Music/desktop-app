@@ -48,15 +48,15 @@ const SignupPage = () => {
             <form className={s.container} onSubmit={onSignup}>
                 <button className={s.back} type={"button"} onClick={onExit}>Back</button>
                 <h1 className={s.heading} {...testId("signup-title")}>Create Dodio Account</h1>
-                <div className={classNames({[s.error]: hasError("username")})}>
+                <div className={classNames({["error"]: hasError("username")})}>
                     <input ref={usernameRef} placeholder={"Username"} autoFocus={true}/>
                     <InvalidInputError inputKey="username"/>
                 </div>
-                <div className={classNames({[s.error]: hasError("email")})}>
+                <div className={classNames({["error"]: hasError("email")})}>
                     <input ref={emailRef} placeholder={"Email"} {...testId("signup-email")}/>
                     <InvalidInputError inputKey="email"/>
                 </div>
-                <div className={classNames({[s.error]: hasError("password")})}>
+                <div className={classNames({["error"]: hasError("password")})}>
                     <div className={s.passwordWrapper}>
                         <input ref={pwRef} type={showPw ? "text" : "password"}
                                placeholder={"Password"} {...testId("signup-password")}/>

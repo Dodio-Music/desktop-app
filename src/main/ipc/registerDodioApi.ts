@@ -8,5 +8,8 @@ export const registerDodioApiIPC = () => {
     ipcMain.handle("api:authRequest", (_, method, ...args) => {
         return api.authRequest(method, ...args)
     });
+    ipcMain.handle("api:plainRequest", (_, method, ...args) => {
+        return api.plainRequest(method, ...args)
+    });
     ipcMain.handle("api:logout", () => api.logout());
 };
