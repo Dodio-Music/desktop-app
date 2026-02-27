@@ -2,10 +2,13 @@ import s from "./SongList.module.css";
 import {BaseSongEntry, isRemoteSong} from "../../../../shared/TrackInfo";
 import React, {JSX, useCallback, MouseEvent, useRef} from "react";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
+import {useDispatch, useSelector} from "react-redux";
+import {AppDispatch, RootState} from "@renderer/redux/store";
 import classNames from "classnames";
 import {ContextEntity} from "@renderer/contextMenus/menuHelper";
+import {likeTrack, unlikeTrack} from "@renderer/redux/likeSlice";
+import toast from "react-hot-toast";
+import {errorToString} from "@renderer/util/errorToString";
 
 interface RowProps<T extends BaseSongEntry> {
     index: number,
@@ -44,6 +47,30 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
         (root: RootState) =>
             isActive ? root.nativePlayer.userPaused : null
     );
+
+    const isLiked = useSelector(
+        (state: RootState) => !!state.likeSlice.likedTracks[isRemoteSong(song) ? song.releaseTrackId : ""]
+    );
+
+    const dispatch = useDispatch<AppDispatch>();
+
+    const handleLikeSong = useCallback(async () => {
+        if(isRemoteSong(song)) {
+            const res = await window.api.authRequest<string>("put", "/like", {likeScope: "TRACK", likedId: song.releaseTrackId, liked: !isLiked});
+
+            if(res.type !== "error") {
+                if(!isLiked) {
+                    dispatch(likeTrack(song.releaseTrackId));
+                    toast.success("Added to Liked Songs.");
+                } else {
+                    dispatch(unlikeTrack(song.releaseTrackId));
+                    toast.success("Removed from Liked Songs.");
+                }
+            } else {
+                toast.error(errorToString(res.error));
+            }
+        }
+    }, [song, isLiked, dispatch]);
 
     const rowClass = `${s.songRow} ${s.grid}`;
     return (
@@ -94,7 +121,9 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
                         index,
                         handlePlay,
                         openContextMenu,
-                        navigate
+                        navigate,
+                        isLiked,
+                        likeSong: handleLikeSong
                     })}
                 </div>
             ))}

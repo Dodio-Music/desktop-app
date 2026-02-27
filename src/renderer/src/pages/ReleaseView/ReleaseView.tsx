@@ -50,7 +50,7 @@ const ReleaseView = () => {
                         scrollElement={scrollPageRef}
                         songs={songEntries}
                         slots={remoteSongRowSlots}
-                        gridTemplateColumns="30px 1fr 100px 250px"
+                        gridTemplateColumns="30px 1fr 100px 240px"
                     />
                 </>
             )}

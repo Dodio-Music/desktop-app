@@ -5,12 +5,14 @@ import RealtimeNotificationBridge from "@renderer/bridges/RealtimeNotificationBr
 import ViewBrowser from "@renderer/layout/Routing/ViewBrowser";
 import RootLayout from "@renderer/layout/Routing/RootLayout";
 import NotificationStateBridge from "@renderer/bridges/NotificationStateBridge/NotificationStateBridge";
+import LikeStateBridge from "@renderer/bridges/LikeStateBridge/LikeStateBridge";
 
 function App() {
     return (
         <>
             <NotificationStateBridge/>
             <RealtimeNotificationBridge/>
+            <LikeStateBridge/>
 
             <Toaster
                 position="bottom-center"

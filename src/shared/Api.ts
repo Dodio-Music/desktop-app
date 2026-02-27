@@ -162,3 +162,15 @@ export interface InviteSearchResponse {
     users: UserPublicDTO[];
     invitedUsers: UserPublicDTO[];
 }
+
+export interface LikedItemsDTO {
+    likedPlaylists: number[];
+    likedTracks: string[];
+    likedReleases: string[];
+}
+
+export interface LikedTrackDTO {
+    trackLikeId: number;
+    track: ReleaseTrackDTO;
+    likedAt: Date;
+}

@@ -10,6 +10,8 @@ import {useAuth} from "@renderer/hooks/reduxHooks";
 import {FaHome, FaRegUserCircle} from "react-icons/fa";
 import classNames from "classnames";
 import {generalPlural} from "@renderer/util/playlistUtils";
+import {useSelector} from "react-redux";
+import {RootState} from "@renderer/redux/store";
 
 interface NavItem {
     url: string;
@@ -27,9 +29,11 @@ const accountPages = {
 
 interface ItemHelper {
     localSongsCount: number;
+    likedTracks: number;
+    likedReleases: number;
 }
 
-const navItems = ({localSongsCount}: ItemHelper): NavItem[] => [
+const navItems = ({localSongsCount, likedReleases, likedTracks}: ItemHelper): NavItem[] => [
     {
         url: "/home",
         label: "Home",
@@ -47,6 +51,7 @@ const navItems = ({localSongsCount}: ItemHelper): NavItem[] => [
         url: "/collection/tracks",
         label: "Liked Songs",
         icon: <FaRegHeart style={{transform: "scale(0.9)"}}/>,
+        subLabel: `${likedTracks} song${generalPlural(likedTracks)}`,
         needsAccount: true
     },
     {
@@ -57,8 +62,9 @@ const navItems = ({localSongsCount}: ItemHelper): NavItem[] => [
     },
     {
         url: "/collection/albums",
-        label: "Liked Albums",
-        icon: <BiAlbum id={s.album}  style={{transform: "scale(1.1)"}} />,
+        label: "Saved Albums",
+        subLabel: `${likedReleases} album${generalPlural(likedReleases)}`,
+        icon: <BiAlbum id={s.album} style={{transform: "scale(1.1)"}} />,
         needsAccount: true
     },
     {
@@ -73,6 +79,7 @@ const Sidebar = () => {
     const {info} = useAuth();
     const {url: accountUrl, text: accountText, icon: accountIcon} = accountPages[info.status];
     const [localSongsCount, setLocalSongsCount] = useState(0);
+    const {likedReleases, likedTracks} = useSelector((state: RootState) => state.likeSlice);
 
     useEffect(() => {
         async function fetchCount() {
@@ -90,7 +97,7 @@ const Sidebar = () => {
 
     return (
         <div className={classNames(s.main)}>
-            {navItems({localSongsCount}).filter(c => !c.needsAccount || info.status === "logged_in").map((item) => (
+            {navItems({localSongsCount, likedTracks: Object.keys(likedTracks).length, likedReleases: Object.keys(likedReleases).length}).filter(c => !c.needsAccount || info.status === "logged_in").map((item) => (
                 <NavButton key={item.url} url={item.url}>
                     {item.icon}
                     <div className={s.name}>

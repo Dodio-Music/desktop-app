@@ -120,6 +120,7 @@
     width: 50px;
     height: 50px;
     aspect-ratio: 1;
+    overflow: visible;
 }
 
 .trackNumber {
@@ -216,6 +217,7 @@
     text-align: right;
     color: var(--color-text-secondary);
     font-size: 1.1rem;
+    font-family: monospace;
 }
 
 .trackColumn {
@@ -263,4 +265,44 @@
     height: 2px;
     background: var(--color-primary);
     z-index: 10;
+}
+
+.like {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    opacity: 0;
+}
+
+.likeButton {
+    font-size: 1.3rem;
+    line-height: 1;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    padding: 7px;
+}
+
+.songRow:hover .like, .showLike {
+    opacity: 1;
+}
+
+.isLiked, .isLiked .likeButton {
+    opacity: 1;
+    color: var(--color-text-primary) !important;
+}
+
+.likeButton > span {
+    line-height: 0;
+    transition: 0.25s transform;
+}
+
+.likeButton:hover > span {
+    transform: scale(1.1);
+}
+
+.likeButton:active > span {
+    transition: 20ms;
+    transform: scale(0.85);
 }

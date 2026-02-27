@@ -211,7 +211,7 @@ const PlaylistView = () => {
                         scrollElement={scrollPageRef}
                         songs={songEntries}
                         slots={playlistSongRowSlots}
-                        gridTemplateColumns="30px 4fr 2.5fr 1.5fr 1fr 105px"
+                        gridTemplateColumns="30px 4fr 2.5fr 1.5fr 1fr 140px"
                         contextHelpers={{
                             view: "playlist",
                             playlistId: playlist.playlistId,

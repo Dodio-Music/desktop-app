@@ -1,18 +1,53 @@
 import useFetchData from "@renderer/hooks/useFetchData";
 import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
 import NothingFound from "@renderer/components/NothingFound/NothingFound";
+import {SongList} from "@renderer/components/SongList/SongList";
+import {likedTracksSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
+import {likedTracksToSongEntries} from "@renderer/util/parseBackendTracks";
+import {LikedTrackDTO} from "../../../shared/Api";
+import {useEffect, useRef} from "react";
+import {useNavigate} from "react-router-dom";
+import {useDispatch, useSelector} from "react-redux";
+import {AppDispatch, RootState} from "@renderer/redux/store";
+import {setLikedTracks} from "@renderer/redux/likeSlice";
 
 const LikedTracksPage = () => {
-    const {loading, error} = useFetchData<string>("/api/test");
+    const navigate = useNavigate();
+    const {data: likedTracks, loading, error} = useFetchData<LikedTrackDTO[]>("/like/tracks");
+    const scrollPageRef = useRef<HTMLDivElement>(null);
+    const dispatch = useDispatch<AppDispatch>();
+    const likedIds = useSelector((state: RootState) => state.likeSlice.likedTracks);
 
-    if(loading) return <LoadingPage/>;
+    const songEntries = likedTracksToSongEntries(likedTracks, likedIds);
 
-    if(error) return <p>{error}</p>
+    useEffect(() => {
+        if(!likedTracks) return;
+
+        dispatch(setLikedTracks(likedTracks.map(l => l.track.releaseTrackId)));
+
+    }, [dispatch, likedTracks]);
 
     return (
-        <div className={"pageWrapper pageWrapperFullHeight"}>
-            <h1>Your Liked Tracks</h1>
-            <NothingFound text={"You didn't like any tracks yet."}/>
+        <div className={"pageWrapper pageWrapperFullHeight"} ref={scrollPageRef}>
+            <h1>Liked Songs</h1>
+            {!likedTracks && loading && <LoadingPage/>}
+
+            {!loading && error && (
+                <p className="errorPage">{error}</p>
+            )}
+
+            { !loading && (
+                songEntries.length > 0 ?
+                    <SongList
+                        scrollElement={scrollPageRef}
+                        songs={songEntries}
+                        slots={likedTracksSongRowSlots}
+                        gridTemplateColumns="30px 4fr 2.5fr 2fr 140px"
+                        navigate={navigate}
+                    />
+                    :
+                    <NothingFound text={"You didn't like any tracks yet."}/>
+            )}
         </div>
     );
 };

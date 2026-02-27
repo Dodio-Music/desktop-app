@@ -6,6 +6,7 @@ import rendererPlayerSlice from "./rendererPlayerSlice";
 import playlistSlice from "@renderer/redux/playlistSlice";
 import notificationsSlice from "@renderer/redux/notificationsSlice";
 import uiSlice from "@renderer/redux/uiSlice";
+import likeSlice from "@renderer/redux/likeSlice";
 
 export const store = configureStore({
     reducer: {
@@ -15,7 +16,8 @@ export const store = configureStore({
         rendererPlayer: rendererPlayerSlice,
         playlistSlice: playlistSlice,
         notifications: notificationsSlice,
-        uiSlice: uiSlice
+        uiSlice: uiSlice,
+        likeSlice: likeSlice
     }
 });
 

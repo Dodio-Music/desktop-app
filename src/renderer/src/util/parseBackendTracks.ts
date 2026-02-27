@@ -1,5 +1,5 @@
 import {RemoteSongEntry} from "../../../shared/TrackInfo.js";
-import {PlaylistDTO, PlaylistSongDTO, ReleaseDTO} from "../../../shared/Api";
+import {LikedTrackDTO, PlaylistDTO, PlaylistSongDTO, ReleaseDTO} from "../../../shared/Api";
 
 export function releaseToSongEntries(rel: ReleaseDTO | null): RemoteSongEntry[] {
     if (!rel) return [];
@@ -19,6 +19,37 @@ export function releaseToSongEntries(rel: ReleaseDTO | null): RemoteSongEntry[] 
             releaseDate: rel.releaseDate,
             releaseTrackId: rt.releaseTrackId,
             context: {type: "release", name: rel.releaseName, url: "/release/" + rel.releaseId, id: rel.releaseId},
+            type: "remote",
+            sources: t.sources.map(src => ({
+                id: src.sourceId,
+                url: src.url,
+                quality: src.quality
+            }))
+        };
+    });
+}
+
+export function likedTracksToSongEntries(likedTracks: LikedTrackDTO[] | null, likedIds: Record<string, true>): RemoteSongEntry[] {
+    if(!likedTracks) return [];
+
+    return likedTracks.filter(l => likedIds[l.track.releaseTrackId]).map(lt => {
+        const rt = lt.track;
+        const t = rt.track;
+        const rel = rt.release;
+
+        return {
+            id: t.trackId,
+            title: t.title,
+            artists: t.artists,
+            album: rel.releaseName,
+            duration: t.duration,
+            picture: rel.coverArtUrl,
+            waveformUrl: t.waveformUrl,
+            releaseId: rel.releaseId,
+            releaseDate: rel.releaseDate,
+            releaseTrackId: rt.releaseTrackId,
+            addedAt: lt.likedAt,
+            context: {type: "liked_tracks", name: "Liked Songs", url: "/collection/tracks", id: -1},
             type: "remote",
             sources: t.sources.map(src => ({
                 id: src.sourceId,
