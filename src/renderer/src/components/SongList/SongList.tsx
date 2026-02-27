@@ -237,9 +237,12 @@ export const SongList = <T extends BaseSongEntry>({
         if (index < 0) return;
         const HEADER_HEIGHT = 250;
         const top = index * ROW_HEIGHT - (scrollElement.current.clientHeight / 2) + ROW_HEIGHT / 2 + HEADER_HEIGHT;
-        scrollElement.current?.scrollTo({
-            top,
-            behavior: "smooth"
+        // request animation frame -> fix for redirect from another page
+        requestAnimationFrame(() => {
+            scrollElement.current?.scrollTo({
+                top,
+                behavior: "smooth"
+            });
         });
     }, [scroll, scrollElement, songs]);
 
