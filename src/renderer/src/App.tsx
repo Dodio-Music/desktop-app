@@ -1,33 +1,17 @@
 import "./assets/base.css";
 import s from "./App.module.css";
 import {Toaster} from "react-hot-toast";
-import {useEffect} from "react";
-import RealtimeNotificationBridge from "@renderer/components/Bridge/RealtimeNotificationBridge";
-import {useDispatch, useSelector} from "react-redux";
-import {fetchNotificationState, resetNotifications} from "@renderer/redux/notificationsSlice";
-import {AppDispatch, RootState} from "@renderer/redux/store";
+import RealtimeNotificationBridge from "@renderer/bridges/RealtimeNotificationBridge/RealtimeNotificationBridge";
 import ViewBrowser from "@renderer/layout/Routing/ViewBrowser";
 import RootLayout from "@renderer/layout/Routing/RootLayout";
+import NotificationStateBridge from "@renderer/bridges/NotificationStateBridge/NotificationStateBridge";
 
 function App() {
-    const username = useSelector((state: RootState) => state.auth.info.username);
-    const initialized = useSelector((state: RootState) => state.notifications.initialized);
-    const dispatch = useDispatch<AppDispatch>();
-
-    useEffect(() => {
-        if (!username) {
-            dispatch(resetNotifications());
-            return;
-        }
-
-        if (!initialized) {
-            dispatch(fetchNotificationState());
-        }
-    }, [username]);
-
     return (
         <>
+            <NotificationStateBridge/>
             <RealtimeNotificationBridge/>
+
             <Toaster
                 position="bottom-center"
                 containerStyle={{marginBottom: "100px", marginTop: "60px"}}

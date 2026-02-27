@@ -32,6 +32,13 @@ export const theme = createTheme({
                     padding: "8px 14px"
                 }
             }
+        },
+        MuiLinearProgress: {
+            styleOverrides: {
+                bar: {
+                    transition: "40ms"
+                }
+            }
         }
     },
 

@@ -2,38 +2,42 @@ import s from "./UploadDashboard.module.css";
 import {DragEvent, useEffect, useState} from "react";
 import classNames from "classnames";
 import {MdDelete} from "react-icons/md";
-
-interface UploadInfo {
-    status: string;
-    success: boolean | null;
-}
+import {UploadState} from "../../../../shared/adminApi";
+import {LinearProgress} from "@mui/material";
 
 const UploadDashboard = () => {
     const [isDragging, setIsDragging] = useState(false);
-    const [uploads, setUploads] = useState<Record<string, UploadInfo>>({});
+    const [uploads, setUploads] = useState<Record<string, UploadState>>({});
 
     const handleDragEnter = () => setIsDragging(true);
     const handleDragLeave = () => setIsDragging(false);
     const handleDragOver = (e: DragEvent<HTMLDivElement>) => e.preventDefault();
 
-    const addUpload = (fileName: string, status: string, success: boolean | null) => {
-        setUploads((prev) => ({
-            ...prev,
-            [fileName]: {status, success}
-        }));
-    };
+    const handleDelete = async (fileName: string) => {
+        const deleted = await window.api.deleteUploadedFile(fileName);
 
-    const handleDelete = (fileName: string) => {
-        setUploads((prev) => {
-            const newUploads = { ...prev };
-            delete newUploads[fileName];
-            return newUploads;
-        });
+        if(deleted) {
+            setUploads((prev) => {
+                const newUploads = { ...prev };
+                delete newUploads[fileName];
+                return newUploads;
+            });
+        }
     };
 
     useEffect(() => {
-        const unsub = window.api.onProgress(({fileName, percent}) => {
-            addUpload(fileName, percent + "%", null);
+        const fetchUploads = async () => {
+            const songMap = await window.api.getUploads();
+            setUploads(songMap);
+        }
+
+        void fetchUploads();
+
+        const unsub = window.api.onFileUploadProgress((state) => {
+            setUploads((prev) => ({
+                ...prev,
+                [state.fileName]: state
+            }));
         });
 
         return () => {
@@ -47,8 +51,7 @@ const UploadDashboard = () => {
         setIsDragging(false);
 
         for (const file of files) {
-            const result = await window.api.uploadFile(file);
-            addUpload(result.fileName, result.message, result.success);
+            void window.api.uploadFile(file);
         }
     };
 
@@ -67,7 +70,14 @@ const UploadDashboard = () => {
                     {Object.entries(uploads).map(([file, info]) => (
                         <div className={classNames(s.tableRow)} key={file}>
                             <p className={s.fileName}>{file}</p>
-                            <p className={info.success ? s.statusSuccess : info.success === false ? s.statusError : s.status}>{info.status}</p>
+                            {info.status === "uploading" ?
+                                <div className={s.progress}>
+                                    <LinearProgress sx={{flex: 1}} color={"inherit"} value={info.percent} variant={"determinate"}/>
+                                    <p className={s.percent}>{info.percent}%</p>
+                                </div>
+                                :
+                                <p className={info.status === "success" ? s.statusSuccess : info.status === "error" ? s.statusError : s.status}>{info.message}</p>
+                            }
                             <p className={s.delete} onClick={() => handleDelete(file)}><MdDelete size={25} /></p>
                         </div>
                     ))}

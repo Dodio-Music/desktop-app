@@ -6,9 +6,9 @@ import {BaseSongEntry, LocalSongEntry, RemoteSongEntry, SongDirectoryResponse} f
 import {ApiResult, DodioApi, MayError, AxiosMethodArgs, DodioError} from "../shared/Api.js";
 import IpcRenderer = Electron.IpcRenderer;
 import {IAllPreferences} from "../main/preferences.js";
-import {UploadProgress, UploadResponse} from "../main/dashboard.js";
 import {RendererAuthInfo} from "../main/web/Typing.js";
 import {QueueState} from "../main/player/QueueManager";
+import {UploadState} from "../shared/adminApi.ts";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -137,11 +137,13 @@ const api = {
     previousTrack: () => ipcRenderer.invoke("player:previous"),
     cycleRepeatMode: () => ipcRenderer.invoke("player:repeat-mode"),
     getPlayerInitialRedux: () => ipcRenderer.invoke("player:get-initial-redux"),
-    uploadFile: (file: File): Promise<UploadResponse> => ipcRenderer.invoke("dashboard:upload", webUtils.getPathForFile(file)),
-    onProgress: (cb: (progress: UploadProgress) => void) => {
-        const listener = (_: IpcRendererEvent, uploadProgress: UploadProgress) => cb(uploadProgress);
-        ipcRenderer.on("dashboard:upload-progress", listener);
-        return () => ipcRenderer.removeListener("dashboard:upload-progress", listener);
+    uploadFile: (file: File) => ipcRenderer.invoke("dashboard:uploads:post", webUtils.getPathForFile(file)),
+    getUploads: (): Promise<Record<string, UploadState>> => ipcRenderer.invoke("dashboard:uploads:get"),
+    deleteUploadedFile: (fileName: string): Promise<boolean> => ipcRenderer.invoke("dashboard:uploads:delete", fileName),
+    onFileUploadProgress: (cb: (state: UploadState) => void) => {
+        const listener = (_: IpcRendererEvent, state: UploadState) => cb(state);
+        ipcRenderer.on("dashboard:uploads:progress", listener);
+        return () => ipcRenderer.removeListener("dashboard:uploads:progress", listener);
     },
     onToast: (cb: (type: "success" | "error", msg: string) => void) => {
         const listener = (_: IpcRendererEvent, type: "success" | "error", msg: string) => cb(type, msg);

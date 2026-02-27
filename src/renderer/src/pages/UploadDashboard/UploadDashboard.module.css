@@ -28,7 +28,7 @@
 
 .horizontal {
     display: grid;
-    gap: 50px;
+    gap: 20px;
     grid-template-columns: 350px 1fr;
     margin-right: 20px;
 }
@@ -41,10 +41,11 @@
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1.2fr 30px;
-    padding: 15px;
-    line-height: 1;
+    padding: 5px;
+    line-height: 1.5;
     border-radius: 5px;
     gap: 25px;
+    align-items: center;
 }
 
 .tableRow {
@@ -54,7 +55,7 @@
 
 .tableRow p {
     white-space: nowrap;
-    overflow: hidden;
+    overflow-x: hidden;
     text-overflow: ellipsis;
 }
 
@@ -87,4 +88,15 @@
 
 .statusSuccess {
     color: var(--color-success-text);
+}
+
+.progress {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.percent {
+    text-align: right;
+    width: 5ch;
 }
