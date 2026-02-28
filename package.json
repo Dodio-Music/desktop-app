@@ -56,7 +56,7 @@
         "@reduxjs/toolkit": "^2.9.0",
         "@stomp/stompjs": "^7.3.0",
         "@uidotdev/usehooks": "^2.4.1",
-        "@underswing/naudiodon": "github:underswing/naudiodon",
+        "@underswing/naudiodon": "https://github.com/underswing/naudiodon.git#v1.0.1",
         "axios": "^1.13.5",
         "chokidar": "^5.0.0",
         "classnames": "^2.5.1",
