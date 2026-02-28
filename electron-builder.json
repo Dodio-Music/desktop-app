@@ -1,0 +1,63 @@
+{
+    "appId": "com.underswing.dodio",
+    "productName": "Dodio",
+
+    "directories": {
+        "output": "dist",
+        "buildResources": "resources"
+    },
+
+    "files": [
+        "out/**/*",
+        "package.json",
+        "resources/**/*",
+        "!**/.vscode/*",
+        "!src/*",
+        "!electron.vite.config.*",
+        "!{.env,.env.*,.npmrc}"
+    ],
+
+    "asar": true,
+
+    "asarUnpack": [
+        "resources/**",
+        "**/node_modules/sharp/**/*",
+        "**/node_modules/@img/**/*"
+    ],
+
+    "win": {
+        "target": "nsis",
+        "icon": "resources/dodo_whiteondark.ico"
+    },
+
+    "nsis": {
+        "artifactName": "${name}-${version}-setup.${ext}",
+        "shortcutName": "Dodio",
+        "uninstallDisplayName": "Dodio",
+        "createDesktopShortcut": "always"
+    },
+
+    "linux": {
+        "target": "AppImage",
+        "icon": "resources/dodo_whiteondark_512.png",
+        "category": "AudioVideo"
+    },
+
+    "appImage": {
+        "artifactName": "${name}-${version}.${ext}"
+    },
+
+    "publish": {
+        "provider": "generic",
+        "url": "https://example.com/auto-updates"
+    },
+
+    "npmRebuild": true,
+
+    "protocols": [
+        {
+            "name": "Dodio",
+            "schemes": ["dodio"]
+        }
+    ]
+}
