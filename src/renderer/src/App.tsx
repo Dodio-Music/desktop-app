@@ -20,7 +20,8 @@ function App() {
                 toastOptions={{
                     style: {
                         backgroundColor: "rgb(50,50,50)",
-                        color: "white"
+                        color: "white",
+                        maxWidth: "550px"
                     }
                 }}
                 containerClassName={s.toast}

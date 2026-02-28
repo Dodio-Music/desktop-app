@@ -25,7 +25,7 @@ export interface BaseAudioSourceInit {
     count: number;
 }
 
-function resolveFfmpegPath() {
+export function resolveFfmpegPath() {
     if (!app.isPackaged) {
         return ffmpegRawPath;
     }

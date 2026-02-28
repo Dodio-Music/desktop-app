@@ -9,6 +9,7 @@ import {IAllPreferences} from "../main/preferences.js";
 import {RendererAuthInfo} from "../main/web/Typing.js";
 import {QueueState} from "../main/player/QueueManager";
 import {UploadState} from "../shared/adminApi.js";
+import {ToastOptions} from "react-hot-toast";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -145,8 +146,8 @@ const api = {
         ipcRenderer.on("dashboard:uploads:progress", listener);
         return () => ipcRenderer.removeListener("dashboard:uploads:progress", listener);
     },
-    onToast: (cb: (type: "success" | "error", msg: string) => void) => {
-        const listener = (_: IpcRendererEvent, type: "success" | "error", msg: string) => cb(type, msg);
+    onToast: (cb: (type: "success" | "error", msg: string, toastOptions?: ToastOptions) => void) => {
+        const listener = (_: IpcRendererEvent, type: "success" | "error", msg: string, toastOptions?: ToastOptions) => cb(type, msg, toastOptions);
         ipcRenderer.on("ui:toast", listener);
         return () => ipcRenderer.removeListener("ui:toast", listener);
     },

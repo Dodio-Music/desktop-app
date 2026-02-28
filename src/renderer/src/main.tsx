@@ -40,11 +40,11 @@ window.api.onPlayerUpdate((state) => {
     store.dispatch(updatePlayerState(state));
 });
 
-window.api.onToast((type, msg) => {
+window.api.onToast((type, msg, toastOptions) => {
     switch(type) {
-        case "success": toast.success(msg);
+        case "success": toast.success(msg, toastOptions);
             break;
-        default: toast.error(msg);
+        default: toast.error(msg, toastOptions);
     }
 });
 

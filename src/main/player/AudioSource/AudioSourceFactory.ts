@@ -1,7 +1,7 @@
 import {BrowserWindow} from "electron";
 import {OutputDevice} from "../PlayerProcess.js";
 import {SourceType} from "../../../shared/PlayerState.js";
-import {BaseAudioSource, BaseAudioSourceInit} from "./BaseAudioSource.js";
+import {BaseAudioSource, BaseAudioSourceInit, resolveFfmpegPath} from "./BaseAudioSource.js";
 import {SEGMENT_DURATION} from "../../../shared/TrackInfo.js";
 import {
     parseFlacStreamInfo,
@@ -13,6 +13,7 @@ import path from "path";
 import {parseFile} from "music-metadata";
 import {readFile} from "node:fs/promises";
 import {detectOggCodec, getOggDuration} from "./helper/OpusHelper.js";
+import fs from "fs";
 
 export interface FlacAudioMeta {
     type: "flac";
@@ -102,6 +103,19 @@ export class AudioSourceFactory {
             generateWaveform
         };
 
+        const ffmpegPath = resolveFfmpegPath();
+
+        if (!isValidFile(ffmpegPath)) {
+            mainWindow.webContents.send(
+                "ui:toast",
+                "error",
+                "ffmpeg.exe was not bundled properly. If this issue persists, delete 'node_modules/ffmpeg-static' and run 'npm i' again.",
+                {duration: 12000}
+            );
+
+            throw new Error("Invalid ffmpeg path: " + ffmpegPath);
+        }
+
         let source: BaseAudioSource;
         if (sourceType === "local") {
             source = new LocalAudioSource(baseInit);
@@ -168,5 +182,14 @@ export class AudioSourceFactory {
             firstPCMByteOffset: meta.firstPCMByteOffset,
             duration
         };
+    }
+}
+
+function isValidFile(filePath: string): boolean {
+    try {
+        if (!fs.existsSync(filePath)) return false;
+        return fs.statSync(filePath).isFile();
+    } catch {
+        return false;
     }
 }
