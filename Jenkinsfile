@@ -52,7 +52,6 @@ pipeline {
                 echo "Building and releasing x64..."
                 sh '''
                 npm run build
-                npx electron-rebuild --arch=x64 --force
                 npx electron-builder --publish always
                 '''
             }
