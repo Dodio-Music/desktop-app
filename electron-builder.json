@@ -25,32 +25,33 @@
         "**/node_modules/@img/**/*"
     ],
 
+    "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
+
     "win": {
-        "target": "nsis",
-        "icon": "resources/dodo_whiteondark.ico"
+        "icon": "resources/dodo_whiteondark.ico",
+        "target": ["nsis"]
     },
 
     "nsis": {
-        "artifactName": "${name}-${version}-setup.${ext}",
         "shortcutName": "Dodio",
         "uninstallDisplayName": "Dodio",
         "createDesktopShortcut": "always"
     },
 
     "linux": {
-        "target": "AppImage",
+        "target": ["AppImage"],
         "icon": "resources/dodo_whiteondark_512.png",
         "category": "AudioVideo"
     },
 
-    "appImage": {
-        "artifactName": "${name}-${version}.${ext}"
-    },
-
-    "publish": {
-        "provider": "generic",
-        "url": "https://example.com/auto-updates"
-    },
+    "publish": [
+        {
+            "provider": "github",
+            "owner": "Dodio-Music",
+            "repo": "desktop-app",
+            "releaseType": "release"
+        }
+    ],
 
     "npmRebuild": true,
 

@@ -1,33 +1,10 @@
 {
     "name": "dodio",
-    "version": "1.0.0",
-    "description": "An Electron based application for accessing Dodio services.",
+    "version": "0.1.0",
+    "description": "A music app for casual music enjoyers and enthusiasts.",
     "main": "./out/main/index.js",
-    "author": "underswing",
+    "author": "Dodio Team",
     "type": "module",
-    "build": {
-        "appId": "com.underswing.dodio",
-        "productName": "Dodio",
-        "directories": {
-            "output": "dist"
-        },
-        "files": [
-            "out/**/*",
-            "package.json",
-            "resources/**/*"
-        ],
-        "win": {
-            "target": "nsis",
-            "icon": "resources/dodo_whiteondark.ico"
-        },
-        "mac": {
-            "target": "dmg"
-        },
-        "linux": {
-            "target": "AppImage",
-            "icon": "resources/dodo_whiteondark_512.png"
-        }
-    },
     "scripts": {
         "lint": "eslint --cache .",
         "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",

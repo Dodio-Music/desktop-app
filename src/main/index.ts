@@ -89,7 +89,7 @@ async function handleDeepLink(url: string) {
 }
 
 app.whenReady().then(async () => {
-    electronApp.setAppUserModelId("com.underswing");
+    electronApp.setAppUserModelId("at.dodio");
 
     protocol.handle("safe-file", (request) => {
         const url = request.url.replace("safe-file://", "");
