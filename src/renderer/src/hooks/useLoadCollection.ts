@@ -1,13 +1,12 @@
 import {useCallback, useEffect, useRef} from "react";
-import {RootState} from "@renderer/redux/store";
-import {useSelector} from "react-redux";
 import {PlaylistDTO, ReleaseDTO} from "../../../shared/Api";
 import toast from "react-hot-toast";
 import {RemoteSongEntry} from "../../../shared/TrackInfo";
 import {playlistToSongEntries, releaseToSongEntries} from "@renderer/util/parseBackendTracks";
+import {useAppSelector} from "@renderer/redux/store";
 
 export const useLoadCollection = () => {
-    const track = useSelector((s: RootState) => s.nativePlayer.currentTrack);
+    const track = useAppSelector(state => state.nativePlayer.currentTrack);
     const trackRef = useRef(track);
 
     useEffect(() => {

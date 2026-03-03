@@ -17,8 +17,7 @@ import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
 import PlaylistInitPopup from "@renderer/components/Popup/Playlist/PlaylistInitPopup";
 import FilterBar from "@renderer/components/FilterBar/FilterBar";
 import {useLoadCollection} from "@renderer/hooks/useLoadCollection";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
+import {useAppSelector} from "@renderer/redux/store";
 
 type FilterOption = "" | "OWNED,INVITED" | "LIKED";
 type FilterEntry = { type: FilterOption, label: string };
@@ -36,8 +35,8 @@ const PlaylistPage = () => {
     const ctx = useContextMenu();
     const authInfo = useAuth().info;
     const loadCollection = useLoadCollection();
-    const track = useSelector((state: RootState) => state.nativePlayer.currentTrack);
-    const userPaused = useSelector((state: RootState) => state.nativePlayer.userPaused);
+    const track = useAppSelector(state => state.nativePlayer.currentTrack);
+    const userPaused = useAppSelector(state => state.nativePlayer.userPaused);
 
     const {
         data,

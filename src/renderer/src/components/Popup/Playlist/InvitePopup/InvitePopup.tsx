@@ -10,8 +10,7 @@ import {Tooltip} from "@mui/material";
 import {FaUserPlus} from "react-icons/fa6";
 import classNames from "classnames";
 import useErrorHandling from "@renderer/hooks/useErrorHandling";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
+import {useAppSelector} from "@renderer/redux/store";
 
 interface InvitePopupProps {
     open: boolean;
@@ -51,7 +50,7 @@ const InvitePopup: FC<InvitePopupProps> = ({open, onClose, playlistId}) => {
     const debouncedQuery = useDebounce(query, 300);
     const {setError, InvalidInputError} = useErrorHandling();
     const searchInputRef = useRef<HTMLInputElement>(null);
-    const playlistUserUsernames = useSelector((state: RootState) => state.playlistSlice.users).map(u => u.user.username);
+    const playlistUserUsernames = useAppSelector(state => state.playlistSlice.users).map(u => u.user.username);
 
     const [results, setResults] = useState<{ user: UserPublicDTO, invited: boolean }[]>([]);
 

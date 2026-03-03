@@ -3,14 +3,13 @@ import {useEffect} from "react";
 import toast from "react-hot-toast";
 import s from "./RealtimeNotificationBridge.module.css";
 import {IoClose} from "react-icons/io5";
-import {useDispatch} from "react-redux";
-import {AppDispatch} from "@renderer/redux/store";
+import {useAppDispatch} from "@renderer/redux/store";
 import {incrementUnread} from "@renderer/redux/notificationsSlice";
 import {onNotification} from "@renderer/stomp/notifications";
 
 const RealtimeNotificationBridge = () => {
     const navigate = useNavigate();
-    const dispatch = useDispatch<AppDispatch>();
+    const dispatch = useAppDispatch();
 
     useEffect(() => {
         const off = onNotification((e) => {

@@ -3,8 +3,7 @@ import useFetchData from "@renderer/hooks/useFetchData";
 import {PlaylistPreviewDTO, ReleasePreviewDTO} from "../../../../shared/Api";
 import {useNavigate} from "react-router-dom";
 import {useCallback, useEffect, useRef} from "react";
-import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState} from "@renderer/redux/store";
+import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import Card from "@renderer/components/Card/Card";
 import {useContextMenu} from "@renderer/hooks/useContextMenu";
@@ -20,8 +19,8 @@ import {useLoadCollection} from "@renderer/hooks/useLoadCollection";
 
 const HomePage = () => {
     const navigate = useNavigate();
-    const expandedSection = useSelector((state: RootState) => state.uiSlice.homepage.expandedSections);
-    const dispatch = useDispatch<AppDispatch>();
+    const expandedSection = useAppSelector(state => state.uiSlice.homepage.expandedSections);
+    const dispatch = useAppDispatch();
     const {
         data: dataReleases,
         loading: loadingReleases,
@@ -36,8 +35,8 @@ const HomePage = () => {
     } = useFetchData<PlaylistPreviewDTO[]>("/playlist/public");
     const confirm = useConfirm();
     const ctx = useContextMenu();
-    const track = useSelector((state: RootState) => state.nativePlayer.currentTrack);
-    const userPaused = useSelector((state: RootState) => state.nativePlayer.userPaused);
+    const track = useAppSelector(state => state.nativePlayer.currentTrack);
+    const userPaused = useAppSelector(state => state.nativePlayer.userPaused);
     const authInfo = useAuth().info;
 
     const userPausedRef = useRef(userPaused);

@@ -7,10 +7,9 @@ import {useAuth} from "@renderer/hooks/reduxHooks";
 import {IoIosArrowBack, IoIosArrowForward, IoMdNotifications, IoMdNotificationsOutline} from "react-icons/io";
 import {IoSettingsOutline, IoSettingsSharp} from "react-icons/io5";
 import {RiDashboardFill, RiDashboardLine} from "react-icons/ri";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
 import classNames from "classnames";
 import {Tooltip} from "@mui/material";
+import {useAppSelector} from "@renderer/redux/store";
 
 interface TitlebarProps {
     zoomLevel: number;
@@ -27,7 +26,7 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
     const [isMaximized, setIsMaximized] = useState(false);
     const {info} = useAuth();
     const navigate = useNavigate();
-    const {initialized, unreadCount} = useSelector((state: RootState) => state.notifications);
+    const {initialized, unreadCount} = useAppSelector(state => state.notifications);
     useLocation();  // used to trigger rerenders on navigation
                     // (back/forward buttons derive from history which doesn't trigger a rerender)
 

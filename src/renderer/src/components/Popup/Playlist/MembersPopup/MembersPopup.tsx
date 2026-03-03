@@ -9,9 +9,8 @@ import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
 import {useContextMenu} from "@renderer/hooks/useContextMenu";
 import {renderEntityActions} from "@renderer/contextMenus/menuHelper";
 import classNames from "classnames";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
 import {toCapitalized} from "@renderer/util/playlistUtils";
+import {useAppSelector} from "@renderer/redux/store";
 
 interface InvitePopupProps {
     open: boolean;
@@ -23,7 +22,7 @@ interface InvitePopupProps {
 const MembersPopup: FC<InvitePopupProps> = ({open, onClose, currentUser, playlistId}) => {
     const ctx = useContextMenu(() => setExpandedUser(""));
     const [expandedUser, setExpandedUser] = useState("");
-    const users = useSelector((state: RootState) => state.playlistSlice.users);
+    const users = useAppSelector(state => state.playlistSlice.users);
 
     const handleUserClick = (e: MouseEvent, u: PlaylistUserDTO) => {
         e.stopPropagation();

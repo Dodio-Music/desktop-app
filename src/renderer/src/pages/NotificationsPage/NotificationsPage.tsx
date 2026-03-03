@@ -11,8 +11,7 @@ import {songCountPlural} from "@renderer/util/playlistUtils";
 import {errorToString} from "@renderer/util/errorToString";
 import toast from "react-hot-toast";
 import {useNavigate} from "react-router-dom";
-import {useDispatch} from "react-redux";
-import {AppDispatch} from "@renderer/redux/store";
+import {useAppDispatch} from "@renderer/redux/store";
 import {setNotifications} from "@renderer/redux/notificationsSlice";
 import dodo from "../../../../../resources/dodo_whiteondark_512.png";
 import {onNotification} from "@renderer/stomp/notifications";
@@ -28,7 +27,7 @@ const filterOptions: FilterEntry[] = [
 const NotificationsPage = () => {
     const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState<FilterOption>("");
-    const dispatch = useDispatch<AppDispatch>();
+    const dispatch = useAppDispatch();
 
     const {
         data,

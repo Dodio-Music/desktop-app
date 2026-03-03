@@ -10,8 +10,7 @@ import {useAuth} from "@renderer/hooks/reduxHooks";
 import {FaHome, FaRegUserCircle} from "react-icons/fa";
 import classNames from "classnames";
 import {generalPlural} from "@renderer/util/playlistUtils";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
+import {useAppSelector} from "@renderer/redux/store";
 
 interface NavItem {
     url: string;
@@ -79,7 +78,7 @@ const Sidebar = () => {
     const {info} = useAuth();
     const {url: accountUrl, text: accountText, icon: accountIcon} = accountPages[info.status];
     const [localSongsCount, setLocalSongsCount] = useState(0);
-    const {likedReleases, likedTracks} = useSelector((state: RootState) => state.likeSlice);
+    const {likedReleases, likedTracks} = useAppSelector(state => state.likeSlice);
 
     useEffect(() => {
         async function fetchCount() {

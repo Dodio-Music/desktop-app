@@ -16,9 +16,10 @@ export function secondsToTime(inputSeconds: number): string {
 
 export function formatTime(seconds: number): string {
     const totalSeconds = Math.floor(seconds);
-    const minutes = Math.floor(totalSeconds / 60);
+    const hours = Math.floor(totalSeconds / 60 / 60);
+    const minutes = Math.floor(totalSeconds / 60) % 60;
     const secs = totalSeconds % 60;
-    return `${minutes.toString().padStart(1, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${hours > 0 ? hours.toString().padStart(1, "0") + ":" : ""}${minutes.toString().padStart(hours > 0 ? 2 : 1, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
 export function formatDurationHuman(seconds: number): string {

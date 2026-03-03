@@ -1,10 +1,10 @@
 import s from "../../PlaybackBar.module.css";
 import {MouseEvent, useEffect, useRef, useState} from "react";
-import {shallowEqual, useSelector} from "react-redux";
+import {shallowEqual} from "react-redux";
 import {isRemoteSong, SEGMENT_DURATION} from "../../../../../../shared/TrackInfo";
 import {useWaveform} from "@renderer/components/PlaybackBar/PlaybackControls/SeekBar/useWaveform";
 import {WaveformData} from "../../../../../../shared/PlayerState";
-import {RootState} from "@renderer/redux/store";
+import {useAppSelector} from "@renderer/redux/store";
 import {formatTime} from "@renderer/util/timeUtils";
 
 enum SeekBarDisplayStyle {
@@ -16,12 +16,12 @@ const seekbarWidth = 600;
 const showLoadingProcess = false;
 
 const SeekBar = () => {
-    const latency = useSelector((state: RootState) => state.nativePlayer.latency);
-    const duration = useSelector((state: RootState) => state.nativePlayer.duration);
-    const currentTime = useSelector((state: RootState) => state.nativePlayer.currentTime);
-    const playbackRunning = useSelector((state: RootState) => state.nativePlayer.playbackRunning);
-    const currentTrack = useSelector((state: RootState) => state.nativePlayer.currentTrack, shallowEqual);
-    const theme = useSelector((state: RootState) => state.uiSlice.theme);
+    const latency = useAppSelector(state => state.nativePlayer.latency);
+    const duration = useAppSelector(state => state.nativePlayer.duration);
+    const currentTime = useAppSelector(state => state.nativePlayer.currentTime);
+    const playbackRunning = useAppSelector(state => state.nativePlayer.playbackRunning);
+    const currentTrack = useAppSelector(state => state.nativePlayer.currentTrack, shallowEqual);
+    const theme = useAppSelector(state => state.uiSlice.theme);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const durationRef = useRef<number>(duration);

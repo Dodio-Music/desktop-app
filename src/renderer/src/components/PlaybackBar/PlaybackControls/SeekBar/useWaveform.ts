@@ -1,7 +1,6 @@
 import {useEffect, useRef} from "react";
 import {WaveformData} from "../../../../../../shared/PlayerState";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
+import {useAppSelector} from "@renderer/redux/store";
 
 export function useWaveform (waveformData: WaveformData | undefined, width: number, height: number, currentTrackId: string | null, fillColor: string) {
     const offscreenCanvasRef = useRef<HTMLCanvasElement>(
@@ -16,7 +15,7 @@ export function useWaveform (waveformData: WaveformData | undefined, width: numb
     const peaks = waveformData?.peaks;
     const id = waveformData?.id;
 
-    const theme = useSelector((state: RootState) => state.uiSlice.theme);
+    const theme = useAppSelector(state => state.uiSlice.theme);
 
     useEffect(() => {
         const canvas = offscreenCanvasRef.current;

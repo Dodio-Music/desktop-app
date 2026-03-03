@@ -1,5 +1,3 @@
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
 import {SongRow} from "@renderer/components/SongList/SongRow";
 import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../../../shared/TrackInfo";
 import {RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState} from "react";
@@ -11,6 +9,7 @@ import {useContextMenu} from "@renderer/hooks/useContextMenu";
 import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
 import {errorToString} from "@renderer/util/errorToString";
 import toast from "react-hot-toast";
+import {useAppSelector} from "@renderer/redux/store";
 
 interface SongListAutoScroll {
     scrollToId: string;
@@ -49,7 +48,7 @@ export const SongList = <T extends BaseSongEntry>({
                                                   }: Props<T>) => {
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
-    const currentTrack = useSelector((root: RootState) => root.nativePlayer.currentTrack);
+    const currentTrack = useAppSelector(state => state.nativePlayer.currentTrack);
     const ctx = useContextMenu();
 
     const setSelectedRowCallback = useCallback((id?: string) => setSelectedRow(id), []);

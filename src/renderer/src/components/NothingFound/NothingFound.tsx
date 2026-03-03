@@ -1,8 +1,7 @@
 import car from "../../../../../resources/car.webm"
 import style from "./NothingFound.module.css";
 import {FC, useEffect, useRef} from "react";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
+import {useAppSelector} from "@renderer/redux/store";
 import ModulatedVideo from "@renderer/components/Cat/ModulatedVideo";
 
 interface props {
@@ -11,7 +10,7 @@ interface props {
 
 const NothingFound: FC<props> = ({text}) => {
     const catImg = useRef<HTMLVideoElement>(null);
-    const {volume, isMuted} = useSelector((state: RootState) => state.rendererPlayer);
+    const {volume, isMuted} = useAppSelector(state => state.rendererPlayer);
 
     useEffect(() => {
         if (!catImg.current || volume === null) return;

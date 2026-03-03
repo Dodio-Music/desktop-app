@@ -7,16 +7,15 @@ import {likedTracksToSongEntries} from "@renderer/util/parseBackendTracks";
 import {LikedTrackDTO} from "../../../shared/Api";
 import {useEffect, useRef} from "react";
 import {useNavigate} from "react-router-dom";
-import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState} from "@renderer/redux/store";
+import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
 import {setLikedTracks} from "@renderer/redux/likeSlice";
 
 const LikedTracksPage = () => {
     const navigate = useNavigate();
     const {data: likedTracks, loading, error} = useFetchData<LikedTrackDTO[]>("/like/tracks");
     const scrollPageRef = useRef<HTMLDivElement>(null);
-    const dispatch = useDispatch<AppDispatch>();
-    const likedIds = useSelector((state: RootState) => state.likeSlice.likedTracks);
+    const dispatch = useAppDispatch();
+    const likedIds = useAppSelector(state => state.likeSlice.likedTracks);
 
     const songEntries = likedTracksToSongEntries(likedTracks, likedIds);
 

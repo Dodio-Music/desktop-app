@@ -2,8 +2,7 @@ import s from "./SongList.module.css";
 import {BaseSongEntry, isRemoteSong} from "../../../../shared/TrackInfo";
 import React, {JSX, useCallback, MouseEvent, useRef} from "react";
 import {SongRowSlot} from "@renderer/components/SongList/ColumnConfig";
-import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState} from "@renderer/redux/store";
+import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
 import classNames from "classnames";
 import {ContextEntity} from "@renderer/contextMenus/menuHelper";
 import {likeTrack, unlikeTrack} from "@renderer/redux/likeSlice";
@@ -43,16 +42,15 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
     const handlePlay = useCallback((song: T) => pauseOrLoadSong(song), [pauseOrLoadSong]);
     const pointerDownRef = useRef<{x: number, y: number} | null>(null);
 
-    const userPaused = useSelector(
-        (root: RootState) =>
-            isActive ? root.nativePlayer.userPaused : null
+    const userPaused = useAppSelector(state =>
+            isActive ? state.nativePlayer.userPaused : null
     );
 
-    const isLiked = useSelector(
-        (state: RootState) => !!state.likeSlice.likedTracks[isRemoteSong(song) ? song.releaseTrackId : ""]
+    const isLiked = useAppSelector(
+        state => !!state.likeSlice.likedTracks[isRemoteSong(song) ? song.releaseTrackId : ""]
     );
 
-    const dispatch = useDispatch<AppDispatch>();
+    const dispatch = useAppDispatch();
 
     const handleLikeSong = useCallback(async () => {
         if(isRemoteSong(song)) {

@@ -1,14 +1,13 @@
 import s from "../PlaybackBar.module.css";
 import {setIsMuted, setVolume} from "@renderer/redux/rendererPlayerSlice";
 import {FiVolume1, FiVolume2, FiVolumeX} from "react-icons/fi";
-import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState} from "@renderer/redux/store";
+import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
 import {useEffect, useMemo, WheelEvent} from "react";
 import {useDebounce} from "@uidotdev/usehooks";
 
 const PlayerTools = () => {
-    const dispatch = useDispatch<AppDispatch>();
-    const {volume, isMuted} = useSelector((state: RootState) => state.rendererPlayer);
+    const dispatch = useAppDispatch();
+    const {volume, isMuted} = useAppSelector(state => state.rendererPlayer);
     const prefsReady = volume !== null && isMuted !== null;
 
     useEffect(() => {

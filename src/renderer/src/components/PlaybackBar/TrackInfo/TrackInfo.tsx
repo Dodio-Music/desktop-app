@@ -2,16 +2,15 @@ import s from "../PlaybackBar.module.css";
 import placeholder from "../../../../../../resources/img-placeholder-128x128.svg";
 import classNames from "classnames";
 import {isLocalSong, isRemoteSong} from "../../../../../shared/TrackInfo";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
 import {useCallback, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import OpenableCover from "@renderer/components/OpenableCover/OpenableCover";
 import {MdQueueMusic} from "react-icons/md";
+import {useAppSelector} from "@renderer/redux/store";
 
 const TrackInfo = () => {
     const navigate = useNavigate();
-    const activeTrack = useSelector((state: RootState) => state.nativePlayer.currentTrack);
+    const activeTrack = useAppSelector(state => state.nativePlayer.currentTrack);
     const [fullCover, setFullCover] = useState<string | null>(null);
 
     useEffect(() => {

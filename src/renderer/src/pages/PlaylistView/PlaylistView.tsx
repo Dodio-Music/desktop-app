@@ -18,7 +18,6 @@ import {LuUserRoundPlus, LuUsers} from "react-icons/lu";
 import PlaylistInitPopup from "@renderer/components/Popup/Playlist/PlaylistInitPopup";
 import {useRequiredParam} from "@renderer/hooks/useRequiredParam";
 import {useAuth} from "@renderer/hooks/reduxHooks";
-import {useDispatch, useSelector} from "react-redux";
 import {resetPlaylist, setPlaylist, setPlaylistUser} from "@renderer/redux/playlistSlice";
 import {
     resubscribeToPlaylist,
@@ -26,7 +25,6 @@ import {
     subscribeToPlaylistMeta,
     subscribeToPlaylistSongs
 } from "@renderer/stomp/stompClient";
-import {RootState} from "@renderer/redux/store";
 import {Tooltip} from "@mui/material";
 import InvitePopup from "@renderer/components/Popup/Playlist/InvitePopup/InvitePopup";
 import MembersPopup from "@renderer/components/Popup/Playlist/MembersPopup/MembersPopup";
@@ -37,6 +35,7 @@ import {renderEntityActions} from "@renderer/contextMenus/menuHelper";
 import {useConfirm} from "@renderer/hooks/useConfirm";
 import {toCapitalized} from "@renderer/util/playlistUtils";
 import toast from "react-hot-toast";
+import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
 
 const PlaylistView = () => {
     const id = useRequiredParam("id");
@@ -50,8 +49,8 @@ const PlaylistView = () => {
     const [membersOpen, setMembersOpen] = useState(false);
     const {data: playlist, loading, error, refetch} = useFetchData<PlaylistDTO>(`/playlist/${id}/full`);
 
-    const dispatch = useDispatch();
-    const {orderedIds, songs, users, kicked, playlistName, isPublic, playlistId} = useSelector((state: RootState) => state.playlistSlice);
+    const dispatch = useAppDispatch();
+    const {orderedIds, songs, users, kicked, playlistName, isPublic, playlistId} = useAppSelector(state => state.playlistSlice);
     const info = useAuth().info;
 
     const prevRoleRef = useRef<typeof userRole | null>(null);

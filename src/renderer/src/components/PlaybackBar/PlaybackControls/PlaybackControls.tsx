@@ -6,13 +6,12 @@ import {MoonLoader} from "react-spinners";
 import {HiPlay} from "react-icons/hi2";
 import {RepeatMode} from "../../../../../shared/PlayerState";
 import SeekBar from "@renderer/components/PlaybackBar/PlaybackControls/SeekBar/SeekBar";
-import {useSelector} from "react-redux";
-import {RootState} from "@renderer/redux/store";
+import {useAppSelector} from "@renderer/redux/store";
 
 const PlaybackControls = () => {
-    const userPaused = useSelector((state: RootState) => state.nativePlayer.userPaused);
-    const waitingForData = useSelector((state: RootState) => state.nativePlayer.waitingForData);
-    const repeatMode = useSelector((state: RootState) => state.nativePlayer.repeatMode);
+    const userPaused = useAppSelector(state => state.nativePlayer.userPaused);
+    const waitingForData = useAppSelector(state => state.nativePlayer.waitingForData);
+    const repeatMode = useAppSelector(state => state.nativePlayer.repeatMode);
 
     const pauseOrResume = () => {
         window.api.pauseOrResume();

@@ -1,11 +1,10 @@
 import {useCallback, useEffect} from "react";
-import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState} from "@renderer/redux/store";
+import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
 import {decreaseVolume, increaseVolume, toggleMute} from "@renderer/redux/rendererPlayerSlice";
 
 
 export function useShortcuts(){
-    const dispatch = useDispatch<AppDispatch>();
+    const dispatch = useAppDispatch();
 
     const preventDefaultKeys = (e: KeyboardEvent) => {
         const forbiddenKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "space"];
@@ -19,7 +18,7 @@ export function useShortcuts(){
         muteKey,
         increaseVolumeKey,
         decreaseVolumeKey,
-    } = useSelector((state: RootState) => state.shortcuts);
+    } = useAppSelector(state => state.shortcuts);
 
     const isTyping = (e: KeyboardEvent) => {
         const target = e.target as HTMLElement;

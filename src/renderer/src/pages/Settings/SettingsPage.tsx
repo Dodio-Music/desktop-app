@@ -2,14 +2,13 @@ import s from "./SettingsPage.module.css";
 import {latencyPresets} from "../../../../shared/latencyPresets.js";
 import {themeOptions} from "../../../../shared/themeOptions";
 import {setGlobalTheme} from "@renderer/redux/uiSlice";
-import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState} from "@renderer/redux/store";
+import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
 import toast from "react-hot-toast";
 import classNames from "classnames";
 
 const SettingsPage = () => {
-    const dispatch = useDispatch<AppDispatch>();
-    const theme = useSelector((state: RootState) => state.uiSlice.theme);
+    const dispatch = useAppDispatch();
+    const theme = useAppSelector(state => state.uiSlice.theme);
 
     const handleThemeChange = async (themeName: string) => {
         const theme = themeOptions.find(t => t.name === themeName);
