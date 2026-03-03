@@ -125,20 +125,3 @@ function attachWindowStateListeners(win: BrowserWindow) {
     win.on("enter-full-screen", save);
     win.on("leave-full-screen", save);
 }
-
-
-export function registerAppLifecycle(createWindowFn: () => BrowserWindow) {
-    // macOS activate
-    app.on("activate", () => {
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindowFn();
-        }
-    });
-
-    // All windows closed (quit on non-macOS)
-    app.on("window-all-closed", () => {
-        if (process.platform !== "darwin") {
-            app.quit();
-        }
-    });
-}

@@ -35,7 +35,8 @@
     "nsis": {
         "shortcutName": "Dodio",
         "uninstallDisplayName": "Dodio",
-        "createDesktopShortcut": "always"
+        "createDesktopShortcut": "always",
+        "differentialPackage": true
     },
 
     "linux": {
