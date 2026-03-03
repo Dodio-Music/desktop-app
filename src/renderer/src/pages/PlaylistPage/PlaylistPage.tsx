@@ -24,7 +24,7 @@ type FilterEntry = { type: FilterOption, label: string };
 const filterOptions: FilterEntry[] = [
     {type: "", label: "All"},
     {type: "OWNED,INVITED", label: "Mine & Shared"},
-    {type: "LIKED", label: "Liked"}
+    {type: "LIKED", label: "Saved"}
 ];
 
 const PlaylistPage = () => {

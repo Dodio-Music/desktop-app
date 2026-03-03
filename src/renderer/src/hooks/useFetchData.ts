@@ -15,7 +15,7 @@ export default function useFetchData<T>(url: string): FetchState<T> {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const hasFetchedRef = useRef(false);
+    const lastFetchedUrlRef = useRef<string | null>(null);
 
     const fetchData = useCallback(async (resetOnFetch: boolean = true) => {
         setLoading(true);
@@ -42,11 +42,11 @@ export default function useFetchData<T>(url: string): FetchState<T> {
             return;
         }
 
-        if (hasFetchedRef.current) return;
-        hasFetchedRef.current = true;
+        if (lastFetchedUrlRef.current === url) return;
+        lastFetchedUrlRef.current = url;
 
         void fetchData();
-    }, [authInfo, fetchData]);
+    }, [authInfo, fetchData, url]);
 
     return { data, loading, error, refetch: () => fetchData(false) };
 }

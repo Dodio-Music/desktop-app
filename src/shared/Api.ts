@@ -174,3 +174,9 @@ export interface LikedTrackDTO {
     track: ReleaseTrackDTO;
     likedAt: Date;
 }
+
+export interface LikedReleaseDTO {
+    releaseLikeId: number;
+    release: ReleasePreviewDTO;
+    likedAt: Date;
+}

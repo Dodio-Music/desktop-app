@@ -1,7 +1,7 @@
 import useFetchData from "@renderer/hooks/useFetchData";
 import {ReleaseDTO} from "../../../../shared/Api";
 import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
-import {useRef} from "react";
+import {useCallback, useRef} from "react";
 import {SongList} from "@renderer/components/SongList/SongList";
 import {releaseToSongEntries} from "@renderer/util/parseBackendTracks";
 import {remoteSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
@@ -10,6 +10,15 @@ import {formatTime} from "@renderer/util/timeUtils";
 import classNames from "classnames";
 import OpenableCover from "@renderer/components/OpenableCover/OpenableCover";
 import {useRequiredParam} from "@renderer/hooks/useRequiredParam";
+import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
+import so from "../../components/OptionBar/OptionBar.module.css";
+import {OptionButton} from "@renderer/components/OptionBar/OptionButton";
+import {MdOutlineAddCircleOutline} from "react-icons/md";
+import {IoIosCheckmarkCircle} from "react-icons/io";
+import {likeRelease, unlikeRelease} from "@renderer/redux/likeSlice";
+import toast from "react-hot-toast";
+import {errorToString} from "@renderer/util/errorToString";
+
 
 const ReleaseView = () => {
     const id = useRequiredParam("id");
@@ -18,6 +27,28 @@ const ReleaseView = () => {
     const { data: release, loading, error } = useFetchData<ReleaseDTO>(`/release/${id}`);
     const songEntries = releaseToSongEntries(release);
     const albumLengthSeconds = release?.releaseTracks.map(r => r.track.duration).reduce((partialSum, a) => partialSum + a, 0) ?? 0;
+    const dispatch = useAppDispatch();
+    const isLiked = useAppSelector(
+        state => !!state.likeSlice.likedReleases[release?.releaseId ?? ""]
+    );
+
+    const handleLikeRelease = useCallback(async () => {
+        if(!release?.releaseId) return;
+
+        const res = await window.api.authRequest<string>("put", "/like", {likeScope: "RELEASE", likedId: release.releaseId, liked: !isLiked});
+
+        if(res.type !== "error") {
+            if(!isLiked) {
+                dispatch(likeRelease(release?.releaseId));
+                toast.success("Saved Album.");
+            } else {
+                dispatch(unlikeRelease(release?.releaseId));
+                toast.success("Removed from Saved Albums.");
+            }
+        } else {
+            toast.error(errorToString(res.error));
+        }
+    }, [release, isLiked, dispatch]);
 
     return (
         <div
@@ -43,6 +74,15 @@ const ReleaseView = () => {
                                     <p className={s.artists}>{release.artists.map(((a, i) => <span key={a}><span className={s.link}>{a}</span>{i < release.artists.length - 1 ? ", " : ""}</span>))}</p>
                                 </div>
                                 <p className={s.tracksInfo}>{release.releaseTracks.length} Track{release.releaseTracks.length !== 1 && "s"} ({formatTime(albumLengthSeconds)})</p>
+                                <div className={so.optionBar}>
+                                    <OptionButton tooltip={isLiked ? "Remove from Saved Albums" : "Save Album"} onClick={() => handleLikeRelease()}>
+                                        {isLiked ?
+                                            <IoIosCheckmarkCircle style={{transform: "scale(1.1)", color: "var(--color-text-primary)"}} />
+                                            :
+                                            <MdOutlineAddCircleOutline style={{transform: "scale(1.1)"}} />
+                                        }
+                                    </OptionButton>
+                                </div>
                             </div>
                         </div>
                     </div>

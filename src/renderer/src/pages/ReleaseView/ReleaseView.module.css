@@ -9,7 +9,7 @@
     width: 100%;
     display: flex;
     justify-content: flex-start;
-    align-items: center;
+    align-items: flex-end;
     gap: 30px;
 }
 
@@ -26,7 +26,6 @@
 .releaseInfo {
     display: flex;
     flex-direction: column;
-    gap: 10px;
 }
 
 .releaseTitle {
@@ -46,4 +45,5 @@
     font-weight: 600;
     color: var(--color-text-secondary);;
     font-size: 0.9rem;
+    margin-top: 10px;
 }

@@ -40,6 +40,21 @@ const likes = createSlice({
         },
         setLikedTracks(state, action: PayloadAction<string[]>) {
             state.likedTracks = Object.fromEntries(action.payload.map(id => [id, true]));
+        },
+        likeRelease(state, action: PayloadAction<string>) {
+            state.likedReleases[action.payload] = true;
+        },
+        unlikeRelease(state, action: PayloadAction<string>) {
+            delete state.likedReleases[action.payload];
+        },
+        setLikedReleases(state, action: PayloadAction<string[]>) {
+            state.likedReleases = Object.fromEntries(action.payload.map(id => [id, true]));
+        },
+        likePlaylist(state, action: PayloadAction<number>) {
+            state.likedPlaylists[action.payload] = true;
+        },
+        unlikePlaylist(state, action: PayloadAction<number>) {
+            delete state.likedPlaylists[action.payload];
         }
     },
     extraReducers: (builder) => {
@@ -55,6 +70,6 @@ const likes = createSlice({
     }
 });
 
-export const {resetLikes, unlikeTrack, likeTrack, setLikedTracks} = likes.actions;
+export const {resetLikes, unlikeTrack, likeTrack, setLikedTracks, likeRelease, unlikeRelease, setLikedReleases, likePlaylist, unlikePlaylist} = likes.actions;
 
 export default likes.reducer;

@@ -1,5 +1,5 @@
 import {useNavigate} from "react-router-dom";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import useFetchData from "@renderer/hooks/useFetchData";
 import {PlaylistDTO} from "../../../../shared/Api";
 import classNames from "classnames";
@@ -8,12 +8,13 @@ import {formatDurationHuman} from "@renderer/util/timeUtils";
 import {SongList} from "@renderer/components/SongList/SongList";
 import {playlistSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
 import s from "./PlaylistView.module.css";
+import so from "../../components/OptionBar/OptionBar.module.css";
 import dodo from "../../../../../resources/dodo_whiteondark_512.png";
 import {orderedIdsAndSongsToSongEntries} from "@renderer/util/parseBackendTracks";
 import CoverGrid from "@renderer/components/CoverGrid/CoverGrid";
 import {FaRegCircleUser} from "react-icons/fa6";
 import {GoDotFill} from "react-icons/go";
-import {MdOutlineEdit} from "react-icons/md";
+import {MdOutlineAddCircleOutline, MdOutlineEdit} from "react-icons/md";
 import {LuUserRoundPlus, LuUsers} from "react-icons/lu";
 import PlaylistInitPopup from "@renderer/components/Popup/Playlist/PlaylistInitPopup";
 import {useRequiredParam} from "@renderer/hooks/useRequiredParam";
@@ -25,7 +26,6 @@ import {
     subscribeToPlaylistMeta,
     subscribeToPlaylistSongs
 } from "@renderer/stomp/stompClient";
-import {Tooltip} from "@mui/material";
 import InvitePopup from "@renderer/components/Popup/Playlist/InvitePopup/InvitePopup";
 import MembersPopup from "@renderer/components/Popup/Playlist/MembersPopup/MembersPopup";
 import {BsThreeDots} from "react-icons/bs";
@@ -36,6 +36,10 @@ import {useConfirm} from "@renderer/hooks/useConfirm";
 import {toCapitalized} from "@renderer/util/playlistUtils";
 import toast from "react-hot-toast";
 import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
+import {OptionButton} from "@renderer/components/OptionBar/OptionButton";
+import {IoIosCheckmarkCircle} from "react-icons/io";
+import {likePlaylist, unlikePlaylist} from "@renderer/redux/likeSlice";
+import {errorToString} from "@renderer/util/errorToString";
 
 const PlaylistView = () => {
     const id = useRequiredParam("id");
@@ -139,6 +143,28 @@ const PlaylistView = () => {
         navigate("/collection/playlists", { replace: true });
     }, [kicked, navigate]);
 
+    const isLiked = useAppSelector(
+        state => !!state.likeSlice.likedPlaylists[playlist?.playlistId ?? ""]
+    );
+
+    const handleLikeRelease = useCallback(async () => {
+        if(!playlist?.playlistId) return;
+
+        const res = await window.api.authRequest<string>("put", "/like", {likeScope: "PLAYLIST", likedId: playlist.playlistId, liked: !isLiked});
+
+        if(res.type !== "error") {
+            if(!isLiked) {
+                dispatch(likePlaylist(playlist.playlistId));
+                toast.success("Saved Playlist.");
+            } else {
+                dispatch(unlikePlaylist(playlist.playlistId));
+                toast.success("Removed from Saved Playlists.");
+            }
+        } else {
+            toast.error(errorToString(res.error));
+        }
+    }, [playlist, isLiked, dispatch]);
+
     return (
         <div
             className={`pageWrapper pageWrapperFullHeight ${classNames(s.pageWrapper)}`}
@@ -169,39 +195,51 @@ const PlaylistView = () => {
                                     <GoDotFill size={9}/>
                                     <p className={s.tracksInfo}>{orderedIds.length} song{orderedIds.length !== 1 && "s"}, {formatDurationHuman(albumLengthSeconds)}</p>
                                 </div>
-                                <div className={s.optionBar}>
-                                    <Tooltip title={"View Members"}>
-                                        <button onClick={() => setMembersOpen(true)}><LuUsers/></button>
-                                    </Tooltip>
-                                    <Tooltip title={canInvite ? "Invite Users" : "You aren't allowed to invite users!"}>
-                                        <button className={!canInvite ? s.disabled : ""} onClick={() => {
-                                            if (!canInvite) return;
-                                            setAddMembersOpen(true);
-                                        }}><LuUserRoundPlus/></button>
-                                    </Tooltip>
-                                    <Tooltip
-                                        title={canEdit ? "Edit Playlist" : "You aren't allowed to change the playlist!"}>
-                                        <button className={!canEdit ? s.disabled : ""}
-                                                onClick={() => {
-                                                    if (!canEdit) return;
-                                                    setUpdateOpen(true);
-                                                }}
-                                        >
-                                            <MdOutlineEdit style={{transform: "scale(1.1)"}}/>
-                                        </button>
-                                    </Tooltip>
-                                    <Tooltip
-                                        title={"More options"}>
-                                        <button onClick={(e) => {
+                                <div className={so.optionBar}>
+                                    <OptionButton tooltip={isLiked ? "Remove from Saved Playlists" : "Save Playlist"} onClick={() => handleLikeRelease()}>
+                                        {isLiked ?
+                                            <IoIosCheckmarkCircle style={{transform: "scale(1.1)", color: "var(--color-text-primary)"}} />
+                                            :
+                                            <MdOutlineAddCircleOutline style={{transform: "scale(1.1)"}} />
+                                        }
+                                    </OptionButton>
+                                    <OptionButton
+                                        tooltip="View Members"
+                                        onClick={() => setMembersOpen(true)}
+                                    >
+                                        <LuUsers />
+                                    </OptionButton>
+                                    <OptionButton
+                                        tooltip="Invite Users"
+                                        disabledTooltip="You aren't allowed to invite users!"
+                                        disabled={!canInvite}
+                                        onClick={() => setAddMembersOpen(true)}
+                                    >
+                                        <LuUserRoundPlus />
+                                    </OptionButton>
+                                    <OptionButton
+                                        tooltip="Edit Playlist"
+                                        disabledTooltip="You aren't allowed to change the playlist!"
+                                        disabled={!canEdit}
+                                        onClick={() => setUpdateOpen(true)}
+                                    >
+                                        <MdOutlineEdit style={{ transform: "scale(1.1)" }} />
+                                    </OptionButton>
+                                    <OptionButton
+                                        tooltip="More options"
+                                        onClick={(e) => {
                                             e.stopPropagation();
                                             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                                            ctx.open(e, {
-                                                type: "playlist",
-                                                data: playlist
-                                            }, {clientX: rect.right - rect.width - 70, clientY: rect.bottom + 10});
-                                        }}>
-                                            <BsThreeDots/></button>
-                                    </Tooltip>
+
+                                            ctx.open(
+                                                e,
+                                                { type: "playlist", data: playlist },
+                                                { clientX: rect.right - rect.width - 70, clientY: rect.bottom + 10 }
+                                            );
+                                        }}
+                                    >
+                                        <BsThreeDots />
+                                    </OptionButton>
                                 </div>
                             </div>
                         </div>

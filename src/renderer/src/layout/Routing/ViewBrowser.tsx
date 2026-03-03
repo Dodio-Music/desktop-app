@@ -1,7 +1,7 @@
 import {Navigate, Route, Routes} from "react-router-dom";
 import LikedArtistsPage from "../../pages/LikedArtistsPage";
 import NotFoundPage from "../../pages/NotFoundPage";
-import LikedAlbumsPage from "../../pages/LikedAlbumsPage";
+import LikedAlbumsPage from "../../pages/LikedAlbumsPage/LikedAlbumsPage";
 import HomePage from "../../pages/HomePage/HomePage";
 import LikedTracksPage from "../../pages/LikedTracksPage";
 import LocalFilesPage from "../../pages/LocalFilesPage/LocalFilesPage";

@@ -2,7 +2,7 @@ import s from "./HomePage.module.css";
 import useFetchData from "@renderer/hooks/useFetchData";
 import {PlaylistPreviewDTO, ReleasePreviewDTO} from "../../../../shared/Api";
 import {useNavigate} from "react-router-dom";
-import {useCallback, useEffect, useRef} from "react";
+import {useCallback} from "react";
 import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import Card from "@renderer/components/Card/Card";
@@ -38,13 +38,7 @@ const HomePage = () => {
     const track = useAppSelector(state => state.nativePlayer.currentTrack);
     const userPaused = useAppSelector(state => state.nativePlayer.userPaused);
     const authInfo = useAuth().info;
-
-    const userPausedRef = useRef(userPaused);
     const loadCollection = useLoadCollection();
-
-    useEffect(() => {
-        userPausedRef.current = userPaused;
-    }, [userPaused]);
 
     const handleClick = useCallback(
         (release: ReleasePreviewDTO) => navigate(`/release/${release.releaseId}`),
