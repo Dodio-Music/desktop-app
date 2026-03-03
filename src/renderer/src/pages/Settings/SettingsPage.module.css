@@ -40,7 +40,11 @@
     border-radius: 5px;
 }
 
-.latencyDropdown:hover {
+.latencyDropdown:not(:disabled):hover {
     color: var(--color-text-primary);
     background-color: var(--color-bg-3);
+}
+
+.settingsDisabled {
+    filter: brightness(0.45);
 }

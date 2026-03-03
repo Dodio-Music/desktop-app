@@ -5,6 +5,7 @@ import {setGlobalTheme} from "@renderer/redux/uiSlice";
 import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch, RootState} from "@renderer/redux/store";
 import toast from "react-hot-toast";
+import classNames from "classnames";
 
 const SettingsPage = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -23,14 +24,14 @@ const SettingsPage = () => {
         <div className={`pageWrapper ${s.wrapper}`}>
             <h1>Settings</h1>
             <h2>Playback</h2>
-            <div className={s.setting}>
+            <div className={classNames(s.setting, s.settingsDisabled)}>
                 <div>
                     <p className={s.label}>Audio Latency Preset</p>
                     <p className={s.info}>Determines how quickly audio reacts when you press play, seek, or change the volume.<br/>
                         Lower latency feels more responsive but may cause crackles on weak systems.</p>
                 </div>
                 <div>
-                    <select className={s.latencyDropdown}>
+                    <select disabled={true} className={s.latencyDropdown}>
                         {Object.entries(latencyPresets).map(([key, preset]) => (
                             <option key={key} value={key}>
                                 {preset.label} [{preset.approxLatencyMs.toFixed(0)}ms]
@@ -39,12 +40,13 @@ const SettingsPage = () => {
                     </select>
                 </div>
             </div>
-            <div className={s.setting}>
+            <div className={classNames(s.setting, s.settingsDisabled)}>
                 <div>
                     <p className={s.label}>Fade Duration</p>
                     <p className={s.info}>Controls how long fade-ins and fade-outs take when pausing or resuming.</p>
                 </div>
             </div>
+            <h2>Design / UI</h2>
             <div className={s.setting}>
                 <div>
                     <p className={s.label}>Theme</p>
