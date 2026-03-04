@@ -48,3 +48,64 @@
 .settingsDisabled {
     filter: brightness(0.45);
 }
+
+.primary {
+    color: var(--color-text-primary);
+    font-weight: bold;
+}
+
+.check {
+    padding: 10px;
+    font-size: 1rem;
+    border: none;
+    font-weight: 600;
+
+    border-radius: 5px;
+    color: var(--color-inverse-text);
+    background-color: var(--color-inverse-bg);
+    transition: 0.1s;
+    cursor: pointer;
+}
+
+.check:hover {
+    background-color: var(--color-inverse-hover);
+}
+
+.check:active, .check:disabled {
+    transition: 0s;
+    transform: scale(0.95);
+    background-color: var(--color-inverse-active);
+    filter: brightness(0.7)
+}
+
+.check:disabled {
+    cursor: default;
+}
+
+.install {
+    color: var(--color-text-primary);
+    background-color: var(--color-primary);
+}
+
+.install:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.install:active, .install:disabled {
+    background-color: var(--color-primary-active);
+}
+
+.updateRight {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    position: relative;
+    width: 50%;
+}
+
+.progress {
+    position: absolute;
+    top: 50px;
+    color: var(--color-text-secondary);
+    font-size: 1rem;
+}

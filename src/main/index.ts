@@ -120,7 +120,7 @@ app.whenReady().then(async () => {
     registerDodioApiIPC();
     registerDashboardIPC(mainWindow);
 
-    registerUpdater();
+    registerUpdater(mainWindow);
 
     installExtension([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS])
         .then(([redux, react]) => console.log(`Added Extensions:  ${redux.name}, ${react.name}`))

@@ -53,7 +53,7 @@
     /* main color */
     --color-primary: hsl(271 91% 60.1%);
     --color-primary-hover: hsl(271 91% 65.1%);
-    --color-primary-active: hsl(271 100% 55%);
+    --color-primary-active: hsl(271 60% 45%);
     --color-accent: hsl(281, 100%, 70%);
 
     /* inverse */

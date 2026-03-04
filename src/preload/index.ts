@@ -10,6 +10,8 @@ import {RendererAuthInfo} from "../main/web/Typing.js";
 import {QueueState} from "../main/player/QueueManager";
 import {UploadState} from "../shared/adminApi.js";
 import {ToastOptions} from "react-hot-toast";
+import {UpdateStatus} from "../shared/updaterApi.ts";
+import {UpdateCheckResult} from "electron-updater";
 
 export interface CustomWindowControls {
     minimize: () => void;
@@ -155,6 +157,14 @@ const api = {
         const listener = (_: IpcRendererEvent, url: string) => cb(url);
         ipcRenderer.on("ui:navigate", listener);
         return () => ipcRenderer.removeListener("ui:navigate", listener);
+    },
+    installUpdate: () => ipcRenderer.invoke("update:install"),
+    checkForUpdate: (): Promise<UpdateCheckResult | null> => ipcRenderer.invoke("update:check"),
+    getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke("update:status"),
+    onUpdateStatusChange: (cb: (status: UpdateStatus) => void): () => void => {
+        const listener = (_: IpcRendererEvent, status: UpdateStatus) => cb(status);
+        ipcRenderer.on("update:update", listener);
+        return () => ipcRenderer.removeListener("update:update", listener);
     }
 } satisfies DodioApi & Record<string, unknown>;
 
