@@ -9,6 +9,8 @@ export function getAutoUpdater(): AppUpdater {
 export const registerUpdater = () => {
     getAutoUpdater().autoDownload = true;
 
+    void getAutoUpdater().checkForUpdates();
+
     getAutoUpdater().on("update-downloaded", (info) => {
         dialog
             .showMessageBox({
