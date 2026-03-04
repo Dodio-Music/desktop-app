@@ -10,7 +10,7 @@ import {RendererAuthInfo} from "../main/web/Typing.js";
 import {QueueState} from "../main/player/QueueManager";
 import {UploadState} from "../shared/adminApi.js";
 import {ToastOptions} from "react-hot-toast";
-import {UpdateStatus} from "../shared/updaterApi.ts";
+import {UpdateStatus} from "../shared/updaterApi.js";
 import {UpdateCheckResult} from "electron-updater";
 
 export interface CustomWindowControls {
