@@ -8,5 +8,6 @@ export const themeOptions: Theme[] = [
     {name: "purple", displayName: "Basic Purple", type: "dark"},
     {name: "crimson", displayName: "Basic Crimson", type: "dark"},
     {name: "blue", displayName: "Basic Blue", type: "dark"},
-    {name: "light", displayName: "Light", type: "light"}
+    {name: "light", displayName: "Light", type: "light"},
+    {name: "green", displayName: "Poisonous Snake", type: "dark"},
 ] as const;
