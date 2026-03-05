@@ -6,7 +6,9 @@ import toast from "react-hot-toast";
 import {errorToString} from "@renderer/util/errorToString";
 import {useConfirm} from "@renderer/hooks/useConfirm";
 import {useAuth} from "@renderer/hooks/reduxHooks";
-import {FC, useEffect, useRef} from "react";
+import {FC, useEffect, useRef, useState} from "react";
+import classNames from "classnames";
+import useErrorHandling from "@renderer/hooks/useErrorHandling";
 
 interface AccountSettingsProps{
     scrollDown: boolean
@@ -15,6 +17,10 @@ interface AccountSettingsProps{
 const AccountPage: FC<AccountSettingsProps> = ({scrollDown}) => {
     const confirm = useConfirm();
     const navigate = useNavigate();
+    const {setError, InvalidInputError, hasError} = useErrorHandling();
+    const [showDisplayInput, setShowDisplayInput] = useState<boolean>(false);
+    const [changeDisplayname, setChangeDisplayname] = useState<string>("");
+
 
     const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -45,6 +51,19 @@ const AccountPage: FC<AccountSettingsProps> = ({scrollDown}) => {
         }
     };
 
+    const onEdit = () => {
+        setChangeDisplayname(info.displayName === undefined ? "" : info.displayName);
+        setShowDisplayInput(!showDisplayInput);
+    }
+
+    const onSave = () => {
+
+    }
+
+    const onCancel = () => {
+
+    }
+
     return (
         <>
             <div className="pageWrapper pageWrapperFullHeight" ref={scrollRef}>
@@ -57,9 +76,28 @@ const AccountPage: FC<AccountSettingsProps> = ({scrollDown}) => {
                     <div className={s.infoRow}>
                         <div>
                             <span className={s.label}>Display Name</span>
-                            <span className={s.value}>{info.displayName}</span>
+
+                        { showDisplayInput &&
+                            <>
+                                <div className={s.displayName}>
+                                    <div className={classNames({["error"]: hasError("login")})}>
+                                        <input value={changeDisplayname} onChange={(e) => setChangeDisplayname(e.currentTarget.value)} autoFocus={true}/>
+                                        <InvalidInputError inputKey="displayname"/>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <button className={s.secondary} onClick={onSave}>Save</button>
+                                    <button className={s.secondary} onClick={onCancel}>Cancel</button>
+                                </div>
+                            </>
+                        }
+
+                            { !showDisplayInput &&
+                                <span className={s.value}>{info.displayName}</span>
+                            }
                         </div>
-                        <button className={s.secondary}>Edit</button>
+                        <button className={s.secondary} onClick={onEdit}>Edit</button>
                     </div>
 
                     <div className={s.infoRow}>

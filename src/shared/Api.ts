@@ -23,7 +23,7 @@ export interface DodioApi {
         ...args: AxiosMethodArgs[M]
     ): Promise<ApiResult<T>>,
 }
-export type InvalidInputKeys = "username" | "email" | "login" | "password" | "password-reset-token" | "playlistName" | "search";
+export type InvalidInputKeys = "username" | "displayname" | "email" | "login" | "password" | "password-reset-token" | "playlistName" | "search";
 export const NoLoginError = {error: "no-login"} satisfies DodioError;
 export type DodioError = {
     error: "Not Found"
