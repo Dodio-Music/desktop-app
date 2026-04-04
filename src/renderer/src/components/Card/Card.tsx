@@ -3,6 +3,10 @@ import s from "./Card.module.css";
 import {FaPause, FaPlay} from "react-icons/fa6";
 import CoverGrid from "@renderer/components/CoverGrid/CoverGrid";
 
+interface CardEntity {
+    id: number | string;
+    name: string;
+}
 
 interface CardProps<T> {
     data: T;
@@ -10,14 +14,17 @@ interface CardProps<T> {
     onClick: (data: T) => void;
     onContextMenu: (e: MouseEvent, item: T) => void;
     onIconClick: (e: MouseEvent, item: T) => void;
+    onArtistClick?: (artist: CardEntity) => void;
+
+    artistType?: "artist" | "user";
 
     getTitle: (data: T) => string;
-    getArtists?: (data: T) => string[];
+    getArtists?: (data: T) => CardEntity[];
     getCoverUrl: (data: T) => string;
     getTiledCovers?: (data: T) => string[] | undefined;
 }
 
-function CardComponent<T>({data, isPlaying, onClick, onContextMenu, onIconClick, getTitle, getCoverUrl, getArtists, getTiledCovers}: CardProps<T>) {
+function CardComponent<T>({data, onArtistClick, isPlaying, onClick, onContextMenu, onIconClick, artistType = "user", getTitle, getCoverUrl, getArtists, getTiledCovers}: CardProps<T>) {
     const covers = getTiledCovers?.(data);
     const img = covers ?
         <CoverGrid coverArtUrls={covers}/>
@@ -37,8 +44,15 @@ function CardComponent<T>({data, isPlaying, onClick, onContextMenu, onIconClick,
                 </button>
             </div>
             <p className={`${s.title}`}>{getTitle(data)}</p>
-            <p className={s.artist}>{Array.isArray(getArtists?.(data)) && getArtists!(data).map((a, i) => (
-                <span key={a}><span className={s.link}>{a}</span>{i < getArtists(data).length - 1 ? ", " : ""}</span>
+            <p className={s.artist}>{getArtists?.(data).map((a, i, arr) => (
+                <span onClick={(e) => {
+                    e.stopPropagation();
+                    onArtistClick?.(a);
+                }} key={a.id}>
+                    <span className={artistType === "artist" ? s.link : ""}>
+                        {a.name}
+                    </span>{i < arr.length - 1 ? ", " : ""}
+                </span>
             ))}</p>
         </div>
     );

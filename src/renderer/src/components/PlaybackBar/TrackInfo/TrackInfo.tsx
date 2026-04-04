@@ -77,8 +77,8 @@ const TrackInfo = () => {
                            onClick={handleTitleClick}>{activeTrack.title}</p>
                         <p className={s.trackArtists}>
                             {activeTrack.artists.map((a, i) => (
-                                <span key={a}>
-                                    <span className={isRemoteSong(activeTrack) ? s.link : ""}>{a}</span>
+                                <span key={a.name}>
+                                    <span className={isRemoteSong(activeTrack) ? s.link : ""}>{a.name}</span>
                                     {i < activeTrack.artists.length - 1 ? ", " : ""}
                                 </span>
                             ))}

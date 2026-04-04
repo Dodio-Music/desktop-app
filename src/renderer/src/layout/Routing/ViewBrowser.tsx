@@ -17,6 +17,8 @@ import NotificationsPage from "@renderer/pages/NotificationsPage/NotificationsPa
 import OverallSettings from "@renderer/pages/Settings/OverallSettings";
 import AuthContentLayout from "@renderer/layout/Routing/AuthContentLayout";
 import AppContentLayout from "@renderer/layout/Routing/AppContentLayout";
+import ArtistPage from "@renderer/pages/ArtistPage/ArtistPage";
+import DiscographyPage from "@renderer/pages/ArtistPage/DiscographyPage";
 
 const ViewBrowser = () => {
     return (
@@ -41,6 +43,8 @@ const ViewBrowser = () => {
                        element={<ProtectedRoute><PlaylistPage/></ProtectedRoute>}/>
                 <Route path={"/release/:id"} element={<ProtectedRoute><ReleaseView/></ProtectedRoute>}/>
                 <Route path={"/playlist/:id"} element={<ProtectedRoute><PlaylistView/></ProtectedRoute>}/>
+                <Route path={"/artist/:id"} element={<ProtectedRoute><ArtistPage/></ProtectedRoute>}/>
+                <Route path={"/artist/:id/discography"} element={<ProtectedRoute><DiscographyPage/></ProtectedRoute>}/>
                 <Route path={"/settings"} element={<OverallSettings/>}/>
                 <Route path={"/notifications"} element={<ProtectedRoute><NotificationsPage/></ProtectedRoute>}/>
 

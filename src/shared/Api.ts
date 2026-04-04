@@ -58,12 +58,18 @@ export type ApiResult<T> = ({type:"error", error: DodioError }) | {type: "ok", v
 
 export type SourceQuality = "LOSSLESS" | "HIGH" | "LOW";
 
+export interface ArtistDTO {
+    id: number;
+    artistName: string;
+    streamCount: number;
+}
+
 export interface TrackDTO {
     trackId: string;
     title: string;
     views: number;
     duration: number;
-    artists: string[];
+    artists: ArtistDTO[];
     sources: SourceDTO[];
     waveformUrl: string;
 }
@@ -79,7 +85,7 @@ export interface ReleaseDTO {
     releaseName: string;
     coverArtUrl: string;
     releaseDate: string;
-    artists: string[];
+    artists: ArtistDTO[];
     releaseType: string;
     releaseTracks: ReleaseTrackDTO[];
 }
@@ -88,7 +94,7 @@ export interface ReleasePreviewDTO {
     releaseId: string;
     releaseName: string;
     coverArtUrl: string;
-    artists: string[];
+    artists: ArtistDTO[];
 }
 
 export interface UserPublicDTO {

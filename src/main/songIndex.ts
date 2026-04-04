@@ -102,7 +102,7 @@ async function buildMetadata(id: string, fullPath: string, stat: fs.Stats): Prom
         fileName: path.basename(fullPath),
         fullPath,
         title: common.title ?? path.basename(fullPath, path.extname(fullPath)),
-        artists: common.artists ?? ["Unknown Artist"],
+        artists: common.artists ? common.artists.map(a => ({name: a})) : [{name: "Unknown Artist"}],
         album: common.album ?? "Unknown Album",
         duration: metadata.format.duration ?? 0,
         picture,

@@ -75,7 +75,7 @@ const PlaylistPage = () => {
                                              }}
                                              onContextMenu={(e, data) => ctx.open(e, {type: "playlistPreview", data})}
                                              getTitle={p => p.playlistName}
-                                             getArtists={c => [c.owner.displayName]}
+                                             getArtists={c => [{id: c.owner.username, name: c.owner.displayName}]}
                                              getCoverUrl={() => dodo}
                                              getTiledCovers={() => playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
                                 />;

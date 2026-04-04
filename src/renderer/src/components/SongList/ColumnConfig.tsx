@@ -62,8 +62,8 @@ export const localSongRowSlots: SongRowSlot<LocalSongEntry>[] = [
                         <p className={classNames(s.trackTitle, s.ellipsis, isActive && s.playing)}>{song.title}</p>
                         <p className={classNames(s.trackArtist, s.ellipsis)}>
                             {song.artists.map((a, i) => (
-                                <span key={a}>
-                                    <span>{a}</span>
+                                <span key={a.name}>
+                                    <span>{a.name}</span>
                                     {i < song.artists.length - 1 ? ", " : ""}
                                 </span>
                             ))}
@@ -91,15 +91,15 @@ export const remoteSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
     playRow<RemoteSongEntry>(),
     {
         header: <p>Title</p>,
-        render: ({song, isActive}) => (
+        render: ({song, isActive, navigate}) => (
             <div className={s.trackColumn}>
                 <div className={s.trackElement}>
                     <div className={s.trackInfo}>
                         <p className={classNames(s.trackTitle, s.ellipsis, isActive && s.playing)}>{song.title}</p>
                         <p className={classNames(s.trackArtist, s.ellipsis)}>
                             {song.artists.map((a, i) => (
-                                <span key={a}>
-                                    <span className={s.link}>{a}</span>
+                                <span key={a.name} onClick={() => navigate?.("/artist/" + a.id)}>
+                                    <span className={s.link}>{a.name}</span>
                                     {i < song.artists.length - 1 ? ", " : ""}
                                 </span>
                             ))}
@@ -131,7 +131,7 @@ export const playlistSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
     playRow<RemoteSongEntry>(),
     {
         header: <p>Title</p>,
-        render: ({song, isActive}) => (
+        render: ({song, isActive, navigate}) => (
             <div className={s.trackColumn}>
                 <div className={s.trackElement}>
                     <div className={s.cover}>
@@ -142,8 +142,8 @@ export const playlistSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
                         <p className={classNames(s.trackTitle, s.ellipsis, isActive && s.playing)}>{song.title}</p>
                         <p className={classNames(s.trackArtist, s.ellipsis)}>
                             {song.artists.map((a, i) => (
-                                <span key={a}>
-                                    <span className={s.link}>{a}</span>
+                                <span key={a.name} onClick={() => navigate?.("/artist/" + a.id)}>
+                                    <span className={s.link}>{a.name}</span>
                                     {i < song.artists.length - 1 ? ", " : ""}
                                 </span>
                             ))}
@@ -186,7 +186,7 @@ export const likedTracksSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
     playRow<RemoteSongEntry>(),
     {
         header: <p>Title</p>,
-        render: ({song, isActive}) => (
+        render: ({song, isActive, navigate}) => (
             <div className={s.trackColumn}>
                 <div className={s.trackElement}>
                     <div className={s.cover}>
@@ -197,8 +197,8 @@ export const likedTracksSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
                         <p className={classNames(s.trackTitle, s.ellipsis, isActive && s.playing)}>{song.title}</p>
                         <p className={classNames(s.trackArtist, s.ellipsis)}>
                             {song.artists.map((a, i) => (
-                                <span key={a}>
-                                    <span className={s.link}>{a}</span>
+                                <span key={a.name} onClick={() => navigate?.("/artist/" + a.id)}>
+                                    <span className={s.link}>{a.name}</span>
                                     {i < song.artists.length - 1 ? ", " : ""}
                                 </span>
                             ))}

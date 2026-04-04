@@ -4,7 +4,7 @@ import {SourceQuality, UserPublicDTO} from "./Api.js";
 export interface BaseSongEntry {
     id: string;
     title: string;
-    artists: string[];
+    artists: {id?: number, name: string}[];
     album: string;
     duration: number;
     picture?: string;

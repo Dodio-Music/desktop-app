@@ -18,11 +18,13 @@ import {IoIosCheckmarkCircle} from "react-icons/io";
 import {likeRelease, unlikeRelease} from "@renderer/redux/likeSlice";
 import toast from "react-hot-toast";
 import {errorToString} from "@renderer/util/errorToString";
+import {useNavigate} from "react-router-dom";
 
 
 const ReleaseView = () => {
     const id = useRequiredParam("id");
     const scrollPageRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
 
     const { data: release, loading, error } = useFetchData<ReleaseDTO>(`/release/${id}`);
     const songEntries = releaseToSongEntries(release);
@@ -71,7 +73,7 @@ const ReleaseView = () => {
                             <div className={s.releaseInfo}>
                                 <div>
                                     <p className={s.releaseTitle}>{release.releaseName}</p>
-                                    <p className={s.artists}>{release.artists.map(((a, i) => <span key={a}><span className={s.link}>{a}</span>{i < release.artists.length - 1 ? ", " : ""}</span>))}</p>
+                                    <p className={s.artists}>{release.artists.map(((a, i) => <span key={a.id}><span className={s.link}>{a.artistName}</span>{i < release.artists.length - 1 ? ", " : ""}</span>))}</p>
                                 </div>
                                 <p className={s.tracksInfo}>{release.releaseTracks.length} Track{release.releaseTracks.length !== 1 && "s"} ({formatTime(albumLengthSeconds)})</p>
                                 <div className={so.optionBar}>
@@ -91,6 +93,7 @@ const ReleaseView = () => {
                         songs={songEntries}
                         slots={remoteSongRowSlots}
                         gridTemplateColumns="30px 1fr 100px 240px"
+                        navigate={navigate}
                     />
                 </>
             )}

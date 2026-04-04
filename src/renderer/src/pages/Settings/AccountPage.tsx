@@ -17,7 +17,7 @@ interface AccountSettingsProps{
 const AccountPage: FC<AccountSettingsProps> = ({scrollDown}) => {
     const confirm = useConfirm();
     const navigate = useNavigate();
-    const {setError, InvalidInputError, hasError} = useErrorHandling();
+    const {InvalidInputError, hasError} = useErrorHandling();
     const [showDisplayInput, setShowDisplayInput] = useState<boolean>(false);
     const [changeDisplayname, setChangeDisplayname] = useState<string>("");
 

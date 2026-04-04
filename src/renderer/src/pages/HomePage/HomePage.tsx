@@ -27,6 +27,7 @@ const HomePage = () => {
         error: errorReleases,
         refetch: refetchReleases
     } = useFetchData<ReleasePreviewDTO[]>("/release");
+    console.log(dataReleases);
     const {
         data: dataPlaylists,
         loading: loadingPlaylists,
@@ -77,10 +78,12 @@ const HomePage = () => {
                                     void loadCollection(data.releaseId, "release")}}
                                 key={t.releaseName}
                                 isPlaying={isPlaying}
+                                artistType={"artist"}
                                 onClick={handleClick}
                                 onContextMenu={(e, data) => ctx.open(e, {type: "release", data})}
                                 getTitle={(r) => r.releaseName}
-                                getArtists={(r) => r.artists}
+                                getArtists={(r) => (r.artists.map(a => ({id: a.id, name: a.artistName})))}
+                                onArtistClick={(artist) => navigate(`/artist/${artist.id}`)}
                                 getCoverUrl={(r) => r.coverArtUrl}
                             />;
                         })
@@ -121,7 +124,7 @@ const HomePage = () => {
                                              data: {...data, playlistUsers: [], playlistSongs: []}
                                          })}
                                          getTitle={p => p.playlistName}
-                                         getArtists={c => [c.owner.displayName]}
+                                         getArtists={c => [{id: c.owner.username, name: c.owner.displayName}]}
                                          getCoverUrl={() => dodo}
                                          getTiledCovers={() => playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
                             />;
