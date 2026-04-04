@@ -66,8 +66,9 @@ function handleError(err: unknown): DodioError {
 
         if (err.response) {
             if (err.response.status === 401) return {error: "no-login"} as DodioError;
+            if(err.response.status === 502) return {error: "no-connection"} as DodioError;
 
-            return err.response.data as DodioError;
+            return {error: "unknown-error", data: err.response.data} as DodioError;
         }
     }
     console.error("Request Error: ", err, typeof err);

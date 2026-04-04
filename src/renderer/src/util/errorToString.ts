@@ -15,6 +15,8 @@ export function errorToString(
             return error.arg.message;
         case "Not Found":
             return "Endpoint not found. (404)";
+        case "unknown-error":
+            return "An unknown server error occurred";
         default: {
             return error.error;
         }

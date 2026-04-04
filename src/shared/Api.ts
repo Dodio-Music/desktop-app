@@ -47,6 +47,9 @@ export type DodioError = {
     arg: {
        errors: DodioError[]
     }
+} | {
+    error: "unknown-error",
+    data: unknown
 }
 
 export type MayError = DodioError | null;

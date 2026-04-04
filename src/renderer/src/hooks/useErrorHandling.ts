@@ -10,6 +10,7 @@ const useErrorHandling = () => {
         if(!error) return;
         if(error?.error === "info") toast.error(error.arg.message)
         else if(error.error === "no-connection") toast.error("Cannot reach Dodio server!");
+        else if(error.error === "unknown-error") toast.error("An unknown server error occurred!");
     }, [error]);
 
     const hasError = (key: InvalidInputKeys) =>
