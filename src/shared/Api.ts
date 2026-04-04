@@ -59,7 +59,7 @@ export type ApiResult<T> = ({type:"error", error: DodioError }) | {type: "ok", v
 export type SourceQuality = "LOSSLESS" | "HIGH" | "LOW";
 
 export interface ArtistDTO {
-    id: number;
+    artistId: number;
     artistName: string;
     streamCount: number;
 }

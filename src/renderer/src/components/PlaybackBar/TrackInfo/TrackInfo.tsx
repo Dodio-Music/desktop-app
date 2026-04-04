@@ -77,7 +77,7 @@ const TrackInfo = () => {
                            onClick={handleTitleClick}>{activeTrack.title}</p>
                         <p className={s.trackArtists}>
                             {activeTrack.artists.map((a, i) => (
-                                <span key={a.name}>
+                                <span key={a.name} onClick={a.id !== undefined ? () => navigate?.("/artist/" + a.id) : undefined}>
                                     <span className={isRemoteSong(activeTrack) ? s.link : ""}>{a.name}</span>
                                     {i < activeTrack.artists.length - 1 ? ", " : ""}
                                 </span>

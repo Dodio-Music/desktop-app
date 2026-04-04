@@ -61,7 +61,7 @@ const LikedAlbumsPage = () => {
                                         onClick={handleClick}
                                         onContextMenu={(e, data) => ctx.open(e, {type: "release", data})}
                                         getTitle={(r) => r.releaseName}
-                                        getArtists={(r) => (r.artists.map(a => ({id: a.id, name: a.artistName})))}
+                                        getArtists={(r) => (r.artists.map(a => ({id: a.artistId, name: a.artistName})))}
                                         onArtistClick={(artist) => navigate(`/artist/${artist.id}`)}
                                         artistType={"artist"}
                                         getCoverUrl={(r) => r.coverArtUrl}

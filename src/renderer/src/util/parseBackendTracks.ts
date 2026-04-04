@@ -10,7 +10,7 @@ export function releaseToSongEntries(rel: ReleaseDTO | null): RemoteSongEntry[] 
         return {
             id: t.trackId,
             title: t.title,
-            artists: t.artists.map(t => ({id: t.id, name: t.artistName})),
+            artists: t.artists.map(t => ({id: t.artistId, name: t.artistName})),
             album: rel.releaseName,
             duration: t.duration,
             picture: rel.coverArtUrl,
@@ -40,7 +40,7 @@ export function likedTracksToSongEntries(likedTracks: LikedTrackDTO[] | null, li
         return {
             id: t.trackId,
             title: t.title,
-            artists: t.artists.map(a => ({id: a.id, name: a.artistName})),
+            artists: t.artists.map(a => ({id: a.artistId, name: a.artistName})),
             album: rel.releaseName,
             duration: t.duration,
             picture: rel.coverArtUrl,
@@ -77,7 +77,7 @@ const playlistSongToRemoteSongEntry = (ps: PlaylistSongDTO, playlist: Pick<Playl
     return {
         id: ps!.playlistSongId,
         title: t.title,
-        artists: t.artists.map(a => ({id: a.id, name: a.artistName})),
+        artists: t.artists.map(a => ({id: a.artistId, name: a.artistName})),
         album: r.releaseName,
         duration: t.duration,
         picture: r.coverArtUrl,
