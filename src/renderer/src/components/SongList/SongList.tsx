@@ -32,6 +32,7 @@ interface Props<T extends BaseSongEntry> {
     navigate?: (path: string) => void;
     contextHelpers?: ContextActionHelpers;
     helpers?: SongListHelpers;
+    hideHeader?: boolean;
 }
 
 const ROW_HEIGHT = 66;
@@ -44,7 +45,8 @@ export const SongList = <T extends BaseSongEntry>({
                                                       scroll,
                                                       contextHelpers,
                                                       navigate,
-                                                      helpers
+                                                      helpers,
+                                                      hideHeader = false
                                                   }: Props<T>) => {
     const [selectedRow, setSelectedRow] = useState<string | undefined>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
@@ -250,15 +252,21 @@ export const SongList = <T extends BaseSongEntry>({
     }
 
     return (
-        <div className={`${s.songList} ${isDragging ? "dragging" : ""}`} ref={listRef}>
-            <div className={`${s.headRow} ${s.grid}`} style={{gridTemplateColumns}}>
-                {slots.map((slot, i) => (
-                    <div key={i} className={s.colWrapper}>
-                        {slot.header}
-                    </div>
-                ))}
-            </div>
-            <div className={s.divider}/>
+        <div className={`${s.songList} ${isDragging ? "dragging" : ""} ${!hideHeader ? s.songListMarginTop : ""}`} ref={listRef}>
+            {
+                !hideHeader && (
+                    <>
+                        <div className={`${s.headRow} ${s.grid}`} style={{gridTemplateColumns}}>
+                            {slots.map((slot, i) => (
+                                <div key={i} className={s.colWrapper}>
+                                    {slot.header}
+                                </div>
+                            ))}
+                        </div>
+                        <div className={s.divider}/>
+                    </>
+                )
+            }
             <WindowScroller scrollElement={scrollElement.current} style={{outline: "none"}}>
                 {({height, isScrolling, scrollTop}) => (
                     <AutoSizer disableHeight={true} style={{outline: "none"}}>

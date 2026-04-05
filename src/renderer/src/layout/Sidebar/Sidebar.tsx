@@ -30,9 +30,10 @@ interface ItemHelper {
     localSongsCount: number;
     likedTracks: number;
     likedReleases: number;
+    followedArtists: number;
 }
 
-const navItems = ({localSongsCount, likedReleases, likedTracks}: ItemHelper): NavItem[] => [
+const navItems = ({localSongsCount, likedReleases, likedTracks, followedArtists}: ItemHelper): NavItem[] => [
     {
         url: "/home",
         label: "Home",
@@ -69,6 +70,7 @@ const navItems = ({localSongsCount, likedReleases, likedTracks}: ItemHelper): Na
     {
         url: "/collection/artists",
         label: "Followed Artists",
+        subLabel: `${followedArtists} artist${generalPlural(followedArtists)}`,
         icon: <PiMicrophoneStageBold id={s.artist}/>,
         needsAccount: true
     }
@@ -78,7 +80,7 @@ const Sidebar = () => {
     const {info} = useAuth();
     const {url: accountUrl, text: accountText, icon: accountIcon} = accountPages[info.status];
     const [localSongsCount, setLocalSongsCount] = useState(0);
-    const {likedReleases, likedTracks} = useAppSelector(state => state.likeSlice);
+    const {likedReleases, likedTracks, followedArtists} = useAppSelector(state => state.likeSlice);
 
     useEffect(() => {
         async function fetchCount() {
@@ -96,7 +98,7 @@ const Sidebar = () => {
 
     return (
         <div className={classNames(s.main)}>
-            {navItems({localSongsCount, likedTracks: Object.keys(likedTracks).length, likedReleases: Object.keys(likedReleases).length}).filter(c => !c.needsAccount || info.status === "logged_in").map((item) => (
+            {navItems({localSongsCount, likedTracks: Object.keys(likedTracks).length, likedReleases: Object.keys(likedReleases).length, followedArtists: Object.keys(followedArtists).length}).filter(c => !c.needsAccount || info.status === "logged_in").map((item) => (
                 <NavButton key={item.url} url={item.url}>
                     {item.icon}
                     <div className={s.name}>

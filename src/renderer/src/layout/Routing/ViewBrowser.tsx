@@ -1,5 +1,5 @@
 import {Navigate, Route, Routes} from "react-router-dom";
-import LikedArtistsPage from "../../pages/LikedArtistsPage";
+import FollowedArtistsPage from "../../pages/FollowedArtistsPage/FollowedArtistsPage";
 import NotFoundPage from "../../pages/NotFoundPage";
 import LikedAlbumsPage from "../../pages/LikedAlbumsPage/LikedAlbumsPage";
 import HomePage from "../../pages/HomePage/HomePage";
@@ -38,7 +38,7 @@ const ViewBrowser = () => {
                 <Route path={"/collection/albums"}
                        element={<ProtectedRoute><LikedAlbumsPage/></ProtectedRoute>}/>
                 <Route path={"/collection/artists"}
-                       element={<ProtectedRoute><LikedArtistsPage/></ProtectedRoute>}/>
+                       element={<ProtectedRoute><FollowedArtistsPage/></ProtectedRoute>}/>
                 <Route path={"/collection/playlists"}
                        element={<ProtectedRoute><PlaylistPage/></ProtectedRoute>}/>
                 <Route path={"/release/:id"} element={<ProtectedRoute><ReleaseView/></ProtectedRoute>}/>

@@ -230,3 +230,39 @@ export const likedTracksSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
         </div>
     }
 ];
+
+export const artistPopularSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
+    playRow<RemoteSongEntry>(),
+    {
+        header: <p></p>,
+        render: ({song, isActive}) => (
+            <div className={s.trackColumn}>
+                <div className={s.trackElement}>
+                    <div className={s.cover}>
+                        <img className={s.img} src={song.picture ? song.picture + "?size=thumb" : placeholder}
+                             alt="cover" loading={"lazy"}/>
+                    </div>
+                    <div className={s.trackInfo}>
+                        <p className={classNames(s.trackTitle, s.ellipsis, isActive && s.playing)}>{song.title}</p>
+                    </div>
+                </div>
+            </div>
+        )
+    },
+    {
+        header: <p></p>,
+        render: () => <p className={classNames(s.plays, s.ellipsis)}>0</p>
+    },
+    {
+        header: <p></p>,
+        render: ({song, isSelected, openContextMenu, isLiked, likeSong}) => <div className={s.lastColumn}>
+            {
+                isLiked !== null ? <div className={classNames(s.like, isSelected && s.showLike, isLiked && s.isLiked)}>
+                    <button className={s.likeButton} onClick={() => likeSong?.()}><span>{isLiked ? <FaHeart /> : <FaRegHeart />}</span></button>
+                </div> : <div></div>
+            }
+            <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
+            <HiOutlineDotsHorizontal onClick={(e) => openContextMenu(e, {type: "song", data: song})} size={24} className={classNames(s.menu, isSelected && s.showOptions, "no-drag")} />
+        </div>
+    }
+];

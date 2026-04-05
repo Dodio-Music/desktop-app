@@ -62,6 +62,14 @@ export interface ArtistDTO {
     artistId: number;
     artistName: string;
     streamCount: number;
+    avatarUrl: string | null;
+}
+
+export interface ArtistOverviewDTO {
+    artist: ArtistDTO;
+    popularReleaseTracks: ReleaseTrackDTO[];
+    totalTrackCount: number;
+    followerCount: number;
 }
 
 export interface TrackDTO {
@@ -176,6 +184,7 @@ export interface LikedItemsDTO {
     likedPlaylists: number[];
     likedTracks: string[];
     likedReleases: string[];
+    followedArtists: number[];
 }
 
 export interface LikedTrackDTO {
@@ -188,4 +197,9 @@ export interface LikedReleaseDTO {
     releaseLikeId: number;
     release: ReleasePreviewDTO;
     likedAt: Date;
+}
+
+export interface ArtistFollowDTO {
+    artist: ArtistDTO;
+    followedAt: Date;
 }

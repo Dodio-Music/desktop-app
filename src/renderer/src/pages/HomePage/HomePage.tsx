@@ -27,7 +27,6 @@ const HomePage = () => {
         error: errorReleases,
         refetch: refetchReleases
     } = useFetchData<ReleasePreviewDTO[]>("/release");
-    console.log(dataReleases);
     const {
         data: dataPlaylists,
         loading: loadingPlaylists,

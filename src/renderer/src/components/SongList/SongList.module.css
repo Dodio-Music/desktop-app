@@ -1,6 +1,9 @@
 .songList {
-    margin-top: 20px;
     width: 100%;
+}
+
+.songListMarginTop {
+    margin-top: 20px;
 }
 
 .songRow {

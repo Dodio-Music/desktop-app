@@ -47,3 +47,11 @@
     font-size: 0.9rem;
     margin-top: 10px;
 }
+
+.link {
+    cursor: pointer;
+}
+
+.link:hover {
+    text-decoration: underline;
+}

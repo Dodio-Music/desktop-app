@@ -1,0 +1,136 @@
+.wrapper {
+    height: 100%;
+}
+
+.artistPage {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.artistHeaderWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.gradientOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 450px;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.artistHeader {
+    width: 100%;
+    display: flex;
+    padding: 30px;
+    justify-content: flex-start;
+    align-items: center;
+    height: 250px;
+    gap: 30px;
+}
+
+.artistHeaderInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.artistAvatar {
+    overflow: hidden;
+    border-radius: 1000px;
+    height: 100%;
+}
+
+.artistHeader h1 {
+    font-size: 4rem;
+    font-weight: 700;
+}
+
+.artistHeader p {
+    font-size: 1.2rem;
+}
+
+.mainPage {
+    padding: 0 30px 30px;
+    background-color: color-mix(
+        in srgb,
+        var(--color-bg-0) 30%,
+        transparent
+    );
+    flex: 1;
+}
+
+.horizWrapper {
+    display: grid;
+    grid-template-columns: 1fr 600px;
+}
+
+.subHeading {
+    color: var(--color-text-primary);
+    font-weight: 600;
+    font-size: 1.6rem;
+    line-height: 1;
+    margin-bottom: 10px;
+}
+
+.artistInfo {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.artistInfoMain {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 100px;
+}
+
+.artistInfoMain > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.artistInfoMain h3 {
+    font-weight: 600;
+    font-size: 1.3rem;
+    color: var(--color-text-secondary);
+}
+
+.artistInfoMain p {
+    font-weight: 700;
+    font-size: 1.7rem;
+    color: var(--color-text-primary);
+}
+
+.controlBar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 25px 0;
+}
+
+.follow {
+    border: 2px solid var(--color-text-tertiary);
+    background: transparent;
+    color: var(--color-text-primary);
+    border-radius: 100px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: 0.1s;
+    cursor: pointer;
+}
+
+.follow:hover {
+    transform: scale(1.05);
+}
+
+.follow:active {
+    transition: 0s;
+    transform: scale(0.95);
+}

@@ -13,13 +13,15 @@ export interface LikeState {
     likedPlaylists: Record<number, true>;
     likedTracks: Record<string, true>;
     likedReleases: Record<string, true>;
+    followedArtists: Record<number, true>;
 }
 
 const initialState: LikeState = {
     initialized: false,
     likedPlaylists: {},
     likedTracks: {},
-    likedReleases: {}
+    likedReleases: {},
+    followedArtists: {}
 };
 
 const likes = createSlice({
@@ -31,6 +33,7 @@ const likes = createSlice({
             state.likedPlaylists = {};
             state.likedTracks = {};
             state.likedReleases = {};
+            state.followedArtists = {};
         },
         likeTrack(state, action: PayloadAction<string>) {
             state.likedTracks[action.payload] = true;
@@ -55,6 +58,15 @@ const likes = createSlice({
         },
         unlikePlaylist(state, action: PayloadAction<number>) {
             delete state.likedPlaylists[action.payload];
+        },
+        setFollowedArtists(state, action: PayloadAction<number[]>) {
+            state.followedArtists = Object.fromEntries(action.payload.map(id => [id, true]));
+        },
+        followArtist(state, action: PayloadAction<number>) {
+            state.followedArtists[action.payload] = true;
+        },
+        unfollowArtist(state, action: PayloadAction<number>) {
+            delete state.followedArtists[action.payload];
         }
     },
     extraReducers: (builder) => {
@@ -64,12 +76,13 @@ const likes = createSlice({
                 state.likedTracks = Object.fromEntries(entries.likedTracks.map(id => [id, true]));
                 state.likedReleases = Object.fromEntries(entries.likedReleases.map(id => [id, true]));
                 state.likedPlaylists = Object.fromEntries(entries.likedPlaylists.map(id => [id, true]));
+                state.followedArtists = Object.fromEntries(entries.followedArtists.map(id => [id, true]));
                 state.initialized = true;
             }
         });
     }
 });
 
-export const {resetLikes, unlikeTrack, likeTrack, setLikedTracks, likeRelease, unlikeRelease, setLikedReleases, likePlaylist, unlikePlaylist} = likes.actions;
+export const {resetLikes, unlikeTrack, likeTrack, setLikedTracks, likeRelease, unlikeRelease, setLikedReleases, likePlaylist, unlikePlaylist, followArtist, unfollowArtist, setFollowedArtists} = likes.actions;
 
 export default likes.reducer;

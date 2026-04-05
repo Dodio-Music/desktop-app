@@ -32,6 +32,7 @@ export interface RemoteSongEntry extends BaseSongEntry {
 export type PlaybackContext =
     | { type: "local", name: string, url: string }
     | { type: "release", name: string, url: string, id: string }
+    | { type: "artist", name: string, url: string, id: number }
     | { type: "playlist", name: string, url: string, id: number }
     | { type: "liked_tracks", name: string, url: string, id: number };
 
