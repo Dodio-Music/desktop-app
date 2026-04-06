@@ -203,3 +203,38 @@
     right: -4px;
     pointer-events: none;
 }
+
+
+
+/*ToDO change to defined colors*/
+.searchWrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    -webkit-app-region: no-drag;
+}
+
+.searchInput {
+    width: 100%;
+    max-width: 500px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+
+    font-size: 1rem;
+    outline: none;
+
+    transition: all 0.2s ease;
+}
+
+.searchInput::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.searchInput:focus {
+    border-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.08);
+}

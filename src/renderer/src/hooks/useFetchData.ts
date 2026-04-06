@@ -24,8 +24,11 @@ export default function useFetchData<T>(url: string, resetOnFetch: boolean = tru
             if(resetOnFetch) setData(null);
             const res = await window.api.authRequest<T>("get", url);
             if (res.type === "ok") {
+                console.log(data)
                 setData(res.value);
             } else {
+                console.log("debuggign")
+                console.log(res.error)
                 setError(errorToString(res.error));
             }
         } catch (e) {

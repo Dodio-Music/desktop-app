@@ -19,6 +19,7 @@ import AuthContentLayout from "@renderer/layout/Routing/AuthContentLayout";
 import AppContentLayout from "@renderer/layout/Routing/AppContentLayout";
 import ArtistPage from "@renderer/pages/ArtistPage/ArtistPage";
 import DiscographyPage from "@renderer/pages/ArtistPage/DiscographyPage";
+import SearchPage from "@renderer/pages/SearchPage/SearchPage";
 
 const ViewBrowser = () => {
     return (
@@ -31,6 +32,7 @@ const ViewBrowser = () => {
             <Route element={<AppContentLayout/>}>
                 <Route path={"/"} element={<Navigate to={"/home"} replace/>}/>
                 <Route path={"/home"} element={<ProtectedRoute><HomePage/></ProtectedRoute>}/>
+                <Route path={"/searchPage"} element={<ProtectedRoute><SearchPage/></ProtectedRoute>}/>
                 <Route path={"/dashboard"} element={<UploadDashboard/>}/>
                 <Route path={"/collection/local"} element={<LocalFilesPage/>}/>
                 <Route path={"/collection/tracks"}
