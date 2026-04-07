@@ -39,7 +39,7 @@ const HomePage = () => {
         loading: loadingReleases,
         error: errorReleases,
         refetch: refetchReleases
-    } = useFetchData<ReleasePreviewDTO[]>(releaseUrl);
+    } = useFetchData<ReleasePreviewDTO[]>("/release");
     const {
         data: dataPlaylists,
         loading: loadingPlaylists,
@@ -68,7 +68,7 @@ const HomePage = () => {
     return (
         <div className={`pageWrapper ${s.wrapper}`}>
             <div className={s.heading}>
-                <h1>New Releases</h1>
+                <h1>Releases</h1>
                 <ToggleSectionButton
                     expanded={expandedSection.releases}
                     onToggle={() => dispatch(homepageToggleExpandedSection("releases"))}
@@ -108,8 +108,10 @@ const HomePage = () => {
                         })
                 }
             </div>
+
+
             <div className={s.heading}>
-                <h1>Discover Playlists</h1>
+                <h1>Artists</h1>
                 <ToggleSectionButton
                     expanded={expandedSection.playlists}
                     onToggle={() => dispatch(homepageToggleExpandedSection("playlists"))}
@@ -160,6 +162,50 @@ const HomePage = () => {
                     })
                 }
             </ContextMenu>
+
+
+            <div className={s.heading}>
+                <h1>Songs</h1>
+                <ToggleSectionButton
+                    expanded={expandedSection.playlists}
+                    onToggle={() => dispatch(homepageToggleExpandedSection("playlists"))}
+                />
+            </div>
+            <div
+                className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorPlaylists && s.scrollerError)}>
+                {errorPlaylists && !dataPlaylists ?
+                    <div className={s.error}>
+                        <p>{`Error: ${errorPlaylists}`}</p>
+                        <button onClick={refetchPlaylists}>Refresh</button>
+                    </div>
+                    :
+                    (loadingPlaylists || !dataPlaylists)
+                        ? Array.from({length: 12}).map((_, i) => (
+                            <CardSkeleton key={i}/>
+                        ))
+                        :
+                        dataPlaylists.map(playlist => {
+                            const isPlaying = track?.context.type === "playlist" && track?.context.id === playlist.playlistId && !userPaused;
+
+                            return <Card key={playlist.playlistId}
+                                         data={playlist}
+                                         onClick={() => navigate(`/playlist/${playlist.playlistId}`)}
+                                         isPlaying={isPlaying}
+                                         onIconClick={(e, data) => {
+                                             e.stopPropagation();
+                                             void loadCollection(data.playlistId, "playlist")}}
+                                         onContextMenu={(e, data) => ctx.open(e, {
+                                             type: "playlist",
+                                             data: {...data, playlistUsers: [], playlistSongs: []}
+                                         })}
+                                         getTitle={p => p.playlistName}
+                                         getArtists={c => [{id: c.owner.username, name: c.owner.displayName}]}
+                                         getCoverUrl={() => dodo}
+                                         getTiledCovers={() => playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
+                            />;
+                        })
+                }
+            </div>
         </div>
     );
 };
