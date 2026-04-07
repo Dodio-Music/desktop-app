@@ -118,7 +118,7 @@ const ArtistPage = () => {
                                 </div>
                                 <div className={s.about}>
                                     <h2 className={s.subHeading}>About</h2>
-                                    <p>Your artist bio will show up here.</p>
+                                    <p>{artistOverview.artist.bio ?? "This artist hasn't added a biography yet."}</p>
                                 </div>
                             </div>
                         </div>

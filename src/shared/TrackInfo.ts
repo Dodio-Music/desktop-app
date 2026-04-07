@@ -24,6 +24,7 @@ export interface RemoteSongEntry extends BaseSongEntry {
     releaseDate: string;
     releaseId: string;
     releaseTrackId: string;
+    streamCount: number;
 
     addedAt?: Date;
     addedBy?: UserPublicDTO;

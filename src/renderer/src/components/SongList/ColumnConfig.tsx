@@ -111,7 +111,7 @@ export const remoteSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
     },
     {
         header: <p className={s.playsHeader}>Plays</p>,
-        render: () => <p className={classNames(s.plays, s.ellipsis)}>0</p>
+        render: (song) => <p className={classNames(s.plays, s.ellipsis)}>{song.song.streamCount}</p>
     },
     {
         header: <p className={s.durationHeader}><WiTime3/></p>,
@@ -251,7 +251,7 @@ export const artistPopularSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
     },
     {
         header: <p></p>,
-        render: () => <p className={classNames(s.plays, s.ellipsis)}>0</p>
+        render: (song) => <p className={classNames(s.plays, s.ellipsis)}>{song.song.streamCount}</p>
     },
     {
         header: <p></p>,

@@ -8,6 +8,7 @@ import {BaseSongEntry, isLocalSong, isRemoteSong} from "../../shared/TrackInfo.j
 import {PlayerState, RepeatMode} from "../../shared/PlayerState.js";
 import {readWaveform, writeWaveform} from "./WaveformCache.js";
 import {resolveRemoteWaveform} from "./AudioSource/helper/WaveformHelper.js";
+import dodioApi from "../web/dodio_api.js";
 
 export class PlayerSession {
     private source: BaseAudioSource | null = null;
@@ -269,5 +270,16 @@ export class PlayerSession {
     seek(time: number) {
         void this.source?.seek(time);
         this.playerProcess.postMessage({ type: "seek", payload: time });
+    }
+
+    async incrementStreamCount(trackId: string) {
+        if(trackId !== this.track?.id) return;
+        if(!isRemoteSong(this.track)) return;
+
+        try {
+            await dodioApi.authRequest("post", "/stream/" + this.track.id);
+        } catch(err) {
+            console.error(err);
+        }
     }
 }

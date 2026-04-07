@@ -62,6 +62,7 @@ export interface ArtistDTO {
     artistId: number;
     artistName: string;
     streamCount: number;
+    bio: string;
     avatarUrl: string | null;
 }
 
@@ -75,7 +76,7 @@ export interface ArtistOverviewDTO {
 export interface TrackDTO {
     trackId: string;
     title: string;
-    views: number;
+    streamCount: number;
     duration: number;
     artists: ArtistDTO[];
     sources: SourceDTO[];

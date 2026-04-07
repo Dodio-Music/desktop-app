@@ -17,6 +17,11 @@ export const registerPlayerProcessIPC = (mainWindow: BrowserWindow, initialPrefs
     session = new PlayerSession(mainWindow, playerProcess, queue);
 
     playerProcess.on("message", async (msg) => {
+        if(msg.type === "stream-threshold-reached") {
+            void session.incrementStreamCount(msg.payload.trackId);
+            return;
+        }
+
         if(mainWindow.isDestroyed() || !mainWindow.webContents || msg.type === "device-info") return;
         session.updateState(msg.state);
 

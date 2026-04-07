@@ -73,6 +73,9 @@ export class PlayerProcess {
     private playheadAnchorFrames = 0;
     private playheadAnchorWall = Date.now();
 
+    // playback tracking (stream increment)
+    private playedFrames = 0;
+    private streamCountSent = false;
 
     // === Audio Device Management (naudiodon) ===
     public registerAudioDevice(devInfo?: OutputDevice) {
@@ -251,6 +254,11 @@ export class PlayerProcess {
 
                     this.session.readOffset += this.deviceInfo.samplesPerBuffer;
                     this.session.waitingForData = false;
+
+                    if(!this.session.waitingForData && !this.isFullyPaused()) {
+                        this.playedFrames += this.deviceInfo.samplesPerBuffer;
+                        this.checkStreamThreshold();
+                    }
                 } else {
                     this.session.waitingForData = true;
                     this.playheadAnchorFrames = this.session.readOffset;
@@ -337,6 +345,9 @@ export class PlayerProcess {
         this.playheadAnchorWall = Date.now();
 
         this.sendStateUpdates = true;
+
+        this.playedFrames = 0;
+        this.streamCountSent = false;
 
         this.notifyState("media-transition");
     }
@@ -528,6 +539,22 @@ export class PlayerProcess {
     private toSampleIndex(channels: number, sampleRate: number, timeInSeconds: number) {
         const frameIndex = Math.floor(timeInSeconds * sampleRate);
         return frameIndex * channels;
+    }
+
+    private checkStreamThreshold() {
+        if (this.streamCountSent || !this.session || !this.deviceInfo) return;
+        const seconds = this.toSeconds(this.deviceInfo.out.channels, this.deviceInfo.out.sampleRate, this.playedFrames);
+
+        if (seconds >= Math.min(15, this.session.duration * 0.5)) {
+            this.streamCountSent = true;
+
+            parentPort?.postMessage({
+                type: "stream-threshold-reached",
+                payload: {
+                    trackId: this.session.id
+                }
+            });
+        }
     }
 }
 
