@@ -34,6 +34,7 @@ const HomePage = () => {
     //     ? `/search?query=${debouncedSearch}&include=PLAYLIST`
     //     : "/playlist/public";
 
+    //ToDO: update URL and DTO to split into 3 section object
     const {
         data: dataReleases,
         loading: loadingReleases,
@@ -46,6 +47,9 @@ const HomePage = () => {
         error: errorPlaylists,
         refetch: refetchPlaylists
     } = useFetchData<PlaylistPreviewDTO[]>("/playlist/public");
+
+
+
     const confirm = useConfirm();
     const ctx = useContextMenu();
     const track = useAppSelector(state => state.nativePlayer.currentTrack);

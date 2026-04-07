@@ -223,3 +223,40 @@ export interface ArtistFollowDTO {
     artist: ArtistDTO;
     followedAt: Date;
 }
+
+export interface SearchItemsDTO {
+    artistResults: ArtistSearchDTO[];
+    trackResults: TrackSearchDTO[];
+    releaseResults: ReleaseSearchDTO[];
+}
+
+
+export interface ArtistSearchDTO {
+    id: number;
+    name: string;
+    followerCount: number;
+    streamCount: number;
+}
+
+
+export interface TrackSearchDTO {
+    id: string;
+    title: string;
+    artistNames: string[];
+    duration: number;
+    viewCount: number;
+}
+
+
+export interface ReleaseSearchDTO {
+    id: string;
+    name: string;
+    artistNames: string[];
+    releaseType: ReleaseType;
+    releaseDate: string;
+    likeCount: number;
+    streamCount: number;
+}
+
+
+export type ReleaseType = "ALBUM" | "SINGLE" | "EP";
