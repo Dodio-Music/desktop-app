@@ -7,6 +7,11 @@
     src: url("./fonts/Inter.ttf")
 }
 
+@font-face {
+    font-family: "RobotoFlex";
+    src: url("./fonts/RobotoFlex.ttf")
+}
+
 /*:root {*/
 /*    --ev-c-white: #ffffff;*/
 /*    --ev-c-white-soft: #f8f8f8;*/

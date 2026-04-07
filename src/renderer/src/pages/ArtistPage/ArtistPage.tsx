@@ -25,6 +25,8 @@ const ArtistPage = () => {
     const popularTracks = releaseTrackDTOListToSongEntries(artistOverview?.popularReleaseTracks ?? [], {type: "artist", id: artistOverview?.artist.artistId ?? -1, url: "/artist/" + artistOverview?.artist.artistId, name: "Artist Tracks"});
     const dispatch = useAppDispatch();
 
+    const displayedPopularTracks = popularTracks.slice(0, 5);
+
     useEffect(() => {
         const img = artistOverview?.artist.avatarUrl ?? dodo;
 
@@ -93,23 +95,30 @@ const ArtistPage = () => {
                         </div>
                         <div className={s.horizWrapper}>
                             <div>
-                                <h2 className={s.subHeading}>Popular</h2>
-                                <SongList songs={popularTracks} hideHeader={true} slots={artistPopularSongRowSlots} gridTemplateColumns="30px 1fr 100px 200px" scrollElement={scrollPageRef}/>
+                                <div className={s.topTracks}>
+                                    <h2 className={s.subHeading}>Top Tracks</h2>
+                                    <p className={s.viewAll}>View All</p>
+                                </div>
+                                <SongList songs={displayedPopularTracks} hideHeader={true} slots={artistPopularSongRowSlots} gridTemplateColumns="30px 1fr 4ch 150px" scrollElement={scrollPageRef}/>
                             </div>
                             <div className={s.artistInfo}>
                                 <div className={s.artistInfoMain}>
                                     <div>
-                                        <h3>Followers</h3>
+                                        <h3 className={s.subHeading}>Followers</h3>
                                         <p>{artistOverview.followerCount}</p>
                                     </div>
                                     <div>
-                                        <h3>Streams</h3>
+                                        <h3 className={s.subHeading}>Streams</h3>
                                         <p>{artistOverview.artist.streamCount}</p>
                                     </div>
                                     <div>
-                                        <h3>Tracks</h3>
+                                        <h3 className={s.subHeading}>Tracks</h3>
                                         <p>{artistOverview.totalTrackCount}</p>
                                     </div>
+                                </div>
+                                <div className={s.about}>
+                                    <h2 className={s.subHeading}>About</h2>
+                                    <p>Your artist bio will show up here.</p>
                                 </div>
                             </div>
                         </div>
