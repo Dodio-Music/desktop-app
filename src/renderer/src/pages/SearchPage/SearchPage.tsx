@@ -1,6 +1,6 @@
 import s from "./SearchPage.module.css";
 import useFetchData from "@renderer/hooks/useFetchData";
-import {PlaylistPreviewDTO, ReleasePreviewDTO} from "../../../../shared/Api";
+import {ReleasePreviewDTO, SearchItemsDTO} from "../../../../shared/Api";
 import {useNavigate} from "react-router-dom";
 import {useCallback, useEffect} from "react";
 import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
@@ -19,34 +19,24 @@ import {useLoadCollection} from "@renderer/hooks/useLoadCollection";
 
 
 
-const HomePage = () => {
+const SearchPage = () => {
     const navigate = useNavigate();
     const expandedSection = useAppSelector(state => state.uiSlice.homepage.expandedSections);
     const dispatch = useAppDispatch();
 
 
     const {debouncedSearch} = useAppSelector(state => state.searchSlice);
-    const releaseUrl = debouncedSearch.trim()
+    const searchUrl :string|null = debouncedSearch.trim()
         ? `/search?query=${debouncedSearch}`
-        : "/release";
+        : null;
 
-    // const playlistUrl = debouncedSearch.trim()
-    //     ? `/search?query=${debouncedSearch}&include=PLAYLIST`
-    //     : "/playlist/public";
 
-    //ToDO: update URL and DTO to split into 3 section object
     const {
-        data: dataReleases,
-        loading: loadingReleases,
-        error: errorReleases,
-        refetch: refetchReleases
-    } = useFetchData<ReleasePreviewDTO[]>("/release");
-    const {
-        data: dataPlaylists,
-        loading: loadingPlaylists,
-        error: errorPlaylists,
-        refetch: refetchPlaylists
-    } = useFetchData<PlaylistPreviewDTO[]>("/playlist/public");
+        data: dataSearch,
+        loading: loadingSearch,
+        error: errorSearch,
+        refetch: refreshSearch
+    } = useFetchData<SearchItemsDTO>(searchUrl)
 
 
 
@@ -66,8 +56,24 @@ const HomePage = () => {
 
     useEffect(() => {
         console.log("Search debounce keys:", debouncedSearch);
-        console.log(releaseUrl)
+        console.log(searchUrl)
     }, [debouncedSearch]);
+
+    if (!debouncedSearch.trim()) {
+        return <div className={`pageWrapper ${s.wrapper}`}>Start typing to search</div>;
+    }
+
+    if (loadingSearch || !dataSearch) {
+        return (
+            <div className={`pageWrapper ${s.wrapper}`}>
+                {Array.from({ length: 12 }).map((_, i) => <CardSkeleton key={i} />)}
+            </div>
+        );
+    }
+
+    if (dataSearch.artistResults.length === 0 && dataSearch.releaseResults.length === 0 && dataSearch.trackResults.length === 0) {
+        return <div className={`pageWrapper ${s.wrapper}`}>No results found</div>;
+    }
 
     return (
         <div className={`pageWrapper ${s.wrapper}`}>
@@ -79,36 +85,42 @@ const HomePage = () => {
                 />
             </div>
             <div
-                className={classNames(s.scroller, expandedSection.releases && s.scrollerShow, errorReleases && s.scrollerError)}>
-                {errorReleases && !dataReleases ?
+                className={classNames(s.scroller, expandedSection.releases && s.scrollerShow, errorSearch && s.scrollerError)}>
+                {errorSearch && !dataSearch ?
                     <div className={s.error}>
-                        <p>{`Error: ${errorReleases}`}</p>
-                        <button onClick={refetchReleases}>Refresh</button>
+                        <p>{`Error: ${errorSearch}`}</p>
+                        <button onClick={refreshSearch}>Refresh</button>
                     </div>
                     :
-                    (loadingReleases || !dataReleases)
+                    (loadingSearch || !dataSearch)
                         ? Array.from({length: 12}).map((_, i) => (
                             <CardSkeleton key={i}/>
                         ))
                         :
-                        dataReleases.map(t => {
-                            const isPlaying = track?.context.type === "release" && track?.context.id === t.releaseId && !userPaused;
+                        dataSearch.releaseResults.map(r => {
+                            const isPlaying =
+                                track?.context.type === "release" &&
+                                track?.context.id === r.id &&
+                                !userPaused;
 
-                            return <Card
-                                data={t}
-                                onIconClick={(e, data) => {
-                                    e.stopPropagation();
-                                    void loadCollection(data.releaseId, "release")}}
-                                key={t.releaseName}
-                                isPlaying={isPlaying}
-                                artistType={"artist"}
-                                onClick={handleClick}
-                                onContextMenu={(e, data) => ctx.open(e, {type: "release", data})}
-                                getTitle={(r) => r.releaseName}
-                                getArtists={(r) => (r.artists.map(a => ({id: a.artistId, name: a.artistName})))}
-                                onArtistClick={(artist) => navigate(`/artist/${artist.id}`)}
-                                getCoverUrl={(r) => r.coverArtUrl}
-                            />;
+                            return (
+                                <Card
+                                    key={r.id}
+                                    data={r}
+                                    isPlaying={isPlaying}
+                                    onClick={() => navigate(`/release/${r.id}`)}
+                                    onContextMenu={() => {}}
+                                    onIconClick={() => {}}
+                                    getTitle={(r) => r.name}
+                                    getArtists={(r) =>
+                                        r.artistNames.map((name, i) => ({
+                                            id: i.toString(),
+                                            name
+                                        }))
+                                    }
+                                    getCoverUrl={() => dodo}
+                                />
+                            );
                         })
                 }
             </div>
@@ -122,50 +134,45 @@ const HomePage = () => {
                 />
             </div>
             <div
-                className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorPlaylists && s.scrollerError)}>
-                {errorPlaylists && !dataPlaylists ?
+                className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorSearch && s.scrollerError)}>
+                {errorSearch && !dataSearch.artistResults ?
                     <div className={s.error}>
-                        <p>{`Error: ${errorPlaylists}`}</p>
-                        <button onClick={refetchPlaylists}>Refresh</button>
+                        <p>{`Error: ${errorSearch}`}</p>
+                        <button onClick={refreshSearch}>Refresh</button>
                     </div>
                     :
-                    (loadingPlaylists || !dataPlaylists)
+                    (loadingSearch || !dataSearch.artistResults)
                         ? Array.from({length: 12}).map((_, i) => (
                             <CardSkeleton key={i}/>
                         ))
                         :
-                        dataPlaylists.map(playlist => {
-                            const isPlaying = track?.context.type === "playlist" && track?.context.id === playlist.playlistId && !userPaused;
-
-                            return <Card key={playlist.playlistId}
-                                         data={playlist}
-                                         onClick={() => navigate(`/playlist/${playlist.playlistId}`)}
-                                         isPlaying={isPlaying}
-                                         onIconClick={(e, data) => {
-                                             e.stopPropagation();
-                                             void loadCollection(data.playlistId, "playlist")}}
-                                         onContextMenu={(e, data) => ctx.open(e, {
-                                             type: "playlist",
-                                             data: {...data, playlistUsers: [], playlistSongs: []}
-                                         })}
-                                         getTitle={p => p.playlistName}
-                                         getArtists={c => [{id: c.owner.username, name: c.owner.displayName}]}
-                                         getCoverUrl={() => dodo}
-                                         getTiledCovers={() => playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
-                            />;
+                        dataSearch.artistResults.map(artist => {
+                            return <Card
+                                key={artist.id}
+                                data={artist}
+                                isPlaying={false}
+                                onClick={() => navigate(`/artist/${artist.id}`)}
+                                onContextMenu={() => {}}
+                                onIconClick={() => {}}
+                                getTitle={(a) => a.name}
+                                getArtists={() => []}
+                                getCoverUrl={() => dodo}
+                            />
                         })
                 }
             </div>
-            <ContextMenu ctx={ctx}>
-                {
-                    ctx.state && renderEntityActions(ctx.state.target, ctx.close, {
-                        confirm,
-                        refetch: ctx.state.target.type === "release" ? refetchReleases : refetchPlaylists,
-                        role: authInfo.role,
-                        username: authInfo.username
-                    })
-                }
-            </ContextMenu>
+
+            {/*TODO what should this do*/}
+            {/*<ContextMenu ctx={ctx}>*/}
+            {/*    {*/}
+            {/*        ctx.state && renderEntityActions(ctx.state.target, ctx.close, {*/}
+            {/*            confirm,*/}
+            {/*            refetch: ctx.state.target.type === "release" ? refreshSearch : refetchPlaylists,*/}
+            {/*            role: authInfo.role,*/}
+            {/*            username: authInfo.username*/}
+            {/*        })*/}
+            {/*    }*/}
+            {/*</ContextMenu>*/}
 
 
             <div className={s.heading}>
@@ -176,37 +183,35 @@ const HomePage = () => {
                 />
             </div>
             <div
-                className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorPlaylists && s.scrollerError)}>
-                {errorPlaylists && !dataPlaylists ?
+                className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorSearch && s.scrollerError)}>
+                {errorSearch && !dataSearch.trackResults ?
                     <div className={s.error}>
-                        <p>{`Error: ${errorPlaylists}`}</p>
-                        <button onClick={refetchPlaylists}>Refresh</button>
+                        <p>{`Error: ${errorSearch}`}</p>
+                        <button onClick={refreshSearch}>Refresh</button>
                     </div>
                     :
-                    (loadingPlaylists || !dataPlaylists)
+                    (loadingSearch || !dataSearch.trackResults)
                         ? Array.from({length: 12}).map((_, i) => (
                             <CardSkeleton key={i}/>
                         ))
                         :
-                        dataPlaylists.map(playlist => {
-                            const isPlaying = track?.context.type === "playlist" && track?.context.id === playlist.playlistId && !userPaused;
-
-                            return <Card key={playlist.playlistId}
-                                         data={playlist}
-                                         onClick={() => navigate(`/playlist/${playlist.playlistId}`)}
-                                         isPlaying={isPlaying}
-                                         onIconClick={(e, data) => {
-                                             e.stopPropagation();
-                                             void loadCollection(data.playlistId, "playlist")}}
-                                         onContextMenu={(e, data) => ctx.open(e, {
-                                             type: "playlist",
-                                             data: {...data, playlistUsers: [], playlistSongs: []}
-                                         })}
-                                         getTitle={p => p.playlistName}
-                                         getArtists={c => [{id: c.owner.username, name: c.owner.displayName}]}
-                                         getCoverUrl={() => dodo}
-                                         getTiledCovers={() => playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
-                            />;
+                        dataSearch.trackResults.map(track => {
+                            return <Card
+                                key={track.id}
+                                data={track}
+                                isPlaying={false}
+                                onClick={() => {}}
+                                onContextMenu={() => {}}
+                                onIconClick={() => {}}
+                                getTitle={(t) => t.title}
+                                getArtists={(t) =>
+                                    t.artistNames.map((name, i) => ({
+                                        id: i.toString(),
+                                        name
+                                    }))
+                                }
+                                getCoverUrl={() => dodo}
+                            />
                         })
                 }
             </div>
@@ -214,4 +219,4 @@ const HomePage = () => {
     );
 };
 
-export default HomePage;
+export default SearchPage;

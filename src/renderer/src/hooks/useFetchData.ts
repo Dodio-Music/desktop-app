@@ -12,12 +12,14 @@ type FetchState<T> = {
 export default function useFetchData<T>(url: string, resetOnFetch: boolean = true): FetchState<T> {
     const {info: authInfo} = useAuth();
     const [data, setData] = useState<T | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const lastFetchedUrlRef = useRef<string | null>(null);
 
     const fetchData = useCallback(async (resetOnFetch: boolean = true) => {
+        if (!url) return
+
         setLoading(true);
         setError(null);
         try {
@@ -40,6 +42,8 @@ export default function useFetchData<T>(url: string, resetOnFetch: boolean = tru
     }, [url]);
 
     useEffect(() => {
+        if (!url) return
+
         if (authInfo.status === "no_account") {
             setLoading(false);
             return;
