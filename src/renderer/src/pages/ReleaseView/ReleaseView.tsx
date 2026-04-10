@@ -1,7 +1,7 @@
 import useFetchData from "@renderer/hooks/useFetchData";
 import {ReleaseDTO} from "../../../../shared/Api";
 import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
-import {useCallback, useRef} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {SongList} from "@renderer/components/SongList/SongList";
 import {releaseToSongEntries} from "@renderer/util/parseBackendTracks";
 import {remoteSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
@@ -19,14 +19,16 @@ import {likeRelease, unlikeRelease} from "@renderer/redux/likeSlice";
 import toast from "react-hot-toast";
 import {errorToString} from "@renderer/util/errorToString";
 import {useNavigate} from "react-router-dom";
+import {Vibrant} from "node-vibrant/browser";
 
 
 const ReleaseView = () => {
     const id = useRequiredParam("id");
     const scrollPageRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const [bgColor, setBgColor] = useState("");
 
-    const { data: release, loading, error } = useFetchData<ReleaseDTO>(`/release/${id}`);
+    const {data: release, loading, error} = useFetchData<ReleaseDTO>(`/release/${id}`);
     const songEntries = releaseToSongEntries(release);
     const albumLengthSeconds = release?.releaseTracks.map(r => r.track.duration).reduce((partialSum, a) => partialSum + a, 0) ?? 0;
     const dispatch = useAppDispatch();
@@ -34,13 +36,35 @@ const ReleaseView = () => {
         state => !!state.likeSlice.likedReleases[release?.releaseId ?? ""]
     );
 
+    useEffect(() => {
+        if (!release?.coverArtUrl) return;
+
+        Vibrant.from(`${release.coverArtUrl}?size=low`)
+            .getPalette()
+            .then((p) => {
+                const color =
+                    p.DarkVibrant?.hex ||
+                    p.Muted?.hex ||
+                    "#222";
+
+                setBgColor(color);
+            })
+            .catch(() => {
+                setBgColor("#222");
+            });
+    }, [release]);
+
     const handleLikeRelease = useCallback(async () => {
-        if(!release?.releaseId) return;
+        if (!release?.releaseId) return;
 
-        const res = await window.api.authRequest<string>("put", "/like", {likeScope: "RELEASE", likedId: release.releaseId, liked: !isLiked});
+        const res = await window.api.authRequest<string>("put", "/like", {
+            likeScope: "RELEASE",
+            likedId: release.releaseId,
+            liked: !isLiked
+        });
 
-        if(res.type !== "error") {
-            if(!isLiked) {
+        if (res.type !== "error") {
+            if (!isLiked) {
                 dispatch(likeRelease(release?.releaseId));
                 //toast.success("Saved Album.");
             } else {
@@ -55,9 +79,10 @@ const ReleaseView = () => {
     return (
         <div
             className={`pageWrapper pageWrapperFullHeight ${classNames(s.pageWrapper)}`}
+            style={{padding: 0}}
             ref={scrollPageRef}
         >
-            {loading && <LoadingPage />}
+            {loading && <LoadingPage/>}
 
             {!loading && error && (
                 <p className="errorPage">{error}</p>
@@ -66,35 +91,48 @@ const ReleaseView = () => {
             {!loading && release && (
                 <>
                     <div className={s.headerWrapper}>
+                        <div
+                            className={s.gradientOverlay}
+                            style={{
+                                background: `linear-gradient(180deg, ${bgColor} 0%, var(--color-bg-0) 100%)`
+                            }}
+                        />
                         <div className={s.infoWrapper}>
                             <div className={s.cover}>
-                                <OpenableCover thumbnailSrc={`${release.coverArtUrl}?size=low`} fullSrc={release.coverArtUrl + "?size=original"}/>
+                                <OpenableCover thumbnailSrc={`${release.coverArtUrl}?size=low`}
+                                               fullSrc={release.coverArtUrl + "?size=original"}/>
                             </div>
                             <div className={s.releaseInfo}>
                                 <div>
                                     <p className={s.releaseTitle}>{release.releaseName}</p>
-                                    <p className={s.artists}>{release.artists.map(((a, i) => <span key={a.artistId}><span className={s.link} onClick={() => navigate("/artist/" + a.artistId)}>{a.artistName}</span>{i < release.artists.length - 1 ? ", " : ""}</span>))}</p>
+                                    <p className={s.artists}>{release.artists.map(((a, i) => <span
+                                        key={a.artistId}><span className={s.link}
+                                                               onClick={() => navigate("/artist/" + a.artistId)}>{a.artistName}</span>{i < release.artists.length - 1 ? ", " : ""}</span>))}</p>
                                 </div>
                                 <p className={s.tracksInfo}>{release.releaseTracks.length} Track{release.releaseTracks.length !== 1 && "s"} ({formatTime(albumLengthSeconds)})</p>
                                 <div className={so.optionBar}>
-                                    <OptionButton tooltip={isLiked ? "Remove from Saved Albums" : "Save Album"} onClick={() => handleLikeRelease()}>
+                                    <OptionButton tooltip={isLiked ? "Remove from Saved Albums" : "Save Album"}
+                                                  onClick={() => handleLikeRelease()}>
                                         {isLiked ?
-                                            <IoIosCheckmarkCircle style={{transform: "scale(1.1)", color: "var(--color-text-primary)"}} />
+                                            <IoIosCheckmarkCircle
+                                                style={{transform: "scale(1.1)", color: "var(--color-text-primary)"}}/>
                                             :
-                                            <MdOutlineAddCircleOutline style={{transform: "scale(1.1)"}} />
+                                            <MdOutlineAddCircleOutline style={{transform: "scale(1.1)"}}/>
                                         }
                                     </OptionButton>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <SongList
-                        scrollElement={scrollPageRef}
-                        songs={songEntries}
-                        slots={remoteSongRowSlots}
-                        gridTemplateColumns="30px 1fr 100px 240px"
-                        navigate={navigate}
-                    />
+                    <div className={s.padder}>
+                        <SongList
+                            scrollElement={scrollPageRef}
+                            songs={songEntries}
+                            slots={remoteSongRowSlots}
+                            gridTemplateColumns="30px 1fr 100px 240px"
+                            navigate={navigate}
+                        />
+                    </div>
                 </>
             )}
         </div>

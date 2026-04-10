@@ -44,7 +44,7 @@ const ArtistPage = () => {
     const displayedPopularTracks = popularTracks.slice(0, 5);
 
     useEffect(() => {
-        const img = artistOverview?.artist.avatarUrl ?? dodo;
+        const img = artistOverview ? `${artistOverview?.artist.avatarUrl}?size=low` : dodo;
 
         Vibrant.from(img)
             .getPalette()

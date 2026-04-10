@@ -11,16 +11,33 @@
     justify-content: flex-start;
     align-items: flex-end;
     gap: 30px;
+    padding: 50px 50px 0 50px;
 }
 
 .headerWrapper {
+    position: relative;
     display: flex;
     flex-direction: column;
     margin-bottom: 30px;
+    width: 100%;
+}
+
+.gradientOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 400px;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .pageWrapper {
-    padding: 70px;
+
+}
+
+.padder {
+    padding: 0 50px 50px 50px;
 }
 
 .releaseInfo {
