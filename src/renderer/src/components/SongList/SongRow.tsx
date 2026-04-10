@@ -59,10 +59,10 @@ export const SongRow = React.memo(function SongRow<T extends BaseSongEntry>({
             if(res.type !== "error") {
                 if(!isLiked) {
                     dispatch(likeTrack(song.releaseTrackId));
-                    toast.success("Added to Liked Songs.");
+                    //toast.success("Added to Liked Songs.");
                 } else {
                     dispatch(unlikeTrack(song.releaseTrackId));
-                    toast.success("Removed from Liked Songs.");
+                    //toast.success("Removed from Liked Songs.");
                 }
             } else {
                 toast.error(errorToString(res.error));

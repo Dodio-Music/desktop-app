@@ -42,10 +42,10 @@ const ReleaseView = () => {
         if(res.type !== "error") {
             if(!isLiked) {
                 dispatch(likeRelease(release?.releaseId));
-                toast.success("Saved Album.");
+                //toast.success("Saved Album.");
             } else {
                 dispatch(unlikeRelease(release?.releaseId));
-                toast.success("Removed from Saved Albums.");
+                //toast.success("Removed from Saved Albums.");
             }
         } else {
             toast.error(errorToString(res.error));

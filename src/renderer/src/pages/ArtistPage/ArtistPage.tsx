@@ -53,10 +53,10 @@ const ArtistPage = () => {
         if(res.type !== "error") {
             if(!isFollowed) {
                 dispatch(followArtist(artistOverview.artist.artistId));
-                toast.success(`Followed ${artistOverview.artist.artistName}.`);
+                //toast.success(`Followed ${artistOverview.artist.artistName}.`);
             } else {
                 dispatch(unfollowArtist(artistOverview.artist.artistId));
-                toast.success(`Unfollowed ${artistOverview.artist.artistName}.`);
+                //toast.success(`Unfollowed ${artistOverview.artist.artistName}.`);
             }
         } else {
             toast.error(errorToString(res.error));
