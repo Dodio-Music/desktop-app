@@ -9,7 +9,7 @@ type FetchState<T> = {
     refetch: () => void;
 };
 
-export default function useFetchData<T>(url: string, resetOnFetch: boolean = true): FetchState<T> {
+export default function useFetchData<T>(url: string | null, resetOnFetch: boolean = true): FetchState<T> {
     const {info: authInfo} = useAuth();
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(false);
@@ -26,11 +26,8 @@ export default function useFetchData<T>(url: string, resetOnFetch: boolean = tru
             if(resetOnFetch) setData(null);
             const res = await window.api.authRequest<T>("get", url);
             if (res.type === "ok") {
-                console.log(data)
                 setData(res.value);
             } else {
-                console.log("debuggign")
-                console.log(res.error)
                 setError(errorToString(res.error));
             }
         } catch (e) {

@@ -175,46 +175,46 @@ const SearchPage = () => {
             {/*</ContextMenu>*/}
 
 
-            <div className={s.heading}>
-                <h1>Songs</h1>
-                <ToggleSectionButton
-                    expanded={expandedSection.playlists}
-                    onToggle={() => dispatch(homepageToggleExpandedSection("playlists"))}
-                />
-            </div>
-            <div
-                className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorSearch && s.scrollerError)}>
-                {errorSearch && !dataSearch.trackResults ?
-                    <div className={s.error}>
-                        <p>{`Error: ${errorSearch}`}</p>
-                        <button onClick={refreshSearch}>Refresh</button>
-                    </div>
-                    :
-                    (loadingSearch || !dataSearch.trackResults)
-                        ? Array.from({length: 12}).map((_, i) => (
-                            <CardSkeleton key={i}/>
-                        ))
-                        :
-                        dataSearch.trackResults.map(track => {
-                            return <Card
-                                key={track.id}
-                                data={track}
-                                isPlaying={false}
-                                onClick={() => {}}
-                                onContextMenu={() => {}}
-                                onIconClick={() => {}}
-                                getTitle={(t) => t.title}
-                                getArtists={(t) =>
-                                    t.artistNames.map((name, i) => ({
-                                        id: i.toString(),
-                                        name
-                                    }))
-                                }
-                                getCoverUrl={() => dodo}
-                            />
-                        })
-                }
-            </div>
+            {/*<div className={s.heading}>*/}
+            {/*    <h1>Songs</h1>*/}
+            {/*    <ToggleSectionButton*/}
+            {/*        expanded={expandedSection.playlists}*/}
+            {/*        onToggle={() => dispatch(homepageToggleExpandedSection("playlists"))}*/}
+            {/*    />*/}
+            {/*</div>*/}
+            {/*<div*/}
+            {/*    className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorSearch && s.scrollerError)}>*/}
+            {/*    {errorSearch && !dataSearch.trackResults ?*/}
+            {/*        <div className={s.error}>*/}
+            {/*            <p>{`Error: ${errorSearch}`}</p>*/}
+            {/*            <button onClick={refreshSearch}>Refresh</button>*/}
+            {/*        </div>*/}
+            {/*        :*/}
+            {/*        (loadingSearch || !dataSearch.trackResults)*/}
+            {/*            ? Array.from({length: 12}).map((_, i) => (*/}
+            {/*                <CardSkeleton key={i}/>*/}
+            {/*            ))*/}
+            {/*            :*/}
+            {/*            dataSearch.trackResults.map(track => {*/}
+            {/*                return <Card*/}
+            {/*                    key={track.id}*/}
+            {/*                    data={track}*/}
+            {/*                    isPlaying={false}*/}
+            {/*                    onClick={() => {navigate(`/playlist/${track.id}`)}}*/}
+            {/*                    onContextMenu={() => {}}*/}
+            {/*                    onIconClick={() => {}}*/}
+            {/*                    getTitle={(t) => t.title}*/}
+            {/*                    getArtists={(t) =>*/}
+            {/*                        t.artistNames.map((name, i) => ({*/}
+            {/*                            id: i.toString(),*/}
+            {/*                            name*/}
+            {/*                        }))*/}
+            {/*                    }*/}
+            {/*                    getCoverUrl={() => dodo}*/}
+            {/*                />*/}
+            {/*            })*/}
+            {/*    }*/}
+            {/*</div>*/}
         </div>
     );
 };

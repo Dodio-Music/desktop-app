@@ -84,6 +84,11 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
 
     }, [debouncedSearch]);
 
+    const onClickOnSearchBar = () => {
+        if (window.location.hash === `#${"searchPage"}`) return
+        navigate("/searchPage");
+    }
+
     return (
         <div className={s.title_bar}>
             <div className={s.left}>
@@ -97,10 +102,11 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
             <div className={s.searchWrapper}>
                 <input
                     type="text"
-                    placeholder="Search releases, playlists..."
+                    placeholder="Search Releases, Artists ..."
                     value={searchState}
                     onChange={(e) => setSearchState(e.target.value)}
                     className={s.searchInput}
+                    onClick={() => onClickOnSearchBar()}
                 />
             </div>
 
