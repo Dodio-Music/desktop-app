@@ -16,6 +16,8 @@ import classNames from "classnames";
 import ToggleSectionButton from "@renderer/pages/HomePage/ToggleSectionButton";
 import {homepageToggleExpandedSection} from "@renderer/redux/uiSlice";
 import {useLoadCollection} from "@renderer/hooks/useLoadCollection";
+import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
+import NothingFound from "@renderer/components/NothingFound/NothingFound";
 
 
 
@@ -60,7 +62,9 @@ const SearchPage = () => {
     }, [debouncedSearch]);
 
     if (!debouncedSearch.trim()) {
-        return <div className={`pageWrapper ${s.wrapper}`}>Start typing to search</div>;
+        return <div className={`pageWrapper ${s.wrapper}`}>
+            <NothingFound text={"Start typing to search"}></NothingFound>
+        </div>;
     }
 
     if (loadingSearch || !dataSearch) {
@@ -72,7 +76,9 @@ const SearchPage = () => {
     }
 
     if (dataSearch.artistResults.length === 0 && dataSearch.releaseResults.length === 0 && dataSearch.trackResults.length === 0) {
-        return <div className={`pageWrapper ${s.wrapper}`}>No results found</div>;
+        return <div className={`pageWrapper ${s.wrapper}`}>
+            <NothingFound text={"No results found"} ></NothingFound>
+        </div>;
     }
 
     return (
