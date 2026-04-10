@@ -52,19 +52,16 @@ const LikedAlbumsPage = () => {
                                     const isPlaying = track?.context.type === "release" && track?.context.id === t.release.releaseId && !userPaused;
 
                                     return <Card
-                                        data={t.release}
-                                        onIconClick={(e, data) => {
+                                        onPlayClick={(e) => {
                                             e.stopPropagation();
-                                            void loadCollection(data.releaseId, "release")}}
+                                            void loadCollection(t.release.releaseId, "release")}}
                                         key={t.release.releaseName}
                                         isPlaying={isPlaying}
-                                        onClick={handleClick}
-                                        onContextMenu={(e, data) => ctx.open(e, {type: "release", data})}
-                                        getTitle={(r) => r.releaseName}
-                                        getArtists={(r) => (r.artists.map(a => ({id: a.artistId, name: a.artistName})))}
-                                        onArtistClick={(artist) => navigate(`/artist/${artist.id}`)}
-                                        artistType={"artist"}
-                                        getCoverUrl={(r) => r.coverArtUrl}
+                                        onClick={() => handleClick(t.release)}
+                                        onContextMenu={(e) => ctx.open(e, {type: "release", data: t.release})}
+                                        title={t.release.releaseName}
+                                        entities={(t.release.artists.map(a => ({id: a.artistId, name: a.artistName, navigateTo: `/artist/${a.artistId}`})))}
+                                        coverUrl={t.release.coverArtUrl}
                                     />;
                                 })
                             }

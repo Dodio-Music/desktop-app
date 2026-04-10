@@ -13,10 +13,18 @@ import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
 import {followArtist, unfollowArtist} from "@renderer/redux/likeSlice";
 import toast from "react-hot-toast";
 import {errorToString} from "@renderer/util/errorToString";
+import Card from "@renderer/components/Card/Card";
+import {ContextMenu} from "@renderer/contextMenus/ContextMenu";
+import {renderEntityActions} from "@renderer/contextMenus/menuHelper";
+import {useNavigate} from "react-router-dom";
+import {useLoadCollection} from "@renderer/hooks/useLoadCollection";
+import {useContextMenu} from "@renderer/hooks/useContextMenu";
+import {useConfirm} from "@renderer/hooks/useConfirm";
+import {useAuth} from "@renderer/hooks/reduxHooks";
 
 const ArtistPage = () => {
     const id = useRequiredParam("id");
-    const {data: artistOverview, loading, error} = useFetchData<ArtistOverviewDTO>(`/artist/${id}/overview`);
+    const {data: artistOverview, loading, error, refetch} = useFetchData<ArtistOverviewDTO>(`/artist/${id}/overview`);
     const scrollPageRef = useRef<HTMLDivElement>(null);
     const [bgColor, setBgColor] = useState("");
     const isFollowed = useAppSelector(
@@ -24,6 +32,14 @@ const ArtistPage = () => {
     );
     const popularTracks = releaseTrackDTOListToSongEntries(artistOverview?.popularReleaseTracks ?? [], {type: "artist", id: artistOverview?.artist.artistId ?? -1, url: "/artist/" + artistOverview?.artist.artistId, name: "Artist Tracks"});
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+    const loadCollection = useLoadCollection();
+    const ctx = useContextMenu();
+    const confirm = useConfirm();
+    const authInfo = useAuth().info;
+
+    const userPaused = useAppSelector(state => state.nativePlayer.userPaused);
+    const track = useAppSelector(state => state.nativePlayer.currentTrack);
 
     const displayedPopularTracks = popularTracks.slice(0, 5);
 
@@ -122,6 +138,46 @@ const ArtistPage = () => {
                                 </div>
                             </div>
                         </div>
+                        <div className={s.discography}>
+                            <div className={s.topTracks}>
+                                <h2 className={s.subHeading}>Discography</h2>
+                                <p className={s.viewAll}>View Full Discography</p>
+                            </div>
+                            <div className={s.latestReleases}>
+                                {
+                                    artistOverview.latestReleases.map(r => {
+                                        const isPlaying = track?.context.type === "release" && track?.context.id === r.releaseId && !userPaused;
+
+                                        return <Card
+                                            key={r.releaseId}
+                                            onClick={() => navigate(`/release/${r.releaseId}`)}
+                                            isPlaying={isPlaying}
+                                            coverUrl={r.coverArtUrl}
+                                            title={r.releaseName}
+                                            releaseInfo={({
+                                                releaseType: r.releaseType,
+                                                releaseYear: new Date(Date.parse(r.releaseDate)).getFullYear()
+                                            })}
+                                            onContextMenu={(e) => ctx.open(e, {type: "release", data: r})}
+                                            onPlayClick={(e) => {
+                                                e.stopPropagation();
+                                                void loadCollection(r.releaseId, "release")
+                                            }}/>
+                                    })
+                                }
+                            </div>
+                        </div>
+                        <ContextMenu ctx={ctx}>
+                            {
+                                ctx.state && renderEntityActions(ctx.state.target, ctx.close, {
+                                    confirm,
+                                    refetch,
+                                    role: authInfo.role,
+                                    username: authInfo.username
+                                })
+                            }
+                        </ContextMenu>
+
                     </div>
                 </div>
             )}

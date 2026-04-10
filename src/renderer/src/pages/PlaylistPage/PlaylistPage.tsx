@@ -66,18 +66,17 @@ const PlaylistPage = () => {
                                 const isPlaying = track?.context.type === "playlist" && track?.context.id === playlist.playlistId && !userPaused;
 
                                 return <Card key={playlist.playlistId}
-                                             data={playlist}
                                              onClick={() => navigate(`/playlist/${playlist.playlistId}`)}
                                              isPlaying={isPlaying}
-                                             onIconClick={(e) => {
+                                             onPlayClick={(e) => {
                                                  e.stopPropagation();
                                                  void loadCollection(playlist.playlistId, "playlist");
                                              }}
-                                             onContextMenu={(e, data) => ctx.open(e, {type: "playlistPreview", data})}
-                                             getTitle={p => p.playlistName}
-                                             getArtists={c => [{id: c.owner.username, name: c.owner.displayName}]}
-                                             getCoverUrl={() => dodo}
-                                             getTiledCovers={() => playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
+                                             onContextMenu={(e) => ctx.open(e, {type: "playlistPreview", data: playlist})}
+                                             title={playlist.playlistName}
+                                             entities={[{id: playlist.owner.username, name: playlist.owner.displayName}]}
+                                             coverUrl={dodo}
+                                             tiledCovers={playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
                                 />;
                             })
                         }

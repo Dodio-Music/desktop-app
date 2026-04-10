@@ -71,19 +71,16 @@ const HomePage = () => {
                             const isPlaying = track?.context.type === "release" && track?.context.id === t.releaseId && !userPaused;
 
                             return <Card
-                                data={t}
-                                onIconClick={(e, data) => {
+                                onPlayClick={(e) => {
                                     e.stopPropagation();
-                                    void loadCollection(data.releaseId, "release")}}
+                                    void loadCollection(t.releaseId, "release")}}
                                 key={t.releaseName}
                                 isPlaying={isPlaying}
-                                artistType={"artist"}
-                                onClick={handleClick}
-                                onContextMenu={(e, data) => ctx.open(e, {type: "release", data})}
-                                getTitle={(r) => r.releaseName}
-                                getArtists={(r) => (r.artists.map(a => ({id: a.artistId, name: a.artistName})))}
-                                onArtistClick={(artist) => navigate(`/artist/${artist.id}`)}
-                                getCoverUrl={(r) => r.coverArtUrl}
+                                onClick={() => handleClick(t)}
+                                onContextMenu={(e) => ctx.open(e, {type: "release", data: t})}
+                                title={t.releaseName}
+                                entities={t.artists.map(a => ({id: a.artistId, name: a.artistName, navigateTo: "/artist/" + a.artistId}))}
+                                coverUrl={t.coverArtUrl}
                             />;
                         })
                 }
@@ -112,20 +109,19 @@ const HomePage = () => {
                             const isPlaying = track?.context.type === "playlist" && track?.context.id === playlist.playlistId && !userPaused;
 
                             return <Card key={playlist.playlistId}
-                                         data={playlist}
                                          onClick={() => navigate(`/playlist/${playlist.playlistId}`)}
                                          isPlaying={isPlaying}
-                                         onIconClick={(e, data) => {
+                                         onPlayClick={(e => {
                                              e.stopPropagation();
-                                             void loadCollection(data.playlistId, "playlist")}}
-                                         onContextMenu={(e, data) => ctx.open(e, {
+                                             void loadCollection(playlist.playlistId, "playlist")})}
+                                         onContextMenu={(e) => ctx.open(e, {
                                              type: "playlist",
-                                             data: {...data, playlistUsers: [], playlistSongs: []}
+                                             data: {...playlist, playlistUsers: [], playlistSongs: []}
                                          })}
-                                         getTitle={p => p.playlistName}
-                                         getArtists={c => [{id: c.owner.username, name: c.owner.displayName}]}
-                                         getCoverUrl={() => dodo}
-                                         getTiledCovers={() => playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
+                                         title={playlist.playlistName}
+                                         entities={[{id: playlist.owner.username, name: playlist.owner.displayName}]}
+                                         coverUrl={dodo}
+                                         tiledCovers={playlist.coverArtUrls.length > 0 ? playlist.coverArtUrls : undefined}
                             />;
                         })
                 }

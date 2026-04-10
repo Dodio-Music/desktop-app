@@ -58,6 +58,8 @@ export type ApiResult<T> = ({type:"error", error: DodioError }) | {type: "ok", v
 
 export type SourceQuality = "LOSSLESS" | "HIGH" | "LOW";
 
+export type ReleaseType = "ALBUM" | "EP" | "SINGLE";
+
 export interface ArtistDTO {
     artistId: number;
     artistName: string;
@@ -69,6 +71,7 @@ export interface ArtistDTO {
 export interface ArtistOverviewDTO {
     artist: ArtistDTO;
     popularReleaseTracks: ReleaseTrackDTO[];
+    latestReleases: ReleasePreviewDTO[];
     totalTrackCount: number;
     followerCount: number;
 }
@@ -95,7 +98,7 @@ export interface ReleaseDTO {
     coverArtUrl: string;
     releaseDate: string;
     artists: ArtistDTO[];
-    releaseType: string;
+    releaseType: ReleaseType;
     releaseTracks: ReleaseTrackDTO[];
 }
 
@@ -103,6 +106,8 @@ export interface ReleasePreviewDTO {
     releaseId: string;
     releaseName: string;
     coverArtUrl: string;
+    releaseDate: string;
+    releaseType: ReleaseType;
     artists: ArtistDTO[];
 }
 
@@ -139,6 +144,7 @@ export interface ReleaseLightDTO {
     releaseName: string;
     coverArtUrl: string;
     releaseDate: string;
+    releaseType: ReleaseType;
 }
 
 export interface PlaylistUserDTO {

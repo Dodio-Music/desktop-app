@@ -1,65 +1,72 @@
-import {JSX, memo, MouseEvent} from "react";
+import {JSX, memo, MouseEvent, ReactNode} from "react";
 import s from "./Card.module.css";
 import {FaPause, FaPlay} from "react-icons/fa6";
 import CoverGrid from "@renderer/components/CoverGrid/CoverGrid";
+import {useNavigate} from "react-router-dom";
+import {ReleaseType} from "../../../../shared/Api";
+import {toCapitalized} from "@renderer/util/playlistUtils";
 
 interface CardEntity {
-    id: number | string;
+    id: string | number;
     name: string;
+    navigateTo?: string;
 }
 
-interface CardProps<T> {
-    data: T;
-    isPlaying: boolean;
-    onClick: (data: T) => void;
-    onContextMenu: (e: MouseEvent, item: T) => void;
-    onIconClick: (e: MouseEvent, item: T) => void;
-    onArtistClick?: (artist: CardEntity) => void;
-
-    artistType?: "artist" | "user";
-
-    getTitle: (data: T) => string;
-    getArtists?: (data: T) => CardEntity[];
-    getCoverUrl: (data: T) => string;
-    getTiledCovers?: (data: T) => string[] | undefined;
+interface ReleaseInfo {
+    releaseYear: number;
+    releaseType: ReleaseType;
 }
 
-function CardComponent<T>({data, onArtistClick, isPlaying, onClick, onContextMenu, onIconClick, artistType = "user", getTitle, getCoverUrl, getArtists, getTiledCovers}: CardProps<T>) {
-    const covers = getTiledCovers?.(data);
-    const img = covers ?
-        <CoverGrid coverArtUrls={covers}/>
+interface CardProps {
+    isPlaying?: boolean;
+    onClick?: () => void;
+    onContextMenu?: (e: MouseEvent) => void;
+    onPlayClick?: (e: MouseEvent) => void;
+
+    title?: ReactNode;
+    entities?: CardEntity[];
+    releaseInfo?: ReleaseInfo;
+
+    coverUrl: string;
+    tiledCovers?: string[] | undefined;
+}
+
+function CardComponent({isPlaying, onClick, onContextMenu, onPlayClick, coverUrl, tiledCovers, title, entities, releaseInfo}: CardProps) {
+    const img = tiledCovers ?
+        <CoverGrid coverArtUrls={tiledCovers}/>
         :
-        <img alt="cover" className={s.cover} src={`${getCoverUrl(data)}?size=low`} loading="lazy"/>
+        <img alt="cover" className={s.cover} src={`${coverUrl}?size=low`} loading="lazy"/>
+
+    const navigate = useNavigate();
 
     return (
-        <div className={s.card} onClick={() => onClick(data)} onContextMenu={(e) => onContextMenu(e, data)}>
+        <div className={s.card} onClick={onClick} onContextMenu={onContextMenu}>
             <div className={s.coverWrapper}>
                 {img}
-                <button className={s.play} onClick={(e) => onIconClick(e, data)}>
-                    {isPlaying ?
-                        <FaPause size={24} className={s.pauseIcon}/>
-                        :
-                        <FaPlay size={24} className={s.playIcon}/>
-                    }
+                <button className={s.play} onClick={onPlayClick}>
+                    {isPlaying !== undefined && isPlaying ? <FaPause size={24} className={s.pauseIcon}/> : <FaPlay size={24} className={s.playIcon}/>}
                 </button>
             </div>
-            <p className={`${s.title}`}>{getTitle(data)}</p>
-            <p className={s.artist}>{getArtists?.(data).map((a, i, arr) => (
+            {title && <p className={`${s.title}`}>{title}</p>}
+            {entities && <p className={s.artist}>{entities.map((a, i, arr) => (
                 <span onClick={(e) => {
-                    e.stopPropagation();
-                    onArtistClick?.(a);
+                    if(a.navigateTo) {
+                        e.stopPropagation();
+                        navigate(a.navigateTo);
+                    }
                 }} key={a.id}>
-                    <span className={artistType === "artist" ? s.link : ""}>
+                    <span className={a.navigateTo ? s.link : ""}>
                         {a.name}
                     </span>{i < arr.length - 1 ? ", " : ""}
                 </span>
-            ))}</p>
+            ))}</p>}
+            {releaseInfo && <p className={`${s.artist}`}>{releaseInfo.releaseYear} · {toCapitalized(releaseInfo.releaseType)}</p>}
         </div>
     );
 }
 
-const Card = memo(CardComponent) as <T>(
-    props: CardProps<T>
+const Card = memo(CardComponent) as (
+    props: CardProps
 ) => JSX.Element;
 
 export default Card;
