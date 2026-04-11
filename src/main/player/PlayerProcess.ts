@@ -201,6 +201,8 @@ export class PlayerProcess {
                             const queuedLatencyFrames = this.getQueuedLatencyFrames();
                             this.playheadAnchorFrames = this.session.readOffset - queuedLatencyFrames;
                             this.playheadAnchorWall = Date.now();
+                            this.playedFrames = 0;
+                            this.streamCountSent = false;
                             this.notifyState("replaying");
                             continue;
                         } else if(nextTrack && nextPCM) {

@@ -98,7 +98,7 @@ const ArtistPage = () => {
                         />
                         <div className={s.artistHeader}>
                             <div className={s.artistAvatar}>
-                                <img src={artistOverview.artist.avatarUrl ?? dodo}/>
+                                <img alt={"Artist Avatar"} width={250} height={250} src={artistOverview.artist.avatarUrl ?? dodo}/>
                             </div>
                             <div className={s.artistHeaderInfo}>
                                 <h1>{artistOverview.artist.artistName}</h1>
