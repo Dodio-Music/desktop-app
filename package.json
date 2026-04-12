@@ -1,6 +1,6 @@
 {
     "name": "dodio",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "A music app for casual music enjoyers and enthusiasts.",
     "main": "./out/main/index.js",
     "author": "Dodio Team",
