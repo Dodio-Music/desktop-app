@@ -79,7 +79,7 @@ export const releaseActions: ContextAction<ReleasePreviewDTO>[] = [
             const ok = await helpers.confirm?.({
                 title: "Delete Release?",
                 body: <>Are you sure you want to delete
-                    release <strong>{entity.releaseName}</strong> by <strong>{entity.artists.join(", ")}</strong>?<br/>This
+                    release <strong>{entity.releaseName}</strong> by <strong>{entity.artists.map(a => a.artistName).join(", ")}</strong>?<br/>This
                     action cannot be undone!</>
             });
             if (!ok) return;
