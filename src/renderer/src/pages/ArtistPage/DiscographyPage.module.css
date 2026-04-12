@@ -1,0 +1,91 @@
+.release {
+    margin-top: 30px;
+}
+
+.releaseInfo {
+    display: flex;
+    justify-content: flex-start;
+    gap: 25px;
+    height: 200px;
+    padding: 20px;
+}
+
+.cover {
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.releaseHeader {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0;
+}
+
+.releaseHeader h3 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.releaseHeader p {
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+}
+
+.play {
+    line-height: 0;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    align-items: center;
+    padding: 12px;
+    border-radius: 1000px;
+    border: none;
+    background-color: white;
+    color: black;
+    box-shadow: rgba(0, 0, 0, 0.46) 0 0 6px 0;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.play:hover {
+    transform: translateY(0px) scale(1.05);
+}
+
+.play:active {
+    transition: 0s;
+    transform: translateY(0px) scale(1);
+}
+
+.playIcon {
+    padding-left: 3px;
+}
+
+.pauseIcon {
+    transform: scale(1.1);
+}
+
+.control {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.link:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.discographyHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.discographyHeaderOptions {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+}

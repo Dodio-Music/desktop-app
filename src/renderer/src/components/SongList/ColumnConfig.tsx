@@ -266,3 +266,56 @@ export const artistPopularSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
         </div>
     }
 ];
+
+export const artistDiscographySongRowSots: SongRowSlot<RemoteSongEntry>[] = [
+    playRow<RemoteSongEntry>(),
+    {
+        header: <p>Title</p>,
+        render: ({song, isActive, navigate}) => (
+            <div className={s.trackColumn}>
+                <div className={s.trackElement}>
+                    <div className={s.cover}>
+                        <img className={s.img} src={song.picture ? song.picture + "?size=thumb" : placeholder}
+                             alt="cover" loading={"lazy"}/>
+                    </div>
+                    <div className={s.trackInfo}>
+                        <p className={classNames(s.trackTitle, s.ellipsis, isActive && s.playing)}>{song.title}</p>
+                        <p className={classNames(s.trackArtist, s.ellipsis)}>
+                            {song.artists.map((a, i) => (
+                                <span key={a.name} onClick={() => navigate?.("/artist/" + a.id)}>
+                                    <span className={s.link}>{a.name}</span>
+                                    {i < song.artists.length - 1 ? ", " : ""}
+                                </span>
+                            ))}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        )
+    },
+    {
+        header: <p>Album</p>,
+        render: ({song, navigate}) => <p onClick={navigate ? () => navigate(`/release/${song.releaseId}`) : undefined} className={classNames(s.trackAlbum, s.ellipsis, s.link)}><span className={s.textInner}>{song.album}</span></p>
+    },
+    {
+        header: <p className={s.playsHeader}>Plays</p>,
+        render: (song) => <p className={classNames(s.plays, s.ellipsis)}>{song.song.streamCount}</p>
+    },
+    {
+        header: <p className={s.textCenter}>Year</p>,
+        render: ({song}) => <p
+            className={classNames(s.releasedIn, s.ellipsis)}>{new Date(Date.parse(song.releaseDate)).getFullYear()}</p>
+    },
+    {
+        header: <p className={s.durationHeader}><WiTime3/></p>,
+        render: ({song, isSelected, openContextMenu, isLiked, likeSong}) => <div className={s.lastColumn}>
+            {
+                isLiked !== null ? <div className={classNames(s.like, isSelected && s.showLike, isLiked && s.isLiked)}>
+                    <button className={s.likeButton} onClick={() => likeSong?.()}><span>{isLiked ? <FaHeart /> : <FaRegHeart />}</span></button>
+                </div> : <div></div>
+            }
+            <p className={s.trackDuration}>{secondsToTime(song.duration ?? 0)}</p>
+            <HiOutlineDotsHorizontal onClick={(e) => openContextMenu(e, {type: "song", data: song})} size={24} className={classNames(s.menu, isSelected && s.showOptions, "no-drag")} />
+        </div>
+    }
+];

@@ -54,10 +54,14 @@
     text-align: right;
 }
 
+.textCenter {
+    text-align: center;
+}
+
 .divider {
     background-color: var(--color-bg-4);
     height: 1px;
-    margin: 0 0 20px;
+    margin: 0 0 10px;
 }
 
 .trackElement {
@@ -178,6 +182,14 @@
 .timestamp {
     color: var(--color-text-secondary);
     font-size: 1.05rem;
+}
+
+.releasedIn {
+    color: var(--color-text-secondary);
+    font-size: 1.05rem;
+    font-family: RobotoFlex, sans-serif;
+    font-variation-settings: "wdth" 110;
+    text-align: center;
 }
 
 .link {

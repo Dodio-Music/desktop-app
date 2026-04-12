@@ -76,6 +76,17 @@ export interface ArtistOverviewDTO {
     followerCount: number;
 }
 
+export type ArtistDiscographyMode = "RELEASE" | "TRACK";
+
+export type ArtistDiscographySort = "NEWEST" | "OLDEST" | "POPULAR";
+
+export interface ArtistDiscographyDTO {
+    artist: ArtistDTO;
+    mode: ArtistDiscographyMode;
+    releases: ReleaseDTO[];
+    releaseTracks: ReleaseTrackDTO[];
+}
+
 export interface TrackDTO {
     trackId: string;
     title: string;
@@ -97,6 +108,7 @@ export interface ReleaseDTO {
     releaseName: string;
     coverArtUrl: string;
     releaseDate: string;
+    streamCount: number;
     artists: ArtistDTO[];
     releaseType: ReleaseType;
     releaseTracks: ReleaseTrackDTO[];
@@ -107,6 +119,7 @@ export interface ReleasePreviewDTO {
     releaseName: string;
     coverArtUrl: string;
     releaseDate: string;
+    streamCount: number;
     releaseType: ReleaseType;
     artists: ArtistDTO[];
 }

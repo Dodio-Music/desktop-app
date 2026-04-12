@@ -60,7 +60,7 @@ function CardComponent({isPlaying, onClick, onContextMenu, onPlayClick, coverUrl
                     </span>{i < arr.length - 1 ? ", " : ""}
                 </span>
             ))}</p>}
-            {releaseInfo && <p className={`${s.artist}`}>{releaseInfo.releaseYear} · {toCapitalized(releaseInfo.releaseType)}</p>}
+            {releaseInfo && <p className={`${s.artist}`}>{releaseInfo.releaseYear} • {toCapitalized(releaseInfo.releaseType)}</p>}
         </div>
     );
 }

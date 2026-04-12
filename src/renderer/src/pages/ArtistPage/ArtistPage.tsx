@@ -5,7 +5,7 @@ import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
 import dodo from "../../../../../resources/dodo_whiteondark_512.png";
 import s from "./ArtistPage.module.css";
 import {Vibrant} from "node-vibrant/browser";
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {SongList} from "@renderer/components/SongList/SongList";
 import {releaseTrackDTOListToSongEntries} from "@renderer/util/parseBackendTracks";
 import {artistPopularSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
@@ -30,7 +30,6 @@ const ArtistPage = () => {
     const isFollowed = useAppSelector(
         state => !!state.likeSlice.followedArtists[artistOverview?.artist.artistId ?? -1]
     );
-    const popularTracks = releaseTrackDTOListToSongEntries(artistOverview?.popularReleaseTracks ?? [], {type: "artist", id: artistOverview?.artist.artistId ?? -1, url: "/artist/" + artistOverview?.artist.artistId, name: "Artist Tracks"});
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const loadCollection = useLoadCollection();
@@ -41,7 +40,22 @@ const ArtistPage = () => {
     const userPaused = useAppSelector(state => state.nativePlayer.userPaused);
     const track = useAppSelector(state => state.nativePlayer.currentTrack);
 
-    const displayedPopularTracks = popularTracks.slice(0, 5);
+    const popularTracks = useMemo(() => {
+        return releaseTrackDTOListToSongEntries(
+            artistOverview?.popularReleaseTracks ?? [],
+            {
+                type: "artist",
+                id: artistOverview?.artist.artistId ?? -1,
+                url: "/artist/" + artistOverview?.artist.artistId,
+                name: "Artist Tracks"
+            }
+        );
+    }, [artistOverview]);
+
+    const displayedPopularTracks = useMemo(
+        () => popularTracks.slice(0, 5),
+        [popularTracks]
+    );
 
     useEffect(() => {
         const img = artistOverview ? `${artistOverview?.artist.avatarUrl}?size=low` : dodo;
@@ -113,7 +127,7 @@ const ArtistPage = () => {
                             <div>
                                 <div className={s.topTracks}>
                                     <h2 className={s.subHeading}>Top Tracks</h2>
-                                    <p className={s.viewAll}>View All</p>
+                                    <p className={s.viewAll} onClick={() => navigate(`/artist/${id}/discography?sort=POPULAR&mode=TRACK`)}>View All</p>
                                 </div>
                                 <SongList songs={displayedPopularTracks} hideHeader={true} slots={artistPopularSongRowSlots} gridTemplateColumns="30px 1fr 4ch 150px" scrollElement={scrollPageRef}/>
                             </div>
@@ -141,7 +155,7 @@ const ArtistPage = () => {
                         <div className={s.discography}>
                             <div className={s.topTracks}>
                                 <h2 className={s.subHeading}>Discography</h2>
-                                <p className={s.viewAll}>View Full Discography</p>
+                                <p className={s.viewAll} onClick={() => navigate(`/artist/${id}/discography`)}>View Full Discography</p>
                             </div>
                             <div className={s.latestReleases}>
                                 {

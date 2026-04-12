@@ -9,7 +9,7 @@ type FetchState<T> = {
     refetch: () => void;
 };
 
-export default function useFetchData<T>(url: string): FetchState<T> {
+export default function useFetchData<T>(url: string, resetOnFetch: boolean = true): FetchState<T> {
     const {info: authInfo} = useAuth();
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(true);
@@ -45,8 +45,8 @@ export default function useFetchData<T>(url: string): FetchState<T> {
         if (lastFetchedUrlRef.current === url) return;
         lastFetchedUrlRef.current = url;
 
-        void fetchData();
-    }, [authInfo, fetchData, url]);
+        void fetchData(resetOnFetch);
+    }, [authInfo, fetchData, url, resetOnFetch]);
 
     return { data, loading, error, refetch: () => fetchData(false) };
 }
