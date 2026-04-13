@@ -65,7 +65,7 @@
 
 .horizWrapper {
     display: grid;
-    grid-template-columns: 1fr 500px 0.2fr;
+    grid-template-columns: 1.3fr 0.2fr 0.7fr 0.1fr;
 }
 
 .subHeading {
@@ -80,14 +80,13 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    margin-left: 130px;
 }
 
 .artistInfoMain {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 450px;
+    width: 100%;
 }
 
 .artistInfoMain > div {
@@ -162,11 +161,27 @@
     margin-top: 30px;
 }
 
-.latestReleases {
+.scroller {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: 210px;
+    gap: 10px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
 }
 
-.release {
-
+.scroller:not(.scrollerShow)::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 150px;
+    height: 100%;
+    pointer-events: none;
+    background: linear-gradient(
+        to right,
+        rgba(40,40,40,0) 0%,
+        var(--color-bg-0) 100%
+    );
 }

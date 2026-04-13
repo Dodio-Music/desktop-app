@@ -21,6 +21,7 @@ import {useLoadCollection} from "@renderer/hooks/useLoadCollection";
 import {useContextMenu} from "@renderer/hooks/useContextMenu";
 import {useConfirm} from "@renderer/hooks/useConfirm";
 import {useAuth} from "@renderer/hooks/reduxHooks";
+import classNames from "classnames";
 
 const ArtistPage = () => {
     const id = useRequiredParam("id");
@@ -129,8 +130,9 @@ const ArtistPage = () => {
                                     <h2 className={s.subHeading}>Top Tracks</h2>
                                     <p className={s.viewAll} onClick={() => navigate(`/artist/${id}/discography?sort=POPULAR&mode=TRACK`)}>View All</p>
                                 </div>
-                                <SongList songs={displayedPopularTracks} hideHeader={true} slots={artistPopularSongRowSlots} gridTemplateColumns="30px 1fr 4ch 150px" scrollElement={scrollPageRef}/>
+                                <SongList songs={displayedPopularTracks} hideHeader={false} slots={artistPopularSongRowSlots} gridTemplateColumns="30px 1fr 4ch 150px" scrollElement={scrollPageRef}/>
                             </div>
+                            <div></div>
                             <div className={s.artistInfo}>
                                 <div className={s.artistInfoMain}>
                                     <div>
@@ -157,7 +159,7 @@ const ArtistPage = () => {
                                 <h2 className={s.subHeading}>Discography</h2>
                                 <p className={s.viewAll} onClick={() => navigate(`/artist/${id}/discography`)}>View Full Discography</p>
                             </div>
-                            <div className={s.latestReleases}>
+                            <div className={classNames(s.latestReleases, s.scroller)}>
                                 {
                                     artistOverview.latestReleases.map(r => {
                                         const isPlaying = track?.context.type === "release" && track?.context.id === r.releaseId && !userPaused;

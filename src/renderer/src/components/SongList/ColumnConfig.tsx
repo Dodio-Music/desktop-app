@@ -234,7 +234,7 @@ export const likedTracksSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
 export const artistPopularSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
     playRow<RemoteSongEntry>(),
     {
-        header: <p></p>,
+        header: <p>Title</p>,
         render: ({song, isActive}) => (
             <div className={s.trackColumn}>
                 <div className={s.trackElement}>
@@ -250,11 +250,11 @@ export const artistPopularSongRowSlots: SongRowSlot<RemoteSongEntry>[] = [
         )
     },
     {
-        header: <p></p>,
+        header: <p className={s.playsHeader}>Plays</p>,
         render: (song) => <p className={classNames(s.plays, s.ellipsis)}>{song.song.streamCount}</p>
     },
     {
-        header: <p></p>,
+        header: <p className={s.durationHeader}><WiTime3/></p>,
         render: ({song, isSelected, openContextMenu, isLiked, likeSong}) => <div className={s.lastColumn}>
             {
                 isLiked !== null ? <div className={classNames(s.like, isSelected && s.showLike, isLiked && s.isLiked)}>
