@@ -79,7 +79,7 @@ const SearchPage = () => {
         </div>;
     }
 
-    if (dataSearch?.artistResults.length === 0 && dataSearch.releaseResults.length === 0 && dataSearch.releaseTrackResults.length === 0) {
+    if (dataSearch?.artistResults.length === 0 && dataSearch.releaseResults.length === 0 && dataSearch.releaseTrackResults.length === 0 && dataSearch.publicPlaylistResults.length === 0) {
         return <div className={`pageWrapper ${s.wrapper}`}>
             <NothingFound text={"No results found"} ></NothingFound>
         </div>;
@@ -87,119 +87,138 @@ const SearchPage = () => {
 
     return (
         <div className={`pageWrapper ${s.wrapper}`} ref={scrollPageRef}>
-            <div className={s.heading}>
-                <h1>Releases</h1>
-                <ToggleSectionButton
-                    expanded={expandedSections["RELEASES"]}
-                    onToggle={() => setExpandedSections(prev => ({...prev, "RELEASES": !prev["RELEASES"]}))}
-                />
-            </div>
-            <div
-                className={classNames(s.scroller, expandedSections["RELEASES"] && s.scrollerShow, errorSearch && s.scrollerError)}>
-                {errorSearch && !dataSearch ?
-                    <div className={s.error}>
-                        <p>{`Error: ${errorSearch}`}</p>
-                        <button onClick={refreshSearch}>Refresh</button>
+            {
+                ((dataSearch?.releaseResults.length ?? 0) > 0 || loadingSearch) &&
+                <>
+                    <div className={s.heading}>
+                        <h1>Releases</h1>
+                        <ToggleSectionButton
+                            expanded={expandedSections["RELEASES"]}
+                            onToggle={() => setExpandedSections(prev => ({...prev, "RELEASES": !prev["RELEASES"]}))}
+                        />
                     </div>
-                    :
-                    (loadingSearch || !dataSearch)
-                        ? Array.from({length: 12}).map((_, i) => (
-                            <CardSkeleton key={i}/>
-                        ))
-                        :
-                        dataSearch.releaseResults.map(r => {
-                            const isPlaying = track?.context.type === "release" && track?.context.id === r.releaseId && !userPaused;
+                    <div
+                        className={classNames(s.scroller, expandedSections["RELEASES"] && s.scrollerShow, errorSearch && s.scrollerError)}>
+                        {errorSearch && !dataSearch ?
+                            <div className={s.error}>
+                                <p>{`Error: ${errorSearch}`}</p>
+                                <button onClick={refreshSearch}>Refresh</button>
+                            </div>
+                            :
+                            (loadingSearch || !dataSearch)
+                                ? Array.from({length: 12}).map((_, i) => (
+                                    <CardSkeleton key={i}/>
+                                ))
+                                :
+                                dataSearch.releaseResults.map(r => {
+                                    const isPlaying = track?.context.type === "release" && track?.context.id === r.releaseId && !userPaused;
 
-                            return <Card
-                                onPlayClick={(e) => {
-                                    e.stopPropagation();
-                                    void loadCollection(r.releaseId, "release")}}
-                                key={r.releaseId}
-                                isPlaying={isPlaying}
-                                onClick={() => handleReleaseClick(r)}
-                                onContextMenu={(e) => ctx.open(e, {type: "release", data: r})}
-                                title={r.releaseName}
-                                entities={r.artists.map(a => ({id: a.artistId, name: a.artistName, navigateTo: "/artist/" + a.artistId}))}
-                                coverUrl={r.coverArtUrl}
-                            />;
-                        })
-                }
-            </div>
-
-
-            <div className={s.heading}>
-                <h1>Artists</h1>
-                <ToggleSectionButton
-                    expanded={expandedSections["ARTISTS"]}
-                    onToggle={() => setExpandedSections(prev => ({...prev, "ARTISTS": !prev["ARTISTS"]}))}
-                />
-            </div>
-            <div
-                className={classNames(s.scroller, expandedSections["ARTISTS"] && s.scrollerShow, errorSearch && s.scrollerError)}>
-                {errorSearch && !dataSearch ?
-                    <div className={s.error}>
-                        <p>{`Error: ${errorSearch}`}</p>
-                        <button onClick={refreshSearch}>Refresh</button>
+                                    return <Card
+                                        onPlayClick={(e) => {
+                                            e.stopPropagation();
+                                            void loadCollection(r.releaseId, "release")}}
+                                        key={r.releaseId}
+                                        isPlaying={isPlaying}
+                                        onClick={() => handleReleaseClick(r)}
+                                        onContextMenu={(e) => ctx.open(e, {type: "release", data: r})}
+                                        title={r.releaseName}
+                                        entities={r.artists.map(a => ({id: a.artistId, name: a.artistName, navigateTo: "/artist/" + a.artistId}))}
+                                        coverUrl={r.coverArtUrl}
+                                    />;
+                                })
+                        }
                     </div>
-                    :
-                    (loadingSearch || !dataSearch)
-                        ? Array.from({length: 12}).map((_, i) => (
-                            <CardSkeleton key={i}/>
-                        ))
-                        :
-                        dataSearch.artistResults.map(a => {
-                            return <Card
-                                key={a.artistId}
-                                onClick={() => handleArtistClick(a)}
-                                title={a.artistName}
-                                coverUrl={a.avatarUrl ?? dodo}
-                                entities={[{id: a.artistId, name: "Artist"}]}
-                            />;
-                        })
-                }
-            </div>
+                </>
+            }
 
-            <div className={s.heading}>
-                <h1>Playlists</h1>
-                <ToggleSectionButton
-                    expanded={expandedSections["PLAYLISTS"]}
-                    onToggle={() => setExpandedSections(prev => ({...prev, "PLAYLISTS": !prev["PLAYLISTS"]}))}
-                />
-            </div>
-            <div
-                className={classNames(s.scroller, expandedSections["PLAYLISTS"] && s.scrollerShow, errorSearch && s.scrollerError)}>
-                {errorSearch && !dataSearch ?
-                    <div className={s.error}>
-                        <p>{`Error: ${errorSearch}`}</p>
-                        <button onClick={refreshSearch}>Refresh</button>
+            {
+                ((dataSearch?.artistResults.length ?? 0) > 0 || loadingSearch) &&
+                <>
+                    <div className={s.heading}>
+                        <h1>Artists</h1>
+                        <ToggleSectionButton
+                            expanded={expandedSections["ARTISTS"]}
+                            onToggle={() => setExpandedSections(prev => ({...prev, "ARTISTS": !prev["ARTISTS"]}))}
+                        />
                     </div>
-                    :
-                    (loadingSearch || !dataSearch)
-                        ? Array.from({length: 12}).map((_, i) => (
-                            <CardSkeleton key={i}/>
-                        ))
-                        :
-                        dataSearch.publicPlaylistResults.map(p => {
-                            return <Card
-                                key={p.playlistId}
-                                onClick={() => handlePlaylistClick(p)}
-                                title={p.playlistName}
-                                coverUrl={dodo}
-                                tiledCovers={p.coverArtUrls ?? [dodo]}
-                                entities={[{id: p.owner.username, name: p.owner.displayName}]}
-                            />;
-                        })
-                }
-            </div>
+                    <div
+                        className={classNames(s.scroller, expandedSections["ARTISTS"] && s.scrollerShow, errorSearch && s.scrollerError)}>
+                        {errorSearch && !dataSearch ?
+                            <div className={s.error}>
+                                <p>{`Error: ${errorSearch}`}</p>
+                                <button onClick={refreshSearch}>Refresh</button>
+                            </div>
+                            :
+                            (loadingSearch || !dataSearch)
+                                ? Array.from({length: 12}).map((_, i) => (
+                                    <CardSkeleton key={i}/>
+                                ))
+                                :
+                                dataSearch.artistResults.map(a => {
+                                    return <Card
+                                        key={a.artistId}
+                                        onClick={() => handleArtistClick(a)}
+                                        title={a.artistName}
+                                        coverUrl={a.avatarUrl ?? dodo}
+                                        entities={[{id: a.artistId, name: "Artist"}]}
+                                    />;
+                                })
+                        }
+                    </div>
+                </>
+            }
 
-            <div className={s.heading}>
-                <h1>Tracks</h1>
-            </div>
-            <SongList songs={trackEntries}
-                      slots={artistDiscographySongRowSots}
-                      scrollElement={scrollPageRef}
-                      gridTemplateColumns="30px 3.5fr 2.5fr 6ch 1.5fr 140px"
-                      navigate={navigate}/>
+            {
+                ((dataSearch?.publicPlaylistResults.length ?? 0) > 0 || loadingSearch) &&
+                <>
+                    <div className={s.heading}>
+                        <h1>Playlists</h1>
+                        <ToggleSectionButton
+                            expanded={expandedSections["PLAYLISTS"]}
+                            onToggle={() => setExpandedSections(prev => ({...prev, "PLAYLISTS": !prev["PLAYLISTS"]}))}
+                        />
+                    </div>
+                    <div
+                        className={classNames(s.scroller, expandedSections["PLAYLISTS"] && s.scrollerShow, errorSearch && s.scrollerError)}>
+                        {errorSearch && !dataSearch ?
+                            <div className={s.error}>
+                                <p>{`Error: ${errorSearch}`}</p>
+                                <button onClick={refreshSearch}>Refresh</button>
+                            </div>
+                            :
+                            (loadingSearch || !dataSearch)
+                                ? Array.from({length: 12}).map((_, i) => (
+                                    <CardSkeleton key={i}/>
+                                ))
+                                :
+                                dataSearch.publicPlaylistResults.map(p => {
+                                    return <Card
+                                        key={p.playlistId}
+                                        onClick={() => handlePlaylistClick(p)}
+                                        title={p.playlistName}
+                                        coverUrl={dodo}
+                                        tiledCovers={p.coverArtUrls ?? [dodo]}
+                                        entities={[{id: p.owner.username, name: p.owner.displayName}]}
+                                    />;
+                                })
+                        }
+                    </div>
+                </>
+            }
+
+            {
+                ((dataSearch?.releaseTrackResults.length ?? 0) > 0 || loadingSearch) &&
+                <>
+                    <div className={s.heading}>
+                        <h1>Tracks</h1>
+                    </div>
+                    <SongList songs={trackEntries}
+                              slots={artistDiscographySongRowSots}
+                              scrollElement={scrollPageRef}
+                              gridTemplateColumns="30px 3.5fr 2.5fr 6ch 1.5fr 140px"
+                              navigate={navigate}/>
+                </>
+            }
 
             <ContextMenu ctx={ctx}>
                 {
