@@ -5,6 +5,10 @@
     margin-bottom: 15px;
 }
 
+.heading h1 {
+    font-size: 2rem;
+}
+
 .heading button {
     display: flex;
     align-items: center;
@@ -18,7 +22,7 @@
     margin: -15px;
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: 210px;
+    grid-auto-columns: 200px;
     gap: 10px;
     overflow: hidden;
     position: relative;
@@ -35,7 +39,7 @@
 
 .scrollerShow {
     grid-auto-flow: unset;
-    grid-template-columns: repeat(auto-fill, 210px);
+    grid-template-columns: repeat(auto-fill, 200px);
     height: fit-content;
     margin-bottom: 30px;
 }

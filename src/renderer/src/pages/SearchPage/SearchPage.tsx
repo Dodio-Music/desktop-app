@@ -1,9 +1,9 @@
 import s from "./SearchPage.module.css";
 import useFetchData from "@renderer/hooks/useFetchData";
-import {ReleasePreviewDTO, SearchItemsDTO} from "../../../../shared/Api";
+import {ArtistDTO, PlaylistPreviewDTO, ReleasePreviewDTO, SearchItemsDTO} from "../../../../shared/Api";
 import {useNavigate} from "react-router-dom";
-import {useCallback, useEffect} from "react";
-import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
+import {useCallback, useMemo, useRef, useState} from "react";
+import {useAppSelector} from "@renderer/redux/store";
 import {useAuth} from "@renderer/hooks/reduxHooks";
 import Card from "@renderer/components/Card/Card";
 import {useContextMenu} from "@renderer/hooks/useContextMenu";
@@ -14,24 +14,20 @@ import CardSkeleton from "@renderer/components/Card/CardSkeleton";
 import dodo from "../../../../../resources/dodo_whiteondark_512.png";
 import classNames from "classnames";
 import ToggleSectionButton from "@renderer/pages/HomePage/ToggleSectionButton";
-import {homepageToggleExpandedSection} from "@renderer/redux/uiSlice";
 import {useLoadCollection} from "@renderer/hooks/useLoadCollection";
-import LoadingPage from "@renderer/pages/LoadingPage/LoadingPage";
 import NothingFound from "@renderer/components/NothingFound/NothingFound";
+import {releaseTrackDTOListToSongEntries} from "@renderer/util/parseBackendTracks";
+import {artistDiscographySongRowSots} from "@renderer/components/SongList/ColumnConfig";
+import {SongList} from "@renderer/components/SongList/SongList";
 
-
-
+type ExpandedSection = "RELEASES" | "ARTISTS" | "PLAYLISTS" | "TRACKS";
 const SearchPage = () => {
+    const scrollPageRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
-    const expandedSection = useAppSelector(state => state.uiSlice.homepage.expandedSections);
-    const dispatch = useAppDispatch();
-
-
     const {debouncedSearch} = useAppSelector(state => state.searchSlice);
-    const searchUrl :string|null = debouncedSearch.trim()
+    const searchUrl: string | null = debouncedSearch.trim()
         ? `/search?query=${debouncedSearch}`
         : null;
-
 
     const {
         data: dataSearch,
@@ -40,8 +36,6 @@ const SearchPage = () => {
         refetch: refreshSearch
     } = useFetchData<SearchItemsDTO>(searchUrl)
 
-
-
     const confirm = useConfirm();
     const ctx = useContextMenu();
     const track = useAppSelector(state => state.nativePlayer.currentTrack);
@@ -49,17 +43,35 @@ const SearchPage = () => {
     const authInfo = useAuth().info;
     const loadCollection = useLoadCollection();
 
-    const handleClick = useCallback(
+    const [expandedSections, setExpandedSections] = useState<Record<ExpandedSection, boolean>>({ARTISTS: false, PLAYLISTS: false, RELEASES: false, TRACKS: false});
+
+    const handleReleaseClick = useCallback(
         (release: ReleasePreviewDTO) => navigate(`/release/${release.releaseId}`),
         [navigate]
     );
 
+    const handleArtistClick = useCallback(
+        (release: ArtistDTO) => navigate(`/artist/${release.artistId}`),
+        [navigate]
+    );
 
+    const handlePlaylistClick = useCallback(
+        (playlist: PlaylistPreviewDTO) => navigate(`/playlist/${playlist.playlistId}`),
+        [navigate]
+    );
 
-    useEffect(() => {
-        console.log("Search debounce keys:", debouncedSearch);
-        console.log(searchUrl)
-    }, [debouncedSearch]);
+    const releaseTrackResults = dataSearch?.releaseTrackResults;
+    const trackEntries = useMemo(() => {
+        if (!releaseTrackResults) return [];
+
+        return releaseTrackDTOListToSongEntries(
+            releaseTrackResults,
+            {
+                type: "search_results",
+                name: "Search Results"
+            }
+        );
+    }, [releaseTrackResults]);
 
     if (!debouncedSearch.trim()) {
         return <div className={`pageWrapper ${s.wrapper}`}>
@@ -67,31 +79,23 @@ const SearchPage = () => {
         </div>;
     }
 
-    if (loadingSearch || !dataSearch) {
-        return (
-            <div className={`pageWrapper ${s.wrapper}`}>
-                {Array.from({ length: 12 }).map((_, i) => <CardSkeleton key={i} />)}
-            </div>
-        );
-    }
-
-    if (dataSearch.artistResults.length === 0 && dataSearch.releaseResults.length === 0 && dataSearch.trackResults.length === 0) {
+    if (dataSearch?.artistResults.length === 0 && dataSearch.releaseResults.length === 0 && dataSearch.releaseTrackResults.length === 0) {
         return <div className={`pageWrapper ${s.wrapper}`}>
             <NothingFound text={"No results found"} ></NothingFound>
         </div>;
     }
 
     return (
-        <div className={`pageWrapper ${s.wrapper}`}>
+        <div className={`pageWrapper ${s.wrapper}`} ref={scrollPageRef}>
             <div className={s.heading}>
                 <h1>Releases</h1>
                 <ToggleSectionButton
-                    expanded={expandedSection.releases}
-                    onToggle={() => dispatch(homepageToggleExpandedSection("releases"))}
+                    expanded={expandedSections["RELEASES"]}
+                    onToggle={() => setExpandedSections(prev => ({...prev, "RELEASES": !prev["RELEASES"]}))}
                 />
             </div>
             <div
-                className={classNames(s.scroller, expandedSection.releases && s.scrollerShow, errorSearch && s.scrollerError)}>
+                className={classNames(s.scroller, expandedSections["RELEASES"] && s.scrollerShow, errorSearch && s.scrollerError)}>
                 {errorSearch && !dataSearch ?
                     <div className={s.error}>
                         <p>{`Error: ${errorSearch}`}</p>
@@ -104,29 +108,20 @@ const SearchPage = () => {
                         ))
                         :
                         dataSearch.releaseResults.map(r => {
-                            const isPlaying =
-                                track?.context.type === "release" &&
-                                track?.context.id === r.id &&
-                                !userPaused;
+                            const isPlaying = track?.context.type === "release" && track?.context.id === r.releaseId && !userPaused;
 
-                            return (
-                                <Card
-                                    key={r.id}
-                                    data={r}
-                                    isPlaying={isPlaying}
-                                    onClick={() => navigate(`/release/${r.id}`)}
-                                    onContextMenu={() => {}}
-                                    onIconClick={() => {}}
-                                    getTitle={(r) => r.name}
-                                    getArtists={(r) =>
-                                        r.artistNames.map((name, i) => ({
-                                            id: i.toString(),
-                                            name
-                                        }))
-                                    }
-                                    getCoverUrl={() => dodo}
-                                />
-                            );
+                            return <Card
+                                onPlayClick={(e) => {
+                                    e.stopPropagation();
+                                    void loadCollection(r.releaseId, "release")}}
+                                key={r.releaseId}
+                                isPlaying={isPlaying}
+                                onClick={() => handleReleaseClick(r)}
+                                onContextMenu={(e) => ctx.open(e, {type: "release", data: r})}
+                                title={r.releaseName}
+                                entities={r.artists.map(a => ({id: a.artistId, name: a.artistName, navigateTo: "/artist/" + a.artistId}))}
+                                coverUrl={r.coverArtUrl}
+                            />;
                         })
                 }
             </div>
@@ -135,92 +130,87 @@ const SearchPage = () => {
             <div className={s.heading}>
                 <h1>Artists</h1>
                 <ToggleSectionButton
-                    expanded={expandedSection.playlists}
-                    onToggle={() => dispatch(homepageToggleExpandedSection("playlists"))}
+                    expanded={expandedSections["ARTISTS"]}
+                    onToggle={() => setExpandedSections(prev => ({...prev, "ARTISTS": !prev["ARTISTS"]}))}
                 />
             </div>
             <div
-                className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorSearch && s.scrollerError)}>
-                {errorSearch && !dataSearch.artistResults ?
+                className={classNames(s.scroller, expandedSections["ARTISTS"] && s.scrollerShow, errorSearch && s.scrollerError)}>
+                {errorSearch && !dataSearch ?
                     <div className={s.error}>
                         <p>{`Error: ${errorSearch}`}</p>
                         <button onClick={refreshSearch}>Refresh</button>
                     </div>
                     :
-                    (loadingSearch || !dataSearch.artistResults)
+                    (loadingSearch || !dataSearch)
                         ? Array.from({length: 12}).map((_, i) => (
                             <CardSkeleton key={i}/>
                         ))
                         :
-                        dataSearch.artistResults.map(artist => {
+                        dataSearch.artistResults.map(a => {
                             return <Card
-                                key={artist.id}
-                                data={artist}
-                                isPlaying={false}
-                                onClick={() => navigate(`/artist/${artist.id}`)}
-                                onContextMenu={() => {}}
-                                onIconClick={() => {}}
-                                getTitle={(a) => a.name}
-                                getArtists={() => []}
-                                getCoverUrl={() => dodo}
-                            />
+                                key={a.artistId}
+                                onClick={() => handleArtistClick(a)}
+                                title={a.artistName}
+                                coverUrl={a.avatarUrl ?? dodo}
+                                entities={[{id: a.artistId, name: "Artist"}]}
+                            />;
                         })
                 }
             </div>
 
-            {/*TODO what should this do*/}
-            {/*<ContextMenu ctx={ctx}>*/}
-            {/*    {*/}
-            {/*        ctx.state && renderEntityActions(ctx.state.target, ctx.close, {*/}
-            {/*            confirm,*/}
-            {/*            refetch: ctx.state.target.type === "release" ? refreshSearch : refetchPlaylists,*/}
-            {/*            role: authInfo.role,*/}
-            {/*            username: authInfo.username*/}
-            {/*        })*/}
-            {/*    }*/}
-            {/*</ContextMenu>*/}
+            <div className={s.heading}>
+                <h1>Playlists</h1>
+                <ToggleSectionButton
+                    expanded={expandedSections["PLAYLISTS"]}
+                    onToggle={() => setExpandedSections(prev => ({...prev, "PLAYLISTS": !prev["PLAYLISTS"]}))}
+                />
+            </div>
+            <div
+                className={classNames(s.scroller, expandedSections["PLAYLISTS"] && s.scrollerShow, errorSearch && s.scrollerError)}>
+                {errorSearch && !dataSearch ?
+                    <div className={s.error}>
+                        <p>{`Error: ${errorSearch}`}</p>
+                        <button onClick={refreshSearch}>Refresh</button>
+                    </div>
+                    :
+                    (loadingSearch || !dataSearch)
+                        ? Array.from({length: 12}).map((_, i) => (
+                            <CardSkeleton key={i}/>
+                        ))
+                        :
+                        dataSearch.publicPlaylistResults.map(p => {
+                            return <Card
+                                key={p.playlistId}
+                                onClick={() => handlePlaylistClick(p)}
+                                title={p.playlistName}
+                                coverUrl={dodo}
+                                tiledCovers={p.coverArtUrls ?? [dodo]}
+                                entities={[{id: p.owner.username, name: p.owner.displayName}]}
+                            />;
+                        })
+                }
+            </div>
 
+            <div className={s.heading}>
+                <h1>Tracks</h1>
+            </div>
+            <SongList songs={trackEntries}
+                      slots={artistDiscographySongRowSots}
+                      scrollElement={scrollPageRef}
+                      gridTemplateColumns="30px 3.5fr 2.5fr 6ch 1.5fr 140px"
+                      navigate={navigate}/>
 
-            {/*<div className={s.heading}>*/}
-            {/*    <h1>Songs</h1>*/}
-            {/*    <ToggleSectionButton*/}
-            {/*        expanded={expandedSection.playlists}*/}
-            {/*        onToggle={() => dispatch(homepageToggleExpandedSection("playlists"))}*/}
-            {/*    />*/}
-            {/*</div>*/}
-            {/*<div*/}
-            {/*    className={classNames(s.scroller, expandedSection.playlists && s.scrollerShow, errorSearch && s.scrollerError)}>*/}
-            {/*    {errorSearch && !dataSearch.trackResults ?*/}
-            {/*        <div className={s.error}>*/}
-            {/*            <p>{`Error: ${errorSearch}`}</p>*/}
-            {/*            <button onClick={refreshSearch}>Refresh</button>*/}
-            {/*        </div>*/}
-            {/*        :*/}
-            {/*        (loadingSearch || !dataSearch.trackResults)*/}
-            {/*            ? Array.from({length: 12}).map((_, i) => (*/}
-            {/*                <CardSkeleton key={i}/>*/}
-            {/*            ))*/}
-            {/*            :*/}
-            {/*            dataSearch.trackResults.map(track => {*/}
-            {/*                return <Card*/}
-            {/*                    key={track.id}*/}
-            {/*                    data={track}*/}
-            {/*                    isPlaying={false}*/}
-            {/*                    onClick={() => {navigate(`/playlist/${track.id}`)}}*/}
-            {/*                    onContextMenu={() => {}}*/}
-            {/*                    onIconClick={() => {}}*/}
-            {/*                    getTitle={(t) => t.title}*/}
-            {/*                    getArtists={(t) =>*/}
-            {/*                        t.artistNames.map((name, i) => ({*/}
-            {/*                            id: i.toString(),*/}
-            {/*                            name*/}
-            {/*                        }))*/}
-            {/*                    }*/}
-            {/*                    getCoverUrl={() => dodo}*/}
-            {/*                />*/}
-            {/*            })*/}
-            {/*    }*/}
-            {/*</div>*/}
+            <ContextMenu ctx={ctx}>
+                {
+                    ctx.state && renderEntityActions(ctx.state.target, ctx.close, {
+                        confirm,
+                        refetch: refreshSearch,
+                        role: authInfo.role,
+                        username: authInfo.username
+                    })
+                }
+            </ContextMenu>
         </div>
     );
 };

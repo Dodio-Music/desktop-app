@@ -49,7 +49,7 @@ const TrackInfo = () => {
     }, [activeTrack, navigate]);
 
     const handleContextClick = useCallback(() => {
-        if (!activeTrack) return;
+        if (!activeTrack || !("url" in activeTrack.context)) return;
 
         const url = activeTrack.context.url;
         const replace = window.location.hash === `#${url}`;
@@ -83,7 +83,7 @@ const TrackInfo = () => {
                                 </span>
                             ))}
                         </p>
-                        <p className={s.playingFrom}><MdQueueMusic size={18} /><span className={s.link} onClick={handleContextClick}> {activeTrack.context.name}</span></p>
+                        <p className={s.playingFrom}><MdQueueMusic size={18} /><span className={"url" in activeTrack.context ? s.link : ""} onClick={handleContextClick}> {activeTrack.context.name}</span></p>
                     </div>
                 </>
             )}

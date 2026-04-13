@@ -35,7 +35,8 @@ export type PlaybackContext =
     | { type: "release", name: string, url: string, id: string }
     | { type: "artist", name: string, url: string, id: number }
     | { type: "playlist", name: string, url: string, id: number }
-    | { type: "liked_tracks", name: string, url: string, id: number };
+    | { type: "liked_tracks", name: string, url: string, id: number }
+    | {type: "search_results", name: string };
 
 export interface SongSource {
     id: string;
