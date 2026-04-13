@@ -223,3 +223,10 @@ export interface ArtistFollowDTO {
     artist: ArtistDTO;
     followedAt: Date;
 }
+
+export interface SearchItemsDTO {
+    artistResults: ArtistDTO[];
+    releaseTrackResults: ReleaseTrackDTO[];
+    releaseResults: ReleasePreviewDTO[];
+    publicPlaylistResults: PlaylistPreviewDTO[];
+}

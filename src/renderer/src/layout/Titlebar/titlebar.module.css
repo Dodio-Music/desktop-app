@@ -203,3 +203,37 @@
     right: -4px;
     pointer-events: none;
 }
+
+
+
+.searchWrapper {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    justify-content: center;
+    -webkit-app-region: no-drag;
+}
+
+.searchInput {
+    width: 100%;
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+
+    background-color: var(--color-bg-0);
+    color: white;
+
+    font-size: 1rem;
+    outline: none;
+
+    transition: all 0.2s ease;
+}
+
+.searchInput::placeholder {
+    color: var(--color-text-tertiary);
+}
+
+.searchInput:focus {
+    border-color: var(--color-border);
+    background-color: var(--color-bg-1);
+}

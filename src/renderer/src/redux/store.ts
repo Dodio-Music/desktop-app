@@ -8,6 +8,7 @@ import notificationsSlice from "@renderer/redux/notificationsSlice";
 import uiSlice from "@renderer/redux/uiSlice";
 import likeSlice from "@renderer/redux/likeSlice";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
+import searchSlice from "@renderer/redux/searchSlice";
 
 export const store = configureStore({
     reducer: {
@@ -18,7 +19,8 @@ export const store = configureStore({
         playlistSlice: playlistSlice,
         notifications: notificationsSlice,
         uiSlice: uiSlice,
-        likeSlice: likeSlice
+        likeSlice: likeSlice,
+        searchSlice: searchSlice
     }
 });
 

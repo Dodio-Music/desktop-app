@@ -5,6 +5,10 @@
     margin-bottom: 15px;
 }
 
+.heading h1 {
+    font-size: 2rem;
+}
+
 .heading button {
     display: flex;
     align-items: center;
@@ -18,7 +22,7 @@
     margin: -15px;
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: 210px;
+    grid-auto-columns: 200px;
     gap: 10px;
     overflow: hidden;
     position: relative;
@@ -35,7 +39,7 @@
 
 .scrollerShow {
     grid-auto-flow: unset;
-    grid-template-columns: repeat(auto-fill, 210px);
+    grid-template-columns: repeat(auto-fill, 200px);
     height: fit-content;
     margin-bottom: 30px;
 }
@@ -95,38 +99,4 @@
     transform: scale(0.95);
     transition: 0s;
     background-color: var(--color-inverse-active);
-}
-
-
-/*ToDO change to defined colors*/
-.searchWrapper {
-    width: 100%;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: center;
-}
-
-.searchInput {
-    width: 100%;
-    max-width: 500px;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-
-    background-color: rgba(255, 255, 255, 0.05);
-    color: white;
-
-    font-size: 16px;
-    outline: none;
-
-    transition: all 0.2s ease;
-}
-
-.searchInput::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-}
-
-.searchInput:focus {
-    border-color: rgba(255, 255, 255, 0.25);
-    background-color: rgba(255, 255, 255, 0.08);
 }

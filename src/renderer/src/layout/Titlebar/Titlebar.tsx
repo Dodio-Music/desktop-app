@@ -9,7 +9,9 @@ import {IoSettingsOutline, IoSettingsSharp} from "react-icons/io5";
 import {RiDashboardFill, RiDashboardLine} from "react-icons/ri";
 import classNames from "classnames";
 import {Tooltip} from "@mui/material";
-import {useAppSelector} from "@renderer/redux/store";
+import {useAppDispatch, useAppSelector} from "@renderer/redux/store";
+import {useDebounce} from "@uidotdev/usehooks";
+import {setSearch} from "@renderer/redux/searchSlice";
 
 interface TitlebarProps {
     zoomLevel: number;
@@ -72,6 +74,21 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
     const canGoBack = historyIndex > 0;
     const canGoForward = historyIndex < window.history.length - 1;
 
+    const [searchState, setSearchState] = useState<string>("");
+    const dispatch = useAppDispatch();
+    const debouncedSearch = useDebounce(searchState, 400);
+    useEffect(() => {
+        dispatch(setSearch(debouncedSearch))
+        if (debouncedSearch)
+            navigate("/searchPage");
+
+    }, [debouncedSearch]);
+
+    const onClickOnSearchBar = () => {
+        if (window.location.hash === `#${"searchPage"}`) return
+        navigate("/searchPage");
+    }
+
     return (
         <div className={s.title_bar}>
             <div className={s.left}>
@@ -81,9 +98,22 @@ const Titlebar: FC<TitlebarProps> = ({zoomLevel}) => {
                     <Tooltip title={canGoForward ? "Go Forward" : ""}><button onClick={() => navigate(1)} disabled={!canGoForward}><IoIosArrowForward /></button></Tooltip>
                 </div>
             </div>
+
+            <div className={s.searchWrapper}>
+                <input
+                    type="text"
+                    placeholder="Search Releases, Artists ..."
+                    value={searchState}
+                    onChange={(e) => setSearchState(e.target.value)}
+                    className={s.searchInput}
+                    onClick={() => onClickOnSearchBar()}
+                />
+            </div>
+
             <div className={s.right}>
                 {zoomLevel !== 100 &&
-                    <button onClick={() => window.api.resetZoom()} className={s.zoomContainer}><p className={s.zoomLevel}>{zoomLevel}%</p></button>}
+                    <button onClick={() => window.api.resetZoom()} className={s.zoomContainer}><p
+                        className={s.zoomLevel}>{zoomLevel}%</p></button>}
 
                 {navButtons.map((btn, idx) => btn.show ? (
                     <div key={idx} className={s.itemWrapper}>
