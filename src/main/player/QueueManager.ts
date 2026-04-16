@@ -35,6 +35,8 @@ export class RepeatAllStrategy implements PlaybackStrategy {
         const {tracks, startIndex} = state.context;
         let tempIndex = startIndex;
 
+        if(tracks.length == 0) return [];
+
         while (result.length < count) {
             tempIndex++;
             if (tempIndex < tracks.length) {
@@ -42,7 +44,7 @@ export class RepeatAllStrategy implements PlaybackStrategy {
             } else {
                 // case: end of context -> return to top
                 tempIndex = 0;
-                if (tracks.length) result.push(tracks[0]);
+                result.push(tracks[0]);
             }
         }
 

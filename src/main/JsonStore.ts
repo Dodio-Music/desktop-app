@@ -1,10 +1,8 @@
 import { app } from "electron";
 import fs from "fs/promises";
 import path from "path";
-import { clearTimeout } from "node:timers";
-import {IPreferences, IState} from "./preferences.js";
 
-export class JsonStore<T extends IPreferences | IState> {
+export class JsonStore<T extends object> {
     private readonly path: string;
     private readonly tmpPath: string;
     private data: T;
@@ -32,7 +30,7 @@ export class JsonStore<T extends IPreferences | IState> {
         return this.data;
     }
 
-    get() {
+    get(): T {
         if (!this.initialized) throw new Error("Store not loaded yet");
         return this.data;
     }
@@ -51,8 +49,13 @@ export class JsonStore<T extends IPreferences | IState> {
     }
 
     private scheduleSave() {
-        if (this.saveTimeout) clearTimeout(this.saveTimeout);
-        this.saveTimeout = setTimeout(() => this.save(), 500);
+        if (this.saveTimeout) {
+            clearTimeout(this.saveTimeout);
+        }
+        this.saveTimeout = setTimeout(async () => {
+            this.saveTimeout = null;
+            await this.save();
+        }, 500);
     }
 }
 
