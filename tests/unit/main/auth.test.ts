@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { applyLogin, applyRefresh, clearAuth, removeAccessToken, auth, setupAuth } from '@main/auth';
 import { SignInResponse, RefreshTokenResponse } from '@main/web/Typing';
+import BrowserWindow = Electron.BrowserWindow;
 
 // Mock electron
 vi.mock('electron', () => ({
@@ -99,4 +100,19 @@ describe('auth management', () => {
     expect(auth.accessToken).toBeUndefined();
     expect(auth.refreshToken).toBe('refresh-token'); // Should still be there
   });
+
+  it('handles loadAuth failure gracefully', async () => {
+    const fs = await import('fs/promises');
+    vi.mocked(fs.default.readFile).mockRejectedValue(new Error('File not found'));
+
+    // We need to re-call setupAuth to trigger loadAuth
+    await setupAuth(mockWindow as unknown as BrowserWindow);
+    expect(auth.accessToken).toBeUndefined();
+  });
+
+  /*it('registers IPC handlers', async () => {
+    const { ipcMain } = await import('electron');
+    expect(ipcMain.handle).toHaveBeenCalledWith('auth:get-initial-redux', expect.any(Function));
+    expect(ipcMain.handle).toHaveBeenCalledWith('auth:refresh', expect.any(Function));
+  });*/
 });

@@ -160,7 +160,9 @@ export class QueueManager extends EventEmitter {
         setPreferences({repeatMode: this.repeatMode});
         this.emit("repeat-mode", this.repeatMode);
         this.notifyNextTrack();
-        this.notifyState("repeat-mode", {repeatMode: this.repeatMode});
+        if (!this.window.isDestroyed()) {
+            this.notifyState("repeat-mode", {repeatMode: this.repeatMode});
+        }
     }
 
     getRepeatMode(): RepeatMode {
