@@ -98,6 +98,7 @@ const api = {
         return () => ipcRenderer.removeListener("zoom-factor-changed", handler);
     },
     getPreferences: (): Promise<IAllPreferences> => ipcRenderer.invoke("preferences:get"),
+    openLocalFolder: () => ipcRenderer.invoke("local:open-folder"),
     setPreferences: (pref: Partial<IAllPreferences>) => ipcRenderer.invoke("preferences:set", pref),
     onPreferencesUpdated: (callback: (prefs?: IAllPreferences) => void) => {
         const handler = (_ev: IpcRendererEvent, prefs?: IAllPreferences) => callback(prefs);

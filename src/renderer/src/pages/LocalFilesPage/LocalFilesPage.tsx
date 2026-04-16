@@ -4,6 +4,7 @@ import {SongList} from "@renderer/components/SongList/SongList";
 import {LocalSongEntry, SongDirectoryResponse} from "../../../../shared/TrackInfo";
 import {localSongRowSlots} from "@renderer/components/SongList/ColumnConfig";
 import {useLocation} from "react-router-dom";
+import {IoFolderOpenOutline} from "react-icons/io5";
 
 const LocalFilesPage = () => {
     const location = useLocation();
@@ -14,6 +15,10 @@ const LocalFilesPage = () => {
     const handleDialog = async () => {
         await window.api.showLocalFilesDialog();
         void getAllSongs();
+    };
+
+    const handleOpenFolder = async () => {
+        await window.api.openLocalFolder();
     };
 
     const getAllSongs = () => {
@@ -41,7 +46,14 @@ const LocalFilesPage = () => {
 
     return (
         <div className={"pageWrapper pageWrapperFullHeight"} ref={scrollPageRef}>
-            <h1>Local Files</h1>
+            <div className={s.headerContainer}>
+                <h1>Local Files</h1>
+                {!error && (
+                    <button onClick={() => handleOpenFolder()} className={s.iconButton} title="Open Folder">
+                        <IoFolderOpenOutline size={24} />
+                    </button>
+                )}
+            </div>
             {error ?
                 <>
                     <p className={s.error}>{error}</p>

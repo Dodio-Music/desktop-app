@@ -15,6 +15,7 @@ import {installExtension, REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS} from "electron-
 import {registerSongIndexIPC} from "./songIndex.js";
 import {SignInResponse} from "./web/Typing";
 import {registerUpdater} from "./updater.js";
+import {registerLocalApiIPC} from "./ipc/registerLocalApi.js";
 
 let mainWindow: BrowserWindow;
 
@@ -119,6 +120,7 @@ app.whenReady().then(async () => {
     registerSongIndexIPC(mainWindow);
     registerDodioApiIPC();
     registerDashboardIPC(mainWindow);
+    registerLocalApiIPC();
 
     registerUpdater(mainWindow);
 
