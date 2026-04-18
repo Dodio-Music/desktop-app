@@ -1,12 +1,25 @@
 import {defineConfig} from "electron-vite";
 import react from "@vitejs/plugin-react";
-import {resolve} from 'node:path'
-import {loadEnv} from "vite";
+import {resolve} from "node:path";
+import fs from "node:fs";
+
+function loadConfig(mode: string) {
+    const path = resolve("config", `${mode}.json`);
+    let config = {};
+    if(fs.existsSync(path)) {
+        config = JSON.parse(fs.readFileSync(path, "utf-8"));
+    }
+    return config;
+}
 
 export default defineConfig(({mode}) => {
-    const defined_envs = loadEnv(mode, process.cwd(), "DODIO_");
+    const config = loadConfig(mode);
+    if(!Object.keys(config).length) console.error("Couldn't load json config!");
     const define_envs = Object.fromEntries(
-        Object.entries(defined_envs).map(([k, v]) => [`process.env.${k}`, JSON.stringify(v)])
+        Object.entries(config).map(([k, v]) => [
+            `process.env.DODIO_${k}`,
+            JSON.stringify(v)
+        ])
     );
     return {
         main: {
