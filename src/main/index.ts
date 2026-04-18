@@ -17,6 +17,7 @@ import {SignInResponse} from "./web/Typing";
 import {registerUpdater} from "./updater.js";
 import {registerLocalApiIPC} from "./ipc/registerLocalApi.js";
 
+const INSTALL_EXTENSIONS = false;
 let mainWindow: BrowserWindow;
 
 app.on("before-quit", async (event) => {
@@ -124,7 +125,9 @@ app.whenReady().then(async () => {
 
     registerUpdater(mainWindow);
 
-    installExtension([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS])
-        .then(([redux, react]) => console.log(`Added Extensions:  ${redux.name}, ${react.name}`))
-        .catch((err) => console.log("An error occurred: ", err));
+    if(INSTALL_EXTENSIONS) {
+        installExtension([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS])
+            .then(([redux, react]) => console.log(`Added Extensions:  ${redux.name}, ${react.name}`))
+            .catch((err) => console.log("An error occurred: ", err));
+    }
 });
