@@ -16,23 +16,23 @@ jobs:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
         steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+            -   name: Checkout repository
+                uses: actions/checkout@v4
 
-            - name: Setup Node
-              uses: actions/setup-node@v4
-              with:
-                  node-version-file: ".nvmrc"
-                  cache: npm
+            -   name: Setup Node
+                uses: actions/setup-node@v4
+                with:
+                    node-version-file: ".nvmrc"
+                    cache: npm
 
-            - name: Install dependencies
-              run: npm ci
+            -   name: Install dependencies
+                run: npm ci
 
-            - name: Build project
-              run: npm run build
+            -   name: Build project
+                run: npm run build
 
-            - name: Build and publish Windows release
-              run: npx electron-builder --win --x64 --publish always
+            -   name: Package and publish Windows release
+                run: npm run dist:win -- --publish always
 
     build-linux:
         name: Build Linux AppImage
@@ -56,5 +56,5 @@ jobs:
             -   name: Build project
                 run: npm run build
 
-            -   name: Build and publish Linux release
-                run: npx electron-builder --linux --x64 --publish always
+            -   name: Package and publish Linux release
+                run: npm run dist:linux -- --publish always

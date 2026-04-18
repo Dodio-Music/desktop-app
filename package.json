@@ -10,15 +10,23 @@
         "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
         "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
         "typecheck": "npm run typecheck:node && npm run typecheck:web",
+
         "start:local": "electron-vite preview --mode dev",
         "start:remote": "electron-vite preview --mode prod",
         "dev:local": "electron-vite dev --mode dev",
         "dev:remote": "electron-vite dev --mode prod",
+
+        "build": "npm run typecheck && electron-vite build --mode prod",
         "postinstall": "electron-builder install-app-deps",
-        "build": "npm run typecheck && electron-vite build --mode prod && electron-builder",
-        "build:unpack": "npm run build -- --dir",
-        "build:win": "npm run build -- --win",
-        "build:linux": "npm run build -- --linux",
+
+        "dist": "electron-builder",
+        "dist:win": "electron-builder --win --x64",
+        "dist:linux": "electron-builder --linux --x64",
+
+        "release:local": "npm run build && npm run dist",
+        "release:local:win": "npm run build & npm run dist:win",
+        "release:local:linux": "npm run build && npm run dist:linux",
+
         "test:unit": "vitest run --coverage",
         "test:e2e": "playwright test"
     },
