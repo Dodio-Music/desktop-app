@@ -33,11 +33,16 @@
     },
 
     "nsis": {
+        "oneClick": false,
+        "createStartMenuShortcut": true,
+        "runAfterFinish": true,
         "shortcutName": "Dodio",
-        "uninstallDisplayName": "Dodio",
-        "createDesktopShortcut": "always",
+        "uninstallDisplayName": "Uninstall Dodio",
+        "createDesktopShortcut": true,
         "differentialPackage": true
     },
+
+    "electronLanguages": ["en-US"],
 
     "linux": {
         "target": ["AppImage"],
