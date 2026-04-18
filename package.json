@@ -70,7 +70,7 @@
         "@types/react-virtualized": "^9.22.3",
         "@vitejs/plugin-react": "^4.7.0",
         "@vitest/coverage-v8": "^4.0.7",
-        "electron": "^38.7.2",
+        "electron": "^41.2.1",
         "electron-builder": "^26.8.1",
         "electron-devtools-installer": "^4.0.0",
         "electron-vite": "^5.0.0",
